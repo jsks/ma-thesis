@@ -1,0 +1,9 @@
+---
+title: Executive Constraints and Civil Conflict
+author: J.L.A. Krusell
+output: pdf_document
+---
+
+\[ x_{j}^{obs} \sim \mathsf{Normal}(x_{j}^\ast, \sigma_{j}^{obs}) \]
+\[ x_{ji}^\ast \sim \mathsf{Normal}(\gamma_j + \lambda_j \theta_i, \psi_j) \]
+\[ \theta \sim \mathsf{Normal}(0, 1) \]

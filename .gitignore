@@ -1,0 +1,15 @@
+**/*.pdf
+**/*.RData
+**/*.rds
+**/*.Rhistory
+**/\#*\#
+
+data/
+docs/
+refs/
+replications/
+plots/
+posteriors/
+R/thesis.utils/
+
+packrat/lib*/

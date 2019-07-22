@@ -1,0 +1,16 @@
+CCACHE=ccache
+
+CC=$(CCACHE) gcc
+CXX=$(CCACHE) g++
+CXX11=$(CCACHE) g++
+CXX14=$(CCACHE) g++
+FC=$(CCACHE) gfortran
+F77=$(CCACHE) gfortran
+
+CFLAGS += -march=native -O3 -pipe
+CXXFLAGS += -march=native -O3 -pipe
+
+CXX98FLAGS += -march=native -O3 -pipe
+CXX11FLAGS += -march=native -O3 -pipe
+CXX14FLAGS += -march=native -O3 -pipe
+CXX17FLAGS += -march=native -O3 -pipe
