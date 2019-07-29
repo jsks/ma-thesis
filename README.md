@@ -1,6 +1,6 @@
 # MA Thesis
 
 ```sh
-$ make build
-$ ./run.sh
+$ docker pull jsks/conflict_onset
+$ ./scripts/run.sh
 ```
