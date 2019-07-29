@@ -10,7 +10,7 @@ RUN apt-get update \
 RUN mkdir -p /root/.R
 COPY .R /root/.R
 
-Run Rscript -e "install.packages(c('data.table', 'dplyr', 'rmarkdown', 'rstan'))"
+RUN install2.r -e data.table dplyr readxl rmarkdown rstan tidyr
 
 RUN mkdir /proj
 WORKDIR /proj

@@ -4,7 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(rstan)
 
-env <- readRDS("data/prepped_data.rds")
+load("data/prepped_data.RData")
 fit <- readRDS("posteriors/fit.rds")
 
 check_hmc_diagnostics(fit)
@@ -16,7 +16,7 @@ theta <- as.matrix(fit, pars = "theta") %>%
     rename(theta_codelow = `25%`,
            theta = `50%`,
            theta_codehigh = `75%`) %>%
-    mutate(country_name = env$country_year$country_name,
-           year = env$country_year$year)
+    mutate(country_name = final.df$country_name,
+           year = final.df$year)
 
 saveRDS(theta, "data/summarised_post.rds")
