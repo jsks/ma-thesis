@@ -1,0 +1,9 @@
+data/*.rds
+data/*.RData
+*.pdf
+\#*
+.Rhistory
+
+docs
+posteriors
+replications
