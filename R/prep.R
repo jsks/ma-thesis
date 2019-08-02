@@ -36,26 +36,25 @@ min.df <- lapply(files, fn) %>%
 
 for (v2 in lg_vars) {
     merged.df[[v2]] <- ifelse(merged.df$v2lgbicam == 0,
-                         min.df$mean[min.df$variable == v2],
-                         merged.df[[v2]])
+                              min.df$mean[min.df$variable == v2],
+                              merged.df[[v2]])
 
     merged.df[[paste0(v2, "_sd")]] <- ifelse(merged.df$v2lgbicam == 0,
-                                       min.df$sd[min.df$variable == v2],
-                                       merged.df[[paste0(v2, "_sd")]])
+                                             min.df$sd[min.df$variable == v2],
+                                             merged.df[[paste0(v2, "_sd")]])
 }
 
 ###
 # Final dataset for model
 final.df <- merged.df %>%
-    select(country_name, year, lepisode_onset, one_of(constraint_vars),
-           one_of(paste0(constraint_vars, "_sd")), e_migdppcln,
-           un_pop, area_sqkm, meanelev) %>%
-    na.omit %>%
+    select(country_name, year, lonset, lepisode_onset, peace_yrs,
+           one_of(constraint_vars), one_of(paste0(constraint_vars, "_sd")),
+           e_migdppcln, e_migdpgro, pop_density, meanelev, ongoing,
+           rlvt_groups_count, neighbour_conflict) %>%
     filter_at(constraint_vars, all_vars(!is.na(.))) %>%
-    mutate(s = do.call(paste, lapply(constraint_vars, as.symbol))) %>%
-    group_by(country_name) %>%
-    mutate(reduced_idx = rle(s) %>% { rep(.$values, .$lengths) } %>% to_idx) %>%
-    ungroup
+    mutate(s = do.call(paste, lapply(c("country_name", constraint_vars), as.symbol)),
+           reduced_idx = collapse_changes(s)) %>%
+    select(-s)
 
 constraints.df <- select(final.df, country_name, year, reduced_idx,
                          one_of(constraint_vars),
