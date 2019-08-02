@@ -24,7 +24,7 @@ fn <- function(f) {
     list(mean = mean(v), sd = sd(v))
 }
 
-lg_vars<- c("v2lginvstp", "v2lgfunds", "v2lgqstexp", "v2lgoppart")
+lg_vars <- grep("^v2lg", constraint_vars, value = T)
 re <- paste0(lg_vars, collapse = "|")
 
 files <- list.files("./data/raw/vdem_post", re, full.names = T)
@@ -63,31 +63,12 @@ constraints.df <- select(final.df, country_name, year, reduced_idx,
     filter(year == min(year)) %>%
     ungroup
 
-manifests <- select(constraints.df, one_of(constraint_vars)) %>% data.matrix
-manifests_sd <- select(constraints.df, one_of(paste0(constraint_vars, "_sd"))) %>%
-    data.matrix
+final.df %<>% na.omit
 
-X <- select(final.df, e_migdppcln, un_pop, area_sqkm, meanelev) %>%
-    mutate(e_migdppcln = normalize(e_migdppcln),
-           un_pop = log(un_pop) %>% normalize,
-           area_sqkm = log(area_sqkm) %>% normalize,
-           meanelev = log(meanelev) %>% normalize) %>%
-    data.matrix
+setdiff(unique(merged.df$country_name), final.df$country_name) %>%
+    paste(collapse = "; ") %>%
+    sprintf("Lost due to missingness: %s", .)
 
-stopifnot(nrow(manifests) == nrow(manifests_sd),
-          ncol(manifests) == ncol(manifests_sd))
-
-data <- list(N = nrow(manifests),
-             J = length(constraint_vars),
-             manifest_obs = manifests,
-             manifest_se = manifests_sd,
-             T = nrow(X),
-             I = ncol(X),
-             X = X,
-             exec_idx = final.df$reduced_idx,
-             n_countries = n_distinct(final.df$country_name),
-             country_id = as.factor(final.df$country_name) %>% as.numeric,
-             y = final.df$lepisode_onset)
-str(data)
-
-save(data, final.df, file = "data/prepped_data.RData")
+info(final.df)
+save(constraint_vars, final.df, constraints.df,
+     file = "data/prepped_data.RData")
