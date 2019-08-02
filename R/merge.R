@@ -81,7 +81,25 @@ filter(ctable, gwid %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
 
 # TODO: include interstate conflict?
 counts.df <- group_by(civil, gwno_loc, year) %>%
-    summarise(conflicts = n(), intensity = max(intensity_level))
+    summarise(n_conflicts = n(), intensity = max(intensity_level))
+
+# Also inherit conflict counts from parent country for newly
+# independent countries. We inherit based on the territory location of
+# the conflict. This won't affect our `ongoing` variable in the final
+# dataset, but it will change our peace_yrs calculation, for example:
+# Eritrea, Namibia etc etc, which would otherwise have inflated
+# counts.
+inherited.df <- civil %>%
+    mutate(territory_gwno = ctable$gwid[match(territory_name, ctable$country_name)]) %>%
+    filter(!is.na(territory_gwno) & gwno_loc != territory_gwno) %>%
+    group_by(territory_gwno, year) %>%
+    summarise(n_conflicts = n(), intensity = max(intensity_level)) %>%
+    rename(gwno_loc = territory_gwno)
+
+counts.df %<>% bind_rows(inherited.df) %>%
+    group_by(gwno_loc, year) %>%
+    summarise(n_conflicts = sum(n_conflicts), intensity = max(intensity))
+
 neighbours.df <- readRDS("data/neighbours.rds") %>%
     inner_join(counts.df, by = c("neighbour_gwid" = "gwno_loc", "year")) %>%
     group_by(gwid, year) %>%
@@ -132,8 +150,7 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
            lepisode_intensity = lead(episode_intensity))
 
 # Calculate number of peace years since last ongoing civil conflict or
-# independence (coded either by codingstart in V-Dem or the end of a
-# coding gap (gapend)). For countries censored due to start date,
+# V-Dem codingstart/gapend. For countries censored due to start date,
 # start counting from the end of WW2. Even for countries not directly
 # involved in WW2, it was a significant international event that
 # reshaped the world order with domestic consequences for everyone.
@@ -143,7 +160,11 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
 # fundamental status of a country. This only affects Serbia in 2006
 # and Czech Republic in 1993.
 #
-# This end result is essentially the peaceyears calculated by GROWup.
+# This end result is essentially the peaceyears calculated by GROWup,
+# with the exception of newly independent countries that inherited the
+# conflict counts based on territory location (ex: Eritrea). We'll
+# also merge in GROWups peaceyears count which simply starts at zero
+# when a country enters that dataset.
 merged.df %<>%
     arrange(country_name, year) %>%
     group_by(country_name) %>%
@@ -221,20 +242,20 @@ sprintf("After merging UN population data, %d countries and %d rows",
 # beginning of the year versus the end of the year in V-Dem.
 growup <- fread("./data/raw/growup/data.csv", data.table = F) %>%
     select(gwid = countries_gwid, country_name = countryname, year,
-           area_sqkm, meanelev)
+           onset_ko_flag, area_sqkm, meanelev, rlvt_groups_count,
+           incidence_flag, peaceyears)
 
 filter(growup, !gwid %in% merged.df$gwid) %$%
     unique(country_name) %>%
     paste(collapse = "; ") %>%
     sprintf("GROWup countries missing from merged dataset: %s", .)
 
-# TODO: what about territorial changes?
 merged.df <- select(growup, -country_name) %>%
     right_join(merged.df, by = c("gwid", "year")) %>%
     group_by(country_name) %>%
-    fill("area_sqkm", "meanelev", .direction = "up") %>%
+    fill("area_sqkm", "meanelev", "rlvt_groups_count", .direction = "up") %>%
     ungroup %>%
-    mutate(pop_area = un_pop / area_sqkm)
+    mutate(pop_density = 1000 * un_pop / area_sqkm)
 
 stopifnot(!anyNA(merged.df$area_sqkm))
 
