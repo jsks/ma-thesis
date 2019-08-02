@@ -1,8 +1,8 @@
 locf_idx <- function(x) {
     x[x == 1] <- which(x == 1)
-    x <- cummax(x)
-    is.na(x) <- x == 0
-    return(x)
+    lx <- c(NA, lag(x)[-1] %>% cummax)
+    is.na(lx) <- lx == 0
+    return(lx)
 }
 
 normalize <- function(x) scale(x) %>% as.vector

@@ -142,20 +142,29 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
 # means that gwid changes are not recorded as changes in the
 # fundamental status of a country. This only affects Serbia in 2006
 # and Czech Republic in 1993.
+#
+# This end result is essentially the peaceyears calculated by GROWup.
 merged.df %<>%
     arrange(country_name, year) %>%
     group_by(country_name) %>%
-    mutate(first_year = pmax(1946, codingstart_contemp, gapend + 1, na.rm = T),
-           peace_yrs = year -
-               year[locf_idx(ongoing)] %>% { ifelse(is.na(.), first_year, .) }) %>%
+    mutate(first_year = pmax(1945, codingstart_contemp, gapend + 1, na.rm = T),
+           peace_yrs = {
+        year - year[locf_idx(ongoing)] %>% { ifelse(is.na(.), first_year, .) } - 1
+    } %>% pmax(0)) %>%
     ungroup
 
 stopifnot(!is.na(merged.df$country_name))
 
 ###
-# The rest of our datasets are only coded between 1950 and 2017, so
-# restrict now for later assertions.
-merged.df %<>% filter(between(year, 1950, 2017))
+# Restrict our dataset to independent country-years (i.e. where the
+# state is sovereign) and between 1950 - 2017, the lower bound set by
+# our population data.
+#
+# We'll also include one year prior to independence so that we can
+# also have the start year into our model, thereby accounting for
+# conflicts that immediately break out (V-Dem generally codes most
+# colonies + former communist states prior to independence).
+merged.df %<>% filter(year >= pmax(1950, start_year), year <= end_year)
 
 ###
 # Population data
