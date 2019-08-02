@@ -202,16 +202,16 @@ pop.df <- read_xlsx("data/raw/WPP2019_POP_F01_1_TOTAL_POPULATION_BOTH_SEXES.xlsx
 # the country names
 pop.df %<>%
     mutate(country_name =
-               case_when(grepl("Bolivia", country_name) ~ "Bolivia",
-                         grepl("Hong Kong", country_name) ~ "Hong Kong",
-                         grepl("Iran", country_name) ~ "Iran",
-                         grepl("Moldova", country_name) ~ "Moldova",
-                         grepl("Macedonia", country_name) ~ "Macedonia",
-                         grepl("Russia", country_name) ~ "Russia",
-                         grepl("Syria", country_name) ~ "Syria",
-                         grepl("Taiwan", country_name) ~ "Taiwan",
-                         grepl("Tanzania", country_name) ~ "Tanzania",
-                         grepl("Venezuela", country_name) ~ "Venezuela",
+               case_when(country_name == "Bolivia (Plurinational State of)" ~ "Bolivia",
+                         country_name == "China, Hong Kong SAR" ~ "Hong Kong",
+                         country_name == "Iran (Islamic Republic of)" ~ "Iran",
+                         country_name == "Republic of Moldova" ~ "Moldova",
+                         country_name == "North Macedonia" ~ "Macedonia",
+                         country_name == "Russian Federation" ~ "Russia",
+                         country_name == "Syrian Arab Republic" ~ "Syria",
+                         country_name == "China, Taiwan Province of China" ~ "Taiwan",
+                         country_name == "United Republic of Tanzania" ~ "Tanzania",
+                         country_name == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
                          country_name == "Dem. People's Republic of Korea" ~ "North Korea",
                          country_name == "Republic of Korea" ~ "South Korea",
                          country_name == "Cabo Verde" ~ "Cape Verde",
@@ -264,10 +264,5 @@ sprintf("After merging GROWup, %d countries and %d rows",
 
 ###
 # Save, save, save!
+info(merged.df)
 saveRDS(merged.df, "data/merged_data.rds")
-
-sprintf("Final: %d conflicts, %d episodes, %d countries, %s country-years",
-        sum(merged.df$lonset, na.rm = T),
-        sum(merged.df$lepisode_onset, na.rm = T),
-        n_distinct(merged.df$country_name),
-        prettyNum(nrow(merged.df), big.mark = ","))
