@@ -54,9 +54,12 @@ vdem %<>%
                             country_name == "Serbia" & year >= 2006 ~ 340L,
                             T ~ COWcode)) %>%
     group_by(country_name) %>%
-    fill(gwid, .direction = "up")
+    fill(gwid, .direction = "up") %>%
+    ungroup
 
-stopifnot(!anyNA(vdem$gwid), vdem$gwid %in% ctable$code)
+vdem <- select(ctable, -country_name) %>% right_join(vdem, by = "gwid")
+
+stopifnot(!anyNA(vdem$gwid), vdem$gwid %in% ctable$gwid)
 
 ###
 # UCDP - Armed Conflict
@@ -72,7 +75,7 @@ civil <- filter(acd, type_of_conflict %in% c(1, 3, 4), conflict_id != 418) %>%
     separate_rows(gwno_loc, sep = ",") %>%
     mutate(gwno_loc = as.integer(gwno_loc))
 
-filter(ctable, code %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
+filter(ctable, gwid %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
     paste(country_name, collapse = "; ") %>%
     sprintf("UCDP countries missing from merged: %s", .)
 
