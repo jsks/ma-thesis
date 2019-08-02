@@ -36,9 +36,11 @@ $(data)/summarised_post.rds: $(post)/fit.rds \
 				R/summarise.R
 	Rscript R/summarise.R
 
-$(data)/lavaan_predict.rds: $(data)/prepped_data.RData \
-				R/lavaan.R
-	Rscript R/lavaan.R
+$(data)/gam_model.rds: $(data)/prepped_data.RData \
+			R/gam.R
+	Rscript R/gam.R
+
+gam: $(data)/gam_model.rds
 
 paper.pdf: paper.Rmd
 	Rscript -e "rmarkdown::render('paper.Rmd')"
