@@ -49,8 +49,8 @@ fit <- stan("stan/model.stan", data = data,
                         list(manifest_est = data$manifest_obs),
                         list(manifest_est = data$manifest_obs),
                         list(manifest_est = data$manifest_obs)),
-            pars = c("theta", "gamma", "lambda", "psi", "alpha", "beta",
-                     "Z_country", "sigma"),
-            control = list(adapt_delta = 0.9, max_treedepth = 12))
+            include = F, pars = c("manifest_raw", "manifest_est", "psi_unif",
+                                  "sigma_unif", "raw_country", "raw_year", "nu",
+                                  "eta", "theta_state_capacity"))
 
 saveRDS(fit, "posteriors/fit.rds")
