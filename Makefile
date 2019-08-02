@@ -9,8 +9,13 @@ all: $(post)/fit.rds
 build:
 	docker pull jsks/conflict_onset:latest
 
+$(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* \
+				R/geo.R
+	Rscript R/geo.R
+
 $(data)/merged_data.rds: $(raw)/V-Dem-CY-Full+Others-v9.rds \
 				$(raw)/ucdp-prio-acd-181 \
+				$(data)/neighbours.rds \
 				R/merge.R
 	Rscript R/merge.R
 

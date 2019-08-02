@@ -4,6 +4,7 @@
 # statistics, GROWup geographic data, and UCDP conflict data.
 ####
 
+suppressMessages(library(data.table))
 suppressMessages(library(dplyr))
 suppressMessages(library(magrittr))
 suppressMessages(library(readxl))
@@ -36,7 +37,9 @@ sprintf("Started with %d countries and %d rows from V-Dem",
 # Add GW codes to merged dataset. GW are modified COW codes, which are
 # already merged into V-Dem, and UCDP uses a slightly modified version
 # of GW. Awesome.
-ctable <- read.csv2("refs/ucdp_countries.csv", stringsAsFactors = F)
+ctable <- fread("refs/ucdp_countries.csv", data.table = F) %>%
+    select(country_name, gwid = code, start_year = start, end_year = end) %>%
+    mutate(end_year = ifelse(is.na(end_year), 2017, end_year))
 
 # Drop smaller countries/territories which will eventually have high
 # missingess
@@ -76,6 +79,14 @@ filter(ctable, code %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
 # TODO: include interstate conflict?
 counts.df <- group_by(civil, gwno_loc, year) %>%
     summarise(conflicts = n(), intensity = max(intensity_level))
+neighbours.df <- readRDS("data/neighbours.rds") %>%
+    inner_join(counts.df, by = c("neighbour_gwid" = "gwno_loc", "year")) %>%
+    group_by(gwid, year) %>%
+    summarise(n_neighbour_conflicts = sum(n_conflicts),
+              neighbour_intensity = max(intensity))
+
+full_counts.df <- full_join(counts.df, neighbours.df,
+                            by = c("gwno_loc" = "gwid", "year"))
 
 # Episode onsets
 episode_ucdp <- group_by(civil, gwno_loc, conflict_id, start_date2) %>%
@@ -107,8 +118,9 @@ conflict_ucdp <- group_by(civil, gwno_loc, conflict_id) %>%
 ucdp <- full_join(episode_ucdp, conflict_ucdp, by = c("gwno_loc", "year"))
 
 merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
-    left_join(counts.df, by = c("gwid" = "gwno_loc", "year")) %>%
-    mutate(ongoing = ifelse(is.na(conflicts), 0, 1),
+    left_join(full_counts.df, by = c("gwid" = "gwno_loc", "year")) %>%
+    mutate(ongoing = ifelse(is.na(n_conflicts), 0, 1),
+           neighbour_conflict = ifelse(is.na(n_neighbour_conflicts), 0, 1),
            onset = ifelse(is.na(onset), 0, 1),
            episode_onset = ifelse(is.na(episode_onset), 0, 1),
            lonset = lead(onset),
@@ -195,7 +207,7 @@ sprintf("After merging UN population data, %d countries and %d rows",
 ###
 # Area & elevation data grom GROWup, technically coded at the
 # beginning of the year versus the end of the year in V-Dem.
-growup <- read.csv("./data/raw/growup/data.csv", stringsAsFactors = F) %>%
+growup <- fread("./data/raw/growup/data.csv", data.table = F) %>%
     select(gwid = countries_gwid, country_name = countryname, year,
            area_sqkm, meanelev)
 
