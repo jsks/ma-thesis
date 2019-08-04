@@ -17,13 +17,6 @@
 #'     the fundamental status of a country. This only affects Serbia
 #'     in 2006 and Czech Republic in 1993.
 #'
-#'     Furthermore, the coding starts are also taken from V-Dem, which
-#'     includes non-sovergeign polities such as colonial
-#'     territories. In the `merge.R` we attempt to therefore backtrack
-#'     conflicts on the basis of territory location (ex: Eritrea),
-#'     even though the final analysis will only be done on independent
-#'     countries according to GW.
-#'
 #' @examples
 #' years <- 1900:1910
 #' ongoing <- sample(0:1, length(years), replace = TRUE)
@@ -43,11 +36,12 @@ calc_peace_yrs <- function(years, incidence) {
         x[x == 1] <- which(x == 1)
         lx <- c(NA, dplyr::lag(x)[-1] %>% cummax)
         is.na(lx) <- lx == 0
+
         return(lx)
     }
 
     x <- years[locf_idx(incidence)]
-    out <- years - ifelse(is.na(x), years[1], x) - 1
+    out <- years - ifelse(is.na(x), years[1] - 1, x) - 1
 
     pmax(out, 0)
 }
@@ -74,7 +68,7 @@ normalize <- function(x) (x - mean(x)) / stats::sd(x)
 #' @param ... Additional arguments passed to [factor()]
 #'
 #' @details This is useful for one thing only: creating the input data
-#'     list for STan.
+#'     list for Stan.
 #'
 #'     For partially pooled intercepts in Stan we need the index
 #'     positions of each unique category associated with a given

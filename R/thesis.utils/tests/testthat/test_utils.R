@@ -2,7 +2,7 @@ test_that("calc_peace_yrs", {
     years <- 1900:1905
     ongoing <- rep(0, 6)
 
-    expect_identical(calc_peace_yrs(years, ongoing), c(0, 0:4))
+    expect_identical(calc_peace_yrs(years, ongoing), c(0, 1:5))
     expect_error(calc_peace_yrs(years, ongoing[-1]),
                  "Mismatched vector lengths")
 
@@ -16,13 +16,13 @@ test_that("calc_peace_yrs", {
     ongoing <- c(0, 0, 0, 0, 1, 0)
 
     expect_identical(calc_peace_yrs(years, ongoing),
-                     c(0, 0, 1, 2, 3, 0))
+                     c(0, 1, 2, 3, 4, 0))
 
     years <- 1900:1909
     ongoing <- c(rep(0, 4), 1, rep(0, 5))
 
     expect_identical(calc_peace_yrs(years, ongoing),
-                     c(0, 0:3, 0, 1:4))
+                     c(0, 1:4, 0, 1:4))
 
     years <- c(1900, 1902:1904)
     ongoing <- rep(0, 4)

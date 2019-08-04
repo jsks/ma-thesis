@@ -20,7 +20,7 @@ suppressMessages(library(thesis.utils))
 # calculate peace years.
 vdem <- readRDS("data/raw/V-Dem-CY-Full+Others-v9.rds") %>%
     select(-matches("_osp|_ord|_mean|_nr|_\\d*$"), -matches("^e_")) %>%
-    filter(year >= 1946) %>%
+    filter(year >= 1945) %>%
     group_by(country_id) %>%
     mutate(gapstart = ifelse(is.na(gapstart1) & is.na(gapstart2) & is.na(gapstart3),
                              NA,
@@ -204,28 +204,23 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
            lepisode_intensity = lead(episode_intensity))
 
 # Calculate number of peace years since last ongoing civil conflict or
-# V-Dem codingstart/gapend. For countries censored due to start date,
-# start counting from the end of WW2. Even for countries not directly
+# independence. For countries censored due to start date, start
+# counting from the end of WW2. Even for countries not directly
 # involved in WW2, it was a significant international event that
 # reshaped the world order with domestic consequences for everyone.
 #
-# This end result is essentially the peaceyears calculated by GROWup,
-# with the exception of newly independent countries that inherited the
-# conflict counts based on territory location (ex: Eritrea). We'll
-# also merge in GROWups peaceyears count which simply starts at zero
-# when a country enters that dataset.
+# The result is essentially the peaceyears count from GROWup with a
+# few exceptions, including extrasystemic colonial wars for
+# independence spilling over past independence and which are then
+# included in ongoing counts of conflict (ex: Indonesia).
 merged.df %<>%
+    filter(year >= start_year, year <= end_year) %>%
     arrange(country_name, year) %>%
     group_by(country_name) %>%
     mutate(peace_yrs = calc_peace_yrs(year, ongoing)) %>%
     ungroup
 
 stopifnot(!is.na(merged.df$country_name))
-
-###
-# Restrict our dataset to independent country-years (i.e. where the
-# state is sovereign).
-merged.df %<>% filter(year >= start_year, year <= end_year)
 
 ###
 # GROWUP - Area, elevation, and ethnic group data

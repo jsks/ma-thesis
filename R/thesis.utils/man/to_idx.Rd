@@ -20,7 +20,7 @@ categories of a given vector, \code{x}.
 }
 \details{
 This is useful for one thing only: creating the input data
-list for STan.\preformatted{For partially pooled intercepts in Stan we need the index
+list for Stan.\preformatted{For partially pooled intercepts in Stan we need the index
 positions of each unique category associated with a given
 observation.
 

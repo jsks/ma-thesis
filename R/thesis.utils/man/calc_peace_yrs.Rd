@@ -24,13 +24,6 @@ by the first element in the \code{years} vector.\preformatted{Note, peace years 
 which means that gwid changes are not recorded as changes in
 the fundamental status of a country. This only affects Serbia
 in 2006 and Czech Republic in 1993.
-
-Furthermore, the coding starts are also taken from V-Dem, which
-includes non-sovergeign polities such as colonial
-territories. In the `merge.R` we attempt to therefore backtrack
-conflicts on the basis of territory location (ex: Eritrea),
-even though the final analysis will only be done on independent
-countries according to GW.
 }
 }
 \examples{
