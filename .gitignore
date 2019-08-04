@@ -4,7 +4,10 @@
 **/*.RData
 **/*.rds
 **/*.Rhistory
+**/*.tar.gz
 **/\#*\#
+
+**/*.Rcheck/
 
 data/
 docs/
@@ -12,6 +15,5 @@ refs/
 replications/
 plots/
 posteriors/
-R/thesis.utils/
 
 packrat/lib*/
