@@ -19,7 +19,7 @@ suppressMessages(library(thesis.utils))
 # a single gapstart/gapend to make things easier when we later
 # calculate peace years.
 vdem <- readRDS("data/raw/V-Dem-CY-Full+Others-v9.rds") %>%
-    select(-matches("_osp|_ord|_mean|_nr|_\\d*$")) %>%
+    select(-matches("_osp|_ord|_mean|_nr|_\\d*$"), -matches("^e_")) %>%
     filter(year >= 1946) %>%
     group_by(country_id) %>%
     mutate(gapstart = ifelse(is.na(gapstart1) & is.na(gapstart2) & is.na(gapstart3),
@@ -31,6 +31,62 @@ vdem <- readRDS("data/raw/V-Dem-CY-Full+Others-v9.rds") %>%
 
 sprintf("Started with %d countries and %d rows from V-Dem",
         n_distinct(vdem$country_id), nrow(vdem))
+
+###
+# Maddison - Population & GDP
+#
+# This is already merged into V-Dem; however, we want to use rgdpnapc
+# to calculate GDP growth rather than cgdppc. Plus, we'll also take
+# population statistics since V-Dem only has WB figures.
+#
+# Maddison includes Serbia Federation, Czech territory, and RFSR as
+# separate entites. V-Dem codes entire Yugoslavia and Czechoslovakia
+# so drop the constituent republics prior to independence, Russia
+# however is coded as only the socialist republic instead of the
+# entire USSR.
+maddison.df <- read_xlsx("data/raw/mpd2018.xlsx", sheet = 2) %>%
+    filter(year > 1940,
+           !(country == "Serbia" & year < 1992),
+           !(country == "Former Yugoslavia" & year >= 1992),
+           !(country == "Czech Republic" & year < 1992),
+           !(country == "Czechoslovakia" & year >= 1992)) %>%
+    mutate(country =
+               case_when(country == "Bolivia (Plurinational State of)" ~ "Bolivia",
+                         country == "Cabo Verde" ~ "Cape Verde",
+                         country == "China, Hong Kong SAR" ~ "Hong Kong",
+                         country == "Congo" ~ "Republic of the Congo",
+                         country == "Côte d'Ivoire" ~ "Ivory Coast",
+                         country == "Czechoslovakia" & year < 1992 ~ "Czech Republic",
+                         country == "D.P.R. of Korea" ~ "North Korea",
+                         country == "D.R. of the Congo" ~ "Democratic Republic of the Congo",
+                         country == "Former Yugoslavia"  & year < 1992 ~ "Serbia",
+                         country == "Gambia" ~ "The Gambia",
+                         country == "Iran (Islamic Republic of)" ~ "Iran",
+                         country == "Lao People's DR" ~ "Laos",
+                         country == "Myanmar" ~ "Burma/Myanmar",
+                         country == "Republic of Korea" ~ "South Korea",
+                         country == "Republic of Moldova" ~ "Moldova",
+                         country == "Russian Federation" ~ "Russia",
+                         country == "Sudan (Former)" ~ "Sudan",
+                         country == "Syrian Arab Republic" ~ "Syria",
+                         country == "Taiwan, Province of China" ~ "Taiwan",
+                         country == "TFYR of Macedonia" ~ "Macedonia",
+                         country == "U.R. of Tanzania: Mainland" ~ "Tanzania",
+                         country == "United States" ~ "United States of America",
+                         country == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
+                         country == "Viet Nam" ~ "Vietnam",
+                         T ~ country)) %>%
+    select(country_name = country, year, cgdppc, rgdpnapc, pop) %>%
+    arrange(country_name, year) %>%
+    group_by(country_name, consecutive(year)) %>%
+    mutate(gdpgro = rgdpnapc / lag(rgdpnapc) - 1)
+
+setdiff(vdem$country_name, maddison.df$country_name) %>%
+    unique %>%
+    paste(collapse = "; ") %>%
+    sprintf("V-Dem countries missing from Maddison: %s", .)
+
+vdem %<>% left_join(maddison.df, by = c("country_name", "year"))
 
 ###
 # Add GW codes to merged dataset. GW are modified COW codes, which are
@@ -78,7 +134,6 @@ filter(ctable, gwid %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
     paste(country_name, collapse = "; ") %>%
     sprintf("UCDP countries missing from merged: %s", .)
 
-# TODO: include interstate conflict?
 counts.df <- group_by(civil, gwno_loc, year) %>%
     summarise(n_conflicts = n(), intensity = max(intensity_level))
 
@@ -154,11 +209,6 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
 # involved in WW2, it was a significant international event that
 # reshaped the world order with domestic consequences for everyone.
 #
-# Note, peace years are calculated based on V-Dem countries, which
-# means that gwid changes are not recorded as changes in the
-# fundamental status of a country. This only affects Serbia in 2006
-# and Czech Republic in 1993.
-#
 # This end result is essentially the peaceyears calculated by GROWup,
 # with the exception of newly independent countries that inherited the
 # conflict counts based on territory location (ex: Eritrea). We'll
@@ -174,68 +224,14 @@ stopifnot(!is.na(merged.df$country_name))
 
 ###
 # Restrict our dataset to independent country-years (i.e. where the
-# state is sovereign) and between 1950 - 2017, the lower bound set by
-# our population data.
+# state is sovereign).
+merged.df %<>% filter(year >= start_year, year <= end_year)
+
+###
+# GROWUP - Area, elevation, and ethnic group data
 #
-# We'll also include one year prior to independence so that we can
-# also have the start year into our model, thereby accounting for
-# conflicts that immediately break out (V-Dem generally codes most
-# colonies + former communist states prior to independence).
-merged.df %<>% filter(year >= pmax(1950, start_year), year <= end_year)
-
-###
-# Population data
-pop.df <- read_xlsx("data/raw/WPP2019_POP_F01_1_TOTAL_POPULATION_BOTH_SEXES.xlsx",
-                    sheet = 1, skip = 16) %>%
-    select(country_name = `Region, subregion, country or area *`,
-           code = `Country code`, Type, matches("\\d{4}")) %>%
-    gather(year, un_pop, -country_name, -code, -Type) %>%
-    filter(Type == "Country") %>%
-    mutate(un_pop = as.numeric(un_pop),
-           year = as.integer(year))
-
-# Unfortunately, we don't have ISO codes in vdem so manually conform
-# the country names
-pop.df %<>%
-    mutate(country_name =
-               case_when(country_name == "Bolivia (Plurinational State of)" ~ "Bolivia",
-                         country_name == "China, Hong Kong SAR" ~ "Hong Kong",
-                         country_name == "Iran (Islamic Republic of)" ~ "Iran",
-                         country_name == "Republic of Moldova" ~ "Moldova",
-                         country_name == "North Macedonia" ~ "Macedonia",
-                         country_name == "Russian Federation" ~ "Russia",
-                         country_name == "Syrian Arab Republic" ~ "Syria",
-                         country_name == "China, Taiwan Province of China" ~ "Taiwan",
-                         country_name == "United Republic of Tanzania" ~ "Tanzania",
-                         country_name == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
-                         country_name == "Dem. People's Republic of Korea" ~ "North Korea",
-                         country_name == "Republic of Korea" ~ "South Korea",
-                         country_name == "Cabo Verde" ~ "Cape Verde",
-                         country_name == "Côte d'Ivoire" ~ "Ivory Coast",
-                         country_name == "Congo" ~ "Republic of the Congo",
-                         country_name == "Czechia" ~ "Czech Republic",
-                         country_name == "Gambia" ~ "The Gambia",
-                         country_name == "Lao People's Democratic Republic" ~ "Laos",
-                         country_name == "Myanmar" ~ "Burma/Myanmar",
-                         country_name == "Eswatini" ~ "Swaziland",
-                         country_name == "Viet Nam" ~ "Vietnam",
-                         T ~ country_name))
-
-dropped <- setdiff(merged.df$country_name, pop.df$country_name) %>% unique
-sprintf("V-Dem countries missing from UN data: %s",
-        paste(dropped, collapse = "; "))
-
-merged.df %<>% filter(!country_name %in% dropped) %>%
-    left_join(pop.df, by = c("country_name", "year"))
-
-stopifnot(!anyNA(merged.df$un_pop))
-
-sprintf("After merging UN population data, %d countries and %d rows",
-        n_distinct(merged.df$country_id), nrow(merged.df))
-
-###
-# Area & elevation data grom GROWup, technically coded at the
-# beginning of the year versus the end of the year in V-Dem.
+# Technically coded at the beginnning of the year versus the end of
+# the year in V-Dem...
 growup <- fread("./data/raw/growup/data.csv", data.table = F) %>%
     select(gwid = countries_gwid, country_name = countryname, year,
            onset_ko_flag, area_sqkm, meanelev, rlvt_groups_count,
@@ -251,9 +247,7 @@ merged.df <- select(growup, -country_name) %>%
     group_by(country_name) %>%
     fill("area_sqkm", "meanelev", "rlvt_groups_count", .direction = "up") %>%
     ungroup %>%
-    mutate(pop_density = 1000 * un_pop / area_sqkm)
-
-stopifnot(!anyNA(merged.df$area_sqkm))
+    mutate(pop_density = 1000 * pop / area_sqkm)
 
 sprintf("After merging GROWup, %d countries and %d rows",
         n_distinct(merged.df$country_id), nrow(merged.df))

@@ -48,8 +48,9 @@ for (v2 in lg_vars) {
 final.df <- merged.df %>%
     select(country_name, year, lonset, lepisode_onset, peace_yrs,
            one_of(constraint_vars), one_of(paste0(constraint_vars, "_sd")),
-           e_migdppcln, e_migdpgro, pop_density, meanelev, ongoing,
-           rlvt_groups_count, neighbour_conflict) %>%
+           cgdppc, gdpgro, pop_density, meanelev, ongoing,
+           rlvt_groups_count, neighbour_conflict, v2lgbicam) %>%
+    filter(v2lgbicam != 0) %>%
     filter_at(constraint_vars, all_vars(!is.na(.))) %>%
     mutate(s = do.call(paste, lapply(c("country_name", constraint_vars), as.symbol)),
            reduced_idx = collapse_changes(s)) %>%
