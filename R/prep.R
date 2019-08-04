@@ -3,8 +3,7 @@
 suppressMessages(library(data.table))
 suppressMessages(library(dplyr))
 suppressMessages(library(magrittr))
-
-source("R/functions.R")
+suppressMessages(library(thesis.utils))
 
 constraint_vars <- c("v2lginvstp", "v2lgfunds", "v2lgqstexp", "v2lgoppart",
                      "v2juhcind", "v2juncind", "v2juhccomp", "v2jucomp",

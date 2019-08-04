@@ -2,8 +2,8 @@
 
 suppressMessages(library(dplyr))
 suppressMessages(library(sf))
+suppressMessages(library(thesis.utils))
 
-source("R/functions.R")
 
 cshapes <- st_read("data/raw/cshapes_0.6/cshapes.shp") %>%
     select(country_name = CNTRY_NAME, gwid = GWCODE,

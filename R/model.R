@@ -2,8 +2,7 @@
 
 suppressMessages(library(dplyr))
 suppressMessages(library(rstan))
-
-source("R/functions.R")
+suppressMessages(library(thesis.utils))
 
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = T)

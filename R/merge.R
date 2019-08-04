@@ -9,8 +9,7 @@ suppressMessages(library(dplyr))
 suppressMessages(library(magrittr))
 suppressMessages(library(readxl))
 suppressMessages(library(tidyr))
-
-source("R/functions.R")
+suppressMessages(library(thesis.utils))
 
 ###
 # V-Dem - Democracy data

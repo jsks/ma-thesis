@@ -4,8 +4,7 @@ library(caTools)
 library(dplyr)
 library(lavaan)
 library(mgcv)
-
-source("R/functions.R")
+library(thesis.utils)
 
 load("data/prepped_data.RData")
 
