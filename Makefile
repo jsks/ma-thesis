@@ -47,4 +47,5 @@ watch_pdf:
 	fswatch -o paper.Rmd | xargs -n1 -I{} make paper.pdf
 
 clean:
-	rm -rf $(data)/*.rds $(data)/*.RData
+	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
+		$(data)/*.rds $(data)/*.RData
