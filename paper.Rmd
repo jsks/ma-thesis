@@ -1,9 +1,94 @@
 ---
 title: Executive Constraints and Civil Conflict
 author: J.L.A. Krusell
-output: pdf_document
+output:
+    pdf_document:
+        pandoc_args: ["--syntax-definition", "stan.xml",
+                      "--highlight-style", "kate"]
 ---
 
-\[ x_{j}^{obs} \sim \mathsf{Normal}(x_{j}^\ast, \sigma_{j}^{obs}) \]
-\[ x_{ji}^\ast \sim \mathsf{Normal}(\gamma_j + \lambda_j \theta_i, \psi_j) \]
+```{r, echo = F}
+```
+
+
+\[ y_t \sim \mathsf{Bernoulli}(\pi_t) \]
+\[ \pi_t = F(\alpha + \beta \theta_{t-1} + \delta_k + GP(t)) \]
+\[ \delta_k \sim \mathsf{Normal}(0, \sigma) \]
+\[ \sigma \sim \mathsf{HalfCauchy}(0, 1) \]
+\[ x_{jt}^\ast \sim \mathsf{Normal}(\gamma_j + \lambda_j \theta_t, \psi_j) \]
+\[ x_{j}^{obs} \sim \mathsf{Normal}(x_{j}^\ast, \tau_{j}^{obs}) \]
 \[ \theta \sim \mathsf{Normal}(0, 1) \]
+\[ \lambda \sim \mathsf{Lognormal}(0, 1) \]
+\[ \gamma \sim \mathsf{Normal}(0, 5) \]
+\[ \psi \sim \mathsf{HalfCauchy}(0, 1) \]
+
+We assume local item independence such that the residual variances, $\psi$, are uncorrelated.
+
+- v2lginvstp - Legislature investigates in practice
+- v2lgfunds - Legislature controls own resources
+- v2lgqstexp - Legislature questions officials in practice
+- v2lgoppart - Legislature opposition parties able to exercise oversight
+
+- v2juhcind - High court independence
+- v2juncind - Lower court independence
+- v2juhccomp - Compliance with higher court
+- v2jucomp - Compliance with judiciary
+
+- v2exrescon - Executive respects constitution
+- v2lgotovst - Executive oversight
+
+
+## Analysis
+
+```{r, echo = F}
+suppressMessages(library(bayesplot))
+suppressMessages(library(rstan))
+
+fit <- readRDS("posteriors/fit.rds")
+beta <- as.matrix(fit, pars = "beta")
+```
+
+```{r, echo = F}
+color_scheme_set("green")
+mcmc_intervals(beta, point_est = "median") +
+    vline_0(size = 0.25, linetype = 2, color = "violet") +
+    ggplot2::scale_y_discrete(labels = c("Executive Constraints",
+                                "State Capacity",
+                                "Executive Constraints:State Capacity",
+                                "GDP per Capita Growth",
+                                "Population Density",
+                                "Mean Elevation",
+                                "Relevant Ethnic Groups",
+                                "Neighbouring Conflict",
+                                "Peace Years Logged"))
+
+```
+
+\newpage
+
+# Appendix
+
+## Stan Code
+
+```{stan, code=readLines("stan/model.stan"), eval=FALSE, output.var="x"}
+```
+\newpage
+
+## GAM Model
+
+```{R, echo = F, results = "asis"}
+ml <- readRDS("data/gam_model.rds")
+itsadug::gamtabs(ml, caption = "GAM Model")
+```
+
+```{R, echo = F}
+p <- predict(ml, type = "response")
+
+plot(density(p[ml$model$lepisode_onset == 0]), col = "lightblue",
+     main = "Predicted Probability Densities")
+lines(density(p[ml$model$lepisode_onset == 1]), col = "indianred")
+```
+
+```{R, echo = F}
+caTools::colAUC(p, ml$model$lepisode_onset, plotROC = T)
+```
