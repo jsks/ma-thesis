@@ -9,9 +9,16 @@ rstan_options(auto_write = T)
 
 load("data/prepped_data.RData")
 
-manifests <- select(constraints.df, one_of(constraint_vars)) %>% data.matrix
+manifests <- select(constraints.df, one_of(constraint_vars)) %>%
+    data.matrix
+
 manifests_sd <- select(constraints.df, one_of(paste0(constraint_vars, "_sd"))) %>%
     data.matrix
+
+for (i in 1:ncol(manifests)) {
+    manifests_sd[, i] <- manifests_sd[, i] / sd(manifests[, i])
+    manifests[, i] <- normalize(manifests[, i])
+}
 
 stopifnot(nrow(manifests) == nrow(manifests_sd),
           ncol(manifests) == ncol(manifests_sd))

@@ -14,12 +14,8 @@ data {
 
   int<lower=1> n_countries;
   int<lower=1> n_years;
-  //int<lower=1> n_peace_yrs;
   int<lower=1, upper=n_countries> country_id[N];
   int<lower=1, upper=n_years> year_id[N];
-  //int<lower=1, upper=n_peace_yrs> peace_yr_id[N];
-
-  //real peace_yrs[n_peace_yrs];
 
   int<lower=0, upper=1> y[N];
 }
@@ -29,7 +25,6 @@ parameters {
   matrix[J, D] manifest_raw;
 
   vector[J] theta;
-  vector[D] gamma;
   vector<lower=0>[D] lambda;
   vector<lower=0, upper=pi()/2>[D] psi_unif;
 
@@ -42,11 +37,6 @@ parameters {
   vector[n_countries] raw_country;
   vector[n_years] raw_year;
   real<lower=0, upper=pi()/2> sigma_unif[2];
-
-  /*real<lower=0> rho;
-  real<lower=0> alpha;
-  real<lower=0> tau;
-  vector[n_peace_yrs] nu;*/
 }
 
 transformed parameters {
@@ -54,30 +44,18 @@ transformed parameters {
   vector<lower=0>[D] psi;
 
   vector[N] theta_state_capacity;
-  //  vector[n_peace_yrs] f;
   vector[n_countries] Z_country;
   vector[n_years] Z_year;
   real<lower=0> sigma[2];
 
-  // psi ~ HalfCauchy(0, 2.5)
-  psi = 2.5 * tan(psi_unif);
+  // psi ~ HalfCauchy(0, 1)
+  psi = tan(psi_unif);
 
-  // manifest_est ~ Normal(gamma + lambda * theta, psi)
+  // manifest_est ~ Normal(lambda * theta, psi)
   for (d in 1:D)
-    manifest_est[, d] = gamma[d] + lambda[d] * theta + psi[d] * manifest_raw[, d];
+    manifest_est[, d] = lambda[d] * theta + psi[d] * manifest_raw[, d];
 
-  // Gaussian process
-  /*{
-    matrix[n_peace_yrs, n_peace_yrs] cov;
-    matrix[n_peace_yrs, n_peace_yrs] L_cov;
-
-    cov = cov_exp_quad(peace_yrs, alpha, rho) +
-      diag_matrix(rep_vector(square(tau), n_peace_yrs));
-    L_cov = cholesky_decompose(cov);
-    f = L_cov * nu;
-    }*/
-
-  // Interaction term
+  // Interaction term b/w exec constraints & state cap
   theta_state_capacity = theta[exec_idx] .* state_capacity;
 
   // sigma ~ HalfCauchy(0, 1)
@@ -93,9 +71,7 @@ transformed parameters {
 model {
   // Factor model
   theta ~ std_normal();
-
   lambda ~ lognormal(0, 1);
-  gamma ~ std_normal();
 
   for (d in 1:D)
     manifest_raw[, d] ~ std_normal();
@@ -110,11 +86,6 @@ model {
   raw_country ~ std_normal();
   raw_year ~ std_normal();
 
-  /*rho ~ inv_gamma(5, 5);
-  alpha ~ std_normal();
-  tau ~ std_normal();
-  nu ~ std_normal();*/
-
   y ~ bernoulli_logit(X * beta[4:] +
                       beta[1] * theta[exec_idx] +
                       beta[2] * state_capacity +
@@ -122,7 +93,6 @@ model {
                       intercept +
                       Z_country[country_id] +
                       Z_year[year_id]);
-                      //f[peace_yr_id]);
 }
 
 generated quantities {
@@ -137,7 +107,6 @@ generated quantities {
     intercept +
     Z_country[country_id] +
     Z_year[year_id];
-    //f[peace_yr_id];
 
   for (i in 1:N)
     log_lik[i] = bernoulli_logit_lpmf(y[i] | eta[i]);
