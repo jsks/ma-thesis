@@ -4,10 +4,7 @@ vdem_post := $(raw)/vdem_post
 post      := posteriors
 
 all: $(post)/fit.rds
-.PHONY: build clean watch_sync watch_pdf
-
-build:
-	docker pull jsks/conflict_onset:latest
+.PHONY: clean watch_sync watch_pdf
 
 $(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* \
 				R/geo.R
@@ -40,9 +37,7 @@ $(data)/gam_model.rds: $(data)/prepped_data.RData \
 			R/gam.R
 	Rscript R/gam.R
 
-gam: $(data)/gam_model.rds
-
-paper.pdf: paper.Rmd
+paper.pdf: paper.Rmd $(data)/gam_model.rds
 	Rscript -e "rmarkdown::render('paper.Rmd')"
 
 watch_sync:

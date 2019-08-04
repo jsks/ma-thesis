@@ -1,3 +1,4 @@
 **
 !.R/
-!.ccache
+!.ccache/
+!R/thesis.utils/

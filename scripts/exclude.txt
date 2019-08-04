@@ -1,5 +1,6 @@
 data/*.rds
 data/*.RData
+R/thesis.utils_*.tar.gz
 *.pdf
 \#*
 .Rhistory
@@ -7,3 +8,4 @@ data/*.RData
 docs
 posteriors
 replications
+R/thesis.utils.Rcheck

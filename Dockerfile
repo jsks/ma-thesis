@@ -7,14 +7,22 @@ RUN apt-get update \
         pandoc \
         pandoc-citeproc \
         texlive-latex-recommended \
+        texlive-fonts-recommended \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /root/.R
 COPY .R /root/.R
 
-RUN install2.r -e data.table dplyr loo readxl rmarkdown rstan sf tidyr
+RUN install2.r -e data.table dplyr loo readxl rmarkdown rstan sf testthat tidyr
 
-RUN mkdir /proj
+RUN mkdir -p /proj/thesis.utils/
+COPY R/thesis.utils /proj/thesis.utils/
+
 WORKDIR /proj
+
+RUN R CMD build thesis.utils \
+    && R CMD check thesis.utils_*.tar.gz \
+    && R CMD INSTALL thesis.utils_*.tar.gz \
+    && rm -rf thesis.utils*
 
 CMD ["R"]
