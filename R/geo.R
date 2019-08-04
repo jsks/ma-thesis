@@ -4,7 +4,6 @@ suppressMessages(library(dplyr))
 suppressMessages(library(sf))
 suppressMessages(library(thesis.utils))
 
-
 cshapes <- st_read("data/raw/cshapes_0.6/cshapes.shp") %>%
     select(country_name = CNTRY_NAME, gwid = GWCODE,
            start_year = GWSYEAR, end_year = GWEYEAR) %>%
@@ -18,6 +17,11 @@ ll <- lapply(seq_along(neighbours.ll), function(i) {
     if (length(v) == 0)
         return(NULL)
 
+    # We take the start year NOT from the neighbour, but from the
+    # target country. This means that we'll of course end up with
+    # dyads outside of the start date for the neighbouring country. We
+    # do this because we want to include colonial conflicts as
+    # neighbouring conflicts (ex: Algeria <1962).
     data.frame(country_name = cshapes$country_name[i],
                gwid = cshapes$gwid[i],
                neighbour = cshapes$country_name[v],
@@ -30,6 +34,7 @@ ll <- lapply(seq_along(neighbours.ll), function(i) {
 neighbours.df <- bind_rows(ll) %>%
     filter(country_name != neighbour, start_year <= end_year) %>%
     explode(from = .$start_year, to = .$end_year) %>%
+    rename(year = sequence) %>%
     distinct(country_name, gwid, neighbour, neighbour_gwid, year)
 
 saveRDS(neighbours.df, "data/neighbours.rds")
