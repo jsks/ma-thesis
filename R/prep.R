@@ -69,6 +69,9 @@ setdiff(unique(merged.df$country_name), final.df$country_name) %>%
     paste(collapse = "; ") %>%
     sprintf("Lost due to missingness: %s", .)
 
-info(final.df)
+dbg_info(final.df)
 save(constraint_vars, final.df, constraints.df,
      file = "data/prepped_data.RData")
+
+# Final assertion
+assert_cy(final.df)

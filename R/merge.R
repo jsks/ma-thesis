@@ -168,10 +168,7 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
 merged.df %<>%
     arrange(country_name, year) %>%
     group_by(country_name) %>%
-    mutate(first_year = pmax(1945, codingstart_contemp, gapend + 1, na.rm = T),
-           peace_yrs = {
-        year - year[locf_idx(ongoing)] %>% { ifelse(is.na(.), first_year, .) } - 1
-    } %>% pmax(0)) %>%
+    mutate(peace_yrs = calc_peace_yrs(year, ongoing)) %>%
     ungroup
 
 stopifnot(!is.na(merged.df$country_name))
@@ -264,5 +261,8 @@ sprintf("After merging GROWup, %d countries and %d rows",
 
 ###
 # Save, save, save!
-info(merged.df)
+dbg_info(merged.df)
 saveRDS(merged.df, "data/merged_data.rds")
+
+# Final assertion
+assert_cy(merged.df)

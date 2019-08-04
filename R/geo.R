@@ -29,7 +29,7 @@ ll <- lapply(seq_along(neighbours.ll), function(i) {
 
 neighbours.df <- bind_rows(ll) %>%
     filter(country_name != neighbour, start_year <= end_year) %>%
-    explode %>%
+    explode(from = .$start_year, to = .$end_year) %>%
     distinct(country_name, gwid, neighbour, neighbour_gwid, year)
 
 saveRDS(neighbours.df, "data/neighbours.rds")
