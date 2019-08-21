@@ -3,7 +3,7 @@ title: Executive Constraints and Civil Conflict
 author: J.L.A. Krusell
 output:
     pdf_document:
-        pandoc_args: ["--syntax-definition", "stan.xml",
+        pandoc_args: ["--syntax-definition", "assets/stan.xml",
                       "--highlight-style", "kate"]
 ---
 
