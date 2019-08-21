@@ -37,6 +37,11 @@ $(data)/gam_model.rds: $(data)/prepped_data.RData \
 			R/gam.R
 	Rscript R/gam.R
 
+$(post)/fa.rds: $(data)/prepped_data.RData
+	Rscript R/fa.R
+
+fa: $(post)/fa.rds
+
 paper.pdf: paper.Rmd $(data)/gam_model.rds
 	Rscript -e "rmarkdown::render('paper.Rmd')"
 
