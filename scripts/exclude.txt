@@ -4,7 +4,9 @@ R/thesis.utils_*.tar.gz
 *.pdf
 \#*
 .Rhistory
+.DS_Store
 
+.git
 docs
 posteriors
 replications
