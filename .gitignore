@@ -11,9 +11,11 @@
 
 data/
 docs/
-refs/
 replications/
 plots/
 posteriors/
 
 packrat/lib*/
+
+refs/*
+!refs/COW\ country\ codes.csv
