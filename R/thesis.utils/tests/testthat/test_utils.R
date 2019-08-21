@@ -46,6 +46,9 @@ test_that("normalize", {
     expect_equal(stats::sd(normalize(x)), 1)
     expect_equal(normalize(rep(5, 5)), rep(NaN, 5))
     expect_error(suppressWarnings(normalize(letters[1:3])))
+
+    x <- c(NA, 1:10, NA)
+    expect_identical(normalize(x), fn(x))
 })
 
 test_that("to_idx", {

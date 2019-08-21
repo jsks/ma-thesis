@@ -57,7 +57,7 @@ calc_peace_yrs <- function(years, incidence) {
 #' normalize(1:10)
 #'
 #' @export
-normalize <- function(x) (x - mean(x)) / stats::sd(x)
+normalize <- function(x) (x - mean(x, na.rm = T)) / stats::sd(x, na.rm = T)
 
 #' Create index
 #'
