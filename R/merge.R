@@ -13,24 +13,31 @@ suppressMessages(library(thesis.utils))
 
 ###
 # V-Dem - Democracy data
-#
-# Recorded gaps in V-Dem DS are super annoying to deal with. Since
-# contemporary countries have no more than one, unify everything into
-# a single gapstart/gapend to make things easier when we later
-# calculate peace years.
 vdem <- readRDS("data/raw/V-Dem-CY-Full+Others-v9.rds") %>%
-    select(-matches("_osp|_ord|_mean|_nr|_\\d*$"), -matches("^e_")) %>%
-    filter(year >= 1945) %>%
-    group_by(country_id) %>%
-    mutate(gapstart = ifelse(is.na(gapstart1) & is.na(gapstart2) & is.na(gapstart3),
-                             NA,
-                             max(gapstart1, gapstart2, gapstart3, na.rm = T)),
-           gapend = ifelse(is.na(gapend1) & is.na(gapend2) & is.na(gapend3),
-                           NA,
-                           max(gapend1, gapend2, gapend3, na.rm = T)))
+    select(-matches("_ord|_mean|_nr|_\\d*$"), -matches("^e_")) %>%
+    filter(year >= 1945)
 
 sprintf("Started with %d countries and %d rows from V-Dem",
         n_distinct(vdem$country_id), nrow(vdem))
+
+###
+# COW - CINC
+nmc <- read.csv("data/raw/NMC_5_0/NMC_5_0.csv", stringsAsFactors = F) %>%
+    filter(year >= 1945)
+
+# Why are there duplicates in this file?!
+cow <- read.csv("refs/COW country codes.csv", stringsAsFactors = F) %>%
+    distinct(CCode, StateNme)
+
+nmc %<>% left_join(cow, by = c("ccode" = "CCode")) %>%
+    select(ccode, year, cinc, COWname = StateNme)
+
+filter(nmc, !ccode %in% vdem$COWcode) %>%
+    distinct(COWname) %$%
+    paste(COWname, collapse = "; ") %>%
+    sprintf("COW countries missing from V-Dem: %s", .)
+
+vdem %<>% left_join(nmc, by = c("COWcode" = "ccode", "year"))
 
 ###
 # Maddison - Population & GDP
@@ -135,7 +142,9 @@ filter(ctable, gwid %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
     sprintf("UCDP countries missing from merged: %s", .)
 
 counts.df <- group_by(civil, gwno_loc, year) %>%
-    summarise(n_conflicts = n(), intensity = max(intensity_level))
+    summarise(n_conflicts = n(),
+              intensity = max(intensity_level),
+              type_of_conflict = max(type_of_conflict))
 
 # Also inherit conflict counts from parent country for newly
 # independent countries. We inherit based on the territory location of
@@ -147,18 +156,23 @@ inherited.df <- civil %>%
     mutate(territory_gwno = ctable$gwid[match(territory_name, ctable$country_name)]) %>%
     filter(!is.na(territory_gwno) & gwno_loc != territory_gwno) %>%
     group_by(territory_gwno, year) %>%
-    summarise(n_conflicts = n(), intensity = max(intensity_level)) %>%
+    summarise(n_conflicts = n(),
+              intensity = max(intensity_level),
+              type_of_conflict = max(type_of_conflict)) %>%
     rename(gwno_loc = territory_gwno)
 
 counts.df %<>% bind_rows(inherited.df) %>%
     group_by(gwno_loc, year) %>%
-    summarise(n_conflicts = sum(n_conflicts), intensity = max(intensity))
+    summarise(n_conflicts = sum(n_conflicts),
+              intensity = max(intensity),
+              type_of_conflict = max(type_of_conflict))
 
 neighbours.df <- readRDS("data/neighbours.rds") %>%
     inner_join(counts.df, by = c("neighbour_gwid" = "gwno_loc", "year")) %>%
     group_by(gwid, year) %>%
     summarise(n_neighbour_conflicts = sum(n_conflicts),
-              neighbour_intensity = max(intensity))
+              neighbour_intensity = max(intensity),
+              neighbour_type_conflict = max(type_of_conflict))
 
 full_counts.df <- full_join(counts.df, neighbours.df,
                             by = c("gwno_loc" = "gwid", "year"))
@@ -244,13 +258,20 @@ merged.df <- select(growup, -country_name) %>%
     ungroup %>%
     mutate(pop_density = 1000 * pop / area_sqkm)
 
-sprintf("After merging GROWup, %d countries and %d rows",
-        n_distinct(merged.df$country_id), nrow(merged.df))
+assert_cy(merged.df)
+
+breaks <- group_by(merged.df, country_name) %>%
+    filter(any(consecutive(year) != 1))
+
+if (nrow(breaks) > 0) {
+    distinct(breaks, country_name) %$%
+        paste(country_name, collapse = "; ") %>%
+        sprintf("Non-consecutive country-years: %s", .) %>%
+        stop(call. = F)
+}
+
+dbg_info(merged.df)
 
 ###
 # Save, save, save!
-dbg_info(merged.df)
 saveRDS(merged.df, "data/merged_data.rds")
-
-# Final assertion
-assert_cy(merged.df)
