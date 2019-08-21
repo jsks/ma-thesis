@@ -41,10 +41,10 @@ paper.pdf: paper.Rmd $(data)/gam_model.rds
 	Rscript -e "rmarkdown::render('paper.Rmd')"
 
 watch_sync:
-	fswatch -o . | xargs -n1 -I{} scripts/sync.sh
+	fswatch --event Updated --event Removed -roe .git . | xargs -n1 -I{} scripts/sync.sh
 
 watch_pdf:
-	fswatch -o paper.Rmd | xargs -n1 -I{} make paper.pdf
+	fswatch --event Updated -oe .git paper.Rmd | xargs -n1 -I{} make paper.pdf
 
 clean:
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
