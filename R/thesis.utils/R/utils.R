@@ -214,3 +214,57 @@ assert_cy <- function(df) {
             stop(call. = F)
     }
 }
+
+#' Summarise posterior distribution
+#'
+#' Calculates quantile intervals from a posterior distribution
+#' represented either by a NumericMatrix where rows represent
+#' posterior draws or extracted directly from a `stanfit` object.
+#'
+#' @param x NumericMatrix or `stanfit` object
+#' @param names Optional CharacterVector identifying the columns from
+#'     the stanfit matrix.
+#' @param probs Quantile probabilities to use when summarising `x`
+#'
+#' @examples
+#' m <- matrix(c(rnorm(100), rnorm(100, 10, 5)), 100, 2)
+#' post_summarise(m)
+#'
+#' @export
+post_summarise <- function(x, names = NULL,
+                           probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...)
+    UseMethod("post_summarise")
+
+#' @describeIn post_summarise Method for a NumericMatrix extracted
+#'     from `stanfit` object
+#' @export
+post_summarise.matrix <- function(x, names = NULL,
+                                  probs = c(0.025, 0.16, 0.5, 0.84, 0.975)) {
+    if (!is.null(names)) {
+        if (length(names) != ncol(x))
+            stop("Name length mismatch")
+
+        colnames(x) <- names
+    }
+
+    apply(x, 2, quantile, probs = probs) %>%
+        t %>%
+        as.data.frame %>%
+        dplyr::mutate(par = colnames(x)) %>%
+        rename(codelow95 = `2.5%`,
+               codelow68 = `16%`,
+               median = `50%`,
+               codehigh68 = `84%`,
+               codehigh95 = `97.5%`) %>%
+        select(par, everything())
+}
+
+#' @param pars Parameters to extract from the given stanfit object
+#'
+#' @describeIn post_summarise Method for stanfit objects
+#' @export
+post_summarise.stanfit <- function(x, names = NULL,
+                                   probs = c(0.025, 0.16, 0.5, 0.84, 0.975), pars) {
+    m <- as.matrix(x, pars = pars)
+    post_summarise.matrix(m, names, probs)
+}
