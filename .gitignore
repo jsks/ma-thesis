@@ -1,4 +1,6 @@
 .DS_Store
+refs/iisystem.dat
+refs/microstatessystem.dat
 
 **/*.pdf
 **/*.RData
@@ -16,6 +18,3 @@ plots/
 posteriors/
 
 packrat/lib*/
-
-refs/*
-!refs/COW\ country\ codes.csv
