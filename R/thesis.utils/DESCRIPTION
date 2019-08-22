@@ -5,12 +5,12 @@ Authors@R:
     person("Joshua", "Krusell",
            role = c("aut", "cre"),
            email = "js.shirin@gmail.com")
-Description: Collection of helper functions used in executive
-             constraints and civil conflict analysis.
+Description: Collection of helper functions used in analysis of
+             executive constraints and civil conflict analysis.
 License: MIT
 Encoding: UTF-8
 LazyData: true
-Imports: magrittr, dplyr, stats
+Imports: magrittr, dplyr, stats, utils
 Suggests: testthat
 RoxygenNote: 6.1.1
 Roxygen: list(markdown = TRUE)
