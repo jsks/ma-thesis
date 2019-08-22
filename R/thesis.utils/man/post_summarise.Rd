@@ -10,10 +10,10 @@ post_summarise(x, names = NULL, probs = c(0.025, 0.16, 0.5, 0.84,
   0.975), ...)
 
 \method{post_summarise}{matrix}(x, names = NULL, probs = c(0.025, 0.16,
-  0.5, 0.84, 0.975))
+  0.5, 0.84, 0.975), ...)
 
 \method{post_summarise}{stanfit}(x, names = NULL, probs = c(0.025,
-  0.16, 0.5, 0.84, 0.975), pars)
+  0.16, 0.5, 0.84, 0.975), pars = NULL, ...)
 }
 \arguments{
 \item{x}{NumericMatrix or \code{stanfit} object}
@@ -22,6 +22,8 @@ post_summarise(x, names = NULL, probs = c(0.025, 0.16, 0.5, 0.84,
 the stanfit matrix.}
 
 \item{probs}{Quantile probabilities to use when summarising \code{x}}
+
+\item{...}{Arguments passed to methods}
 
 \item{pars}{Parameters to extract from the given stanfit object}
 }

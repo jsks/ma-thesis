@@ -225,6 +225,7 @@ assert_cy <- function(df) {
 #' @param names Optional CharacterVector identifying the columns from
 #'     the stanfit matrix.
 #' @param probs Quantile probabilities to use when summarising `x`
+#' @param ... Arguments passed to methods
 #'
 #' @examples
 #' m <- matrix(c(rnorm(100), rnorm(100, 10, 5)), 100, 2)
@@ -239,24 +240,15 @@ post_summarise <- function(x, names = NULL,
 #'     from `stanfit` object
 #' @export
 post_summarise.matrix <- function(x, names = NULL,
-                                  probs = c(0.025, 0.16, 0.5, 0.84, 0.975)) {
-    if (!is.null(names)) {
-        if (length(names) != ncol(x))
-            stop("Name length mismatch")
+                                  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...) {
+    if (ncol(x) == 0)
+        stop("Expected matrix with at least one column")
 
-        colnames(x) <- names
-    }
-
-    apply(x, 2, quantile, probs = probs) %>%
+    df <- apply(x, 2, stats::quantile, probs = probs) %>%
         t %>%
-        as.data.frame %>%
-        dplyr::mutate(par = colnames(x)) %>%
-        rename(codelow95 = `2.5%`,
-               codelow68 = `16%`,
-               median = `50%`,
-               codehigh68 = `84%`,
-               codehigh95 = `97.5%`) %>%
-        select(par, everything())
+        as.data.frame
+
+    df$par <- if (is.null(names)) colnames(x) else names
 }
 
 #' @param pars Parameters to extract from the given stanfit object
@@ -264,7 +256,11 @@ post_summarise.matrix <- function(x, names = NULL,
 #' @describeIn post_summarise Method for stanfit objects
 #' @export
 post_summarise.stanfit <- function(x, names = NULL,
-                                   probs = c(0.025, 0.16, 0.5, 0.84, 0.975), pars) {
+                                   probs = c(0.025, 0.16, 0.5, 0.84, 0.975), pars = NULL,
+                                   ...) {
+    if (is.null(pars))
+        stop("Expected at least one parameter to extract from stanfit")
+
     m <- as.matrix(x, pars = pars)
     post_summarise.matrix(m, names, probs)
 }
