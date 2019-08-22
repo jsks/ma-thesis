@@ -264,3 +264,22 @@ post_summarise.stanfit <- function(x, names = NULL,
     m <- as.matrix(x, pars = pars)
     post_summarise.matrix(m, names, probs)
 }
+
+#' Partial application
+#'
+#' Produce a new function by binding the provided arguments to `fn`.
+#'
+#' @param fn Function
+#' @param ... Arguments to be applied
+#'
+#' @examples
+#' f <- partial(sum, na.rm = TRUE)
+#' f(c(1, NA, 2, 3))
+#'
+#' @export
+partial <- function(fn, ...) {
+    dots <- list(...)
+    force(fn)
+
+    function(...) do.call(fn, c(dots, list(...)))
+}

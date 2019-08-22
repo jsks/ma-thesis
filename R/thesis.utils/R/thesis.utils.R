@@ -8,6 +8,6 @@
 #' @docType package
 #' @name thesis.utils
 if (getRversion() >= "2.15.1")
-    utils::globalVariables(".")
+    utils::globalVariables(c(".", "country_name", "year", "n"))
 
 NULL
