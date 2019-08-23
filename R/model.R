@@ -91,13 +91,13 @@ stopifnot(!sapply(data, anyNA))
 
 init <- list(lg_est = data$lg, nonlg_est = data$nonlg)
 fit <- stan("stan/model.stan", data = data, seed = 101010,
+            iter = 4000, thin = 2, control = list(max_treedepth = 12),
             init = rep(list(init), 4), include = F,
-            control = list(max_treedepth = 15),
             pars = c("psi_unif", "sigma_unif", "lg_est", "nonlg_est",
                      "lg_missing", "nu", "raw_country", "raw_year",
                      "eta", "theta_state_capacity"))
 
-print(fit, pars = c("lambda", "psi", "beta"))
+print(fit, pars = c("gamma", "lambda", "psi", "alpha", "delta"))
 
 # Check model diagnostics. Would be great if we could simply do an
 # assertion with check_hmc_diagnostics...
