@@ -1,3 +1,12 @@
+/*
+ * Structural equation model comprising of a measurement portion
+ * estimating executive constraints as a latent factor of several
+ * V-Dem variables and a logistic regression predicting conflict
+ * onset.
+ *
+ * Invoked by the R script, `R/model.R`.
+ */
+
 data {
   // Factor model
   int J;
