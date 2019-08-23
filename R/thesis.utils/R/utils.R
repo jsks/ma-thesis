@@ -46,47 +46,22 @@ calc_peace_yrs <- function(years, incidence) {
     pmax(out, 0)
 }
 
-#' Normalize vector
+#' Collapse identical observations
 #'
-#' Simple wrapper around the default arguments to [scale()] which
-#' transforms a numeric matrix according to `(x - mean(x)) / sd(x)`.
-#'
-#' @param x NumericVector
-#'
-#' @examples
-#' normalize(1:10)
-#'
-#' @export
-normalize <- function(x) (x - mean(x, na.rm = T)) / stats::sd(x, na.rm = T)
-
-#' Create index
-#'
-#' Create a NumericVector of index positions from the unique
-#' categories of a given vector, `x`.
+#' Given a vector of any type, return the grouping indices for
+#' consecutively unchanged elements.
 #'
 #' @param x Vector of any type
-#' @param ... Additional arguments passed to [factor()]
-#'
-#' @details This is useful for one thing only: creating the input data
-#'     list for Stan.
-#'
-#'     For partially pooled intercepts in Stan we need the index
-#'     positions of each unique category associated with a given
-#'     observation.
-#'
-#'     For example, matching a random intercept for N years involves
-#'     estimating 1:N varying intercepts that need to be properly
-#'     indexed in the final regression. See `stan/model.stan` and
-#'     `R/model.R`.
-#'
-#' @return NumericVector indexing the original values of `x`.
 #'
 #' @examples
-#' years <- rep(1900:1905, times = 2)
-#' to_idx(years)
+#' collapse_changes(c(rep(1, 3), 4, rep(3, 2)))
 #'
 #' @export
-to_idx <- function(x, ...) factor(x, ...) %>% as.numeric
+collapse_changes <- function(x) {
+    v <- rle(x)
+    rep_v <- rep(v$values, v$lengths)
+    to_idx(rep_v, unique(rep_v))
+}
 
 #' Find consecutive elements
 #'
@@ -104,23 +79,6 @@ consecutive <- function(x) {
         warning("NA's in given vector")
 
     cumsum(c(T, diff(x) != 1))
-}
-
-#' Collapse identical observations
-#'
-#' Given a vector of any type, return the grouping indices for
-#' consecutively unchanged elements.
-#'
-#' @param x Vector of any type
-#'
-#' @examples
-#' collapse_changes(c(rep(1, 3), 4, rep(3, 2)))
-#'
-#' @export
-collapse_changes <- function(x) {
-    v <- rle(x)
-    rep_v <- rep(v$values, v$lengths)
-    to_idx(rep_v, unique(rep_v))
 }
 
 #' Explode a data frame!
@@ -172,98 +130,18 @@ explode <- function(df, from = NULL, to = NULL) {
     dplyr::bind_rows(ll)
 }
 
-#' Merging stats
+#' Normalize vector
 #'
-#' Extremely simply debugging function that does nothing more than
-#' simply print out the number of conflict episodes, countries, and
-#' country-years in a given data frame. Completely useless for any
-#' generic task.
+#' Simple wrapper around the default arguments to [scale()] which
+#' transforms a numeric matrix according to `(x - mean(x)) / sd(x)`.
 #'
-#' @param df DataFrame
-#'
-#' @export
-dbg_info <- function(df) {
-    msg <- sprintf("%d conflict episodes, %d countries, %s country-years",
-                   sum(df$lepisode_onset, na.rm = T),
-                   dplyr::n_distinct(df$country_name),
-                   prettyNum(nrow(df), big.mark = ","))
-
-    print(msg)
-}
-
-#' Determine duplicated country-years
-#'
-#' Assert that there are no duplicated country-years in the given
-#' DataFrame.
-#'
-#' @param df DataFrame
-#'
-#' @return If there are duplicated country-years in the given data
-#'     frame, `assert_cy` will throw an error listing the offending
-#'     countries. Otherwise, `NULL` is returned.
-#'
-#' @export
-assert_cy <- function(df) {
-    counts <- dplyr::count(df, country_name, year) %>%
-        dplyr::filter(n > 1)
-
-    if (nrow(counts) > 0) {
-        dplyr::distinct(counts, country_name) %$%
-            paste(country_name, collapse = "; ") %>%
-            sprintf("Duplicated country-years: %s", .) %>%
-            stop(call. = F)
-    }
-}
-
-#' Summarise posterior distribution
-#'
-#' Calculates quantile intervals from a posterior distribution
-#' represented either by a NumericMatrix where rows represent
-#' posterior draws or extracted directly from a `stanfit` object.
-#'
-#' @param x NumericMatrix or `stanfit` object
-#' @param names Optional CharacterVector identifying the columns from
-#'     the stanfit matrix.
-#' @param probs Quantile probabilities to use when summarising `x`
-#' @param ... Arguments passed to methods
+#' @param x NumericVector
 #'
 #' @examples
-#' m <- matrix(c(rnorm(100), rnorm(100, 10, 5)), 100, 2)
-#' post_summarise(m)
+#' normalize(1:10)
 #'
 #' @export
-post_summarise <- function(x, names = NULL,
-                           probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...)
-    UseMethod("post_summarise")
-
-#' @describeIn post_summarise Method for a NumericMatrix extracted
-#'     from `stanfit` object
-#' @export
-post_summarise.matrix <- function(x, names = NULL,
-                                  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...) {
-    if (ncol(x) == 0)
-        stop("Expected matrix with at least one column")
-
-    df <- apply(x, 2, stats::quantile, probs = probs) %>%
-        t %>%
-        as.data.frame
-
-    df$par <- if (is.null(names)) colnames(x) else names
-}
-
-#' @param pars Parameters to extract from the given stanfit object
-#'
-#' @describeIn post_summarise Method for stanfit objects
-#' @export
-post_summarise.stanfit <- function(x, names = NULL,
-                                   probs = c(0.025, 0.16, 0.5, 0.84, 0.975), pars = NULL,
-                                   ...) {
-    if (is.null(pars))
-        stop("Expected at least one parameter to extract from stanfit")
-
-    m <- as.matrix(x, pars = pars)
-    post_summarise.matrix(m, names, probs)
-}
+normalize <- function(x) (x - mean(x, na.rm = T)) / stats::sd(x, na.rm = T)
 
 #' Partial application
 #'
@@ -283,3 +161,32 @@ partial <- function(fn, ...) {
 
     function(...) do.call(fn, c(dots, list(...)))
 }
+
+#' Create index
+#'
+#' Create a NumericVector of index positions from the unique
+#' categories of a given vector, `x`.
+#'
+#' @param x Vector of any type
+#' @param ... Additional arguments passed to [factor()]
+#'
+#' @details This is useful for one thing only: creating the input data
+#'     list for Stan.
+#'
+#'     For partially pooled intercepts in Stan we need the index
+#'     positions of each unique category associated with a given
+#'     observation.
+#'
+#'     For example, matching a random intercept for N years involves
+#'     estimating 1:N varying intercepts that need to be properly
+#'     indexed in the final regression. See `stan/model.stan` and
+#'     `R/model.R`.
+#'
+#' @return NumericVector indexing the original values of `x`.
+#'
+#' @examples
+#' years <- rep(1900:1905, times = 2)
+#' to_idx(years)
+#'
+#' @export
+to_idx <- function(x, ...) factor(x, ...) %>% as.numeric
