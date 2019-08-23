@@ -105,5 +105,10 @@ test_that("explode", {
                       sequence = c(1900, 1905, 1906),
                       stringsAsFactors = F)
     expect_equal(explode(x, x$from, x$to), out)
+})
 
+test_that("partial", {
+    f <- partial(sum, na.rm = T)
+    expect_equal(f(1, NA, 2, -1), 2)
+    expect_error(partial(2, 2)(1))
 })
