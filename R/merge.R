@@ -22,11 +22,11 @@ sprintf("Started with %d countries and %d rows from V-Dem",
 
 ###
 # COW - CINC
-nmc <- read.csv("data/raw/NMC_5_0/NMC_5_0.csv", stringsAsFactors = F) %>%
+nmc <- fread("data/raw/NMC_5_0/NMC_5_0.csv", data.table = F) %>%
     filter(year >= 1945)
 
 # Why are there duplicates in this file?!
-cow <- read.csv("refs/COW country codes.csv", stringsAsFactors = F) %>%
+cow <- fread("refs/COW country codes.csv", data.table = F) %>%
     distinct(CCode, StateNme)
 
 nmc %<>% left_join(cow, by = c("ccode" = "CCode")) %>%
