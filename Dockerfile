@@ -12,6 +12,7 @@ RUN apt-get update \
 
 RUN mkdir -p /root/.R
 COPY .R /root/.R
+COPY .Rprofile /root/.Rprofile
 
 RUN install2.r -e data.table dplyr loo readxl rmarkdown rstan sf testthat tidyr
 
