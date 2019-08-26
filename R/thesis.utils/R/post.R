@@ -30,11 +30,10 @@ post_summarise.matrix <- function(x, names = NULL,
     if (anyNA(x))
         stop("NA's in posterior matrix")
 
-    df <- apply(x, 2, stats::quantile, probs = probs) %>%
-        t %>%
-        as.data.frame
-
+    df <- apply(x, 2, stats::quantile, probs = probs) %>% t %>% as.data.frame
+    rownames(df) <- NULL
     df$par <- if (is.null(names)) colnames(x) else names
+
     df
 }
 
