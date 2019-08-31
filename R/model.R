@@ -7,59 +7,27 @@ suppressMessages(library(dplyr))
 suppressMessages(library(rstan))
 suppressMessages(library(thesis.utils))
 
+options(warn = 2)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = T)
 
 dir.create("posteriors/summary", recursive = T, showWarnings = F)
-
 load("data/prepped_data.RData")
-
-###
-# Manifest vars for exec_constraints
-lg_vars <- grep("^v2lg", constraint_vars, value = T)
-nonlg_vars <- grep("^v2[^l]", constraint_vars, value = T)
-
-prep <- function(df, vars) {
-    m <- select(df, matches(paste0(vars, collapse = "|"))) %>%
-        data.matrix
-
-    obs <- m[, vars]
-    se <- m[, paste0(vars, "_sd")]
-
-    for (i in 1:ncol(obs)) {
-        se[, i] <- se[, i] / sd(obs[, i])
-        obs[, i] <- normalize(obs[, i])
-    }
-
-    list(obs = obs, se = se)
-}
-
-lg_present <- constraints.df$v2lgbicam == 1
-
-nonlg_mm <- prep(constraints.df, nonlg_vars)
-lg_mm <- filter(constraints.df, v2lgbicam == 1) %>%
-    prep(lg_vars)
-
-stopifnot(nrow(nonlg_mm$obs) == nrow(nonlg_mm$se),
-          ncol(nonlg_mm$obs) == ncol(nonlg_mm$se))
-stopifnot(nrow(lg_mm$obs) == nrow(lg_mm$se),
-          ncol(lg_mm$obs) == ncol(lg_mm$se))
 
 ###
 # Control variables
 X <- select(final.df, gdpgro, pop_density, meanelev, rlvt_groups_count,
             neighbour_conflict, peace_yrs) %>%
-    mutate(gdpgro = normalize(gdpgro),
-           pop_density = log(pop_density) %>% normalize,
-           meanelev = log(meanelev) %>% normalize,
-           peace_yrs = log(peace_yrs + 1) %>% normalize) %>%
+    na.omit %>%
     data.matrix
+
+lg_present <- lgbicam == 1
 
 ###
 # Final stan input list
 data <- list(
     # Latent Factor Model
-    J = nrow(constraints.df),
+    J = nrow(nonlg_mm$obs),
     J_missing = sum(!lg_present),
     J_obs = sum(lg_present),
     missing_idx = which(!lg_present),
@@ -71,13 +39,13 @@ data <- list(
     nonlg = nonlg_mm$obs,
     nonlg_se = nonlg_mm$se,
     lgotovst_idx = which(colnames(lg_mm$obs) == "v2lgotovst"),
-    lgbicam = constraints.df$v2lgbicam,
+    lgbicam = lgbicam,
 
     # Onset regression
     N = nrow(X),
     M = ncol(X),
     X = X,
-    state_capacity = log(final.df$cgdppc) %>% normalize,
+    state_capacity = final.df$cgdppc,
     exec_idx = final.df$reduced_idx,
     n_countries = n_distinct(final.df$country_name),
     n_years = n_distinct(final.df$year),
@@ -90,29 +58,20 @@ str(data)
 stopifnot(!sapply(data, anyNA))
 
 init <- list(lg_est = data$lg, nonlg_est = data$nonlg)
-fit <- stan("stan/model.stan", data = data, seed = 101010,
-            iter = 4000, thin = 2, control = list(max_treedepth = 12),
-            init = rep(list(init), 4), include = F,
-            pars = c("psi_unif", "sigma_unif", "lg_est", "nonlg_est",
-                     "lg_missing", "nu", "raw_country", "raw_year",
-                     "eta", "theta_state_capacity"))
+tryCatch({
+    fit <- stan("stan/model.stan", data = data, seed = 101010,
+                iter = 4000, thin = 2, control = list(max_treedepth = 12),
+                init = rep(list(init), 4), include = F,
+                pars = c("psi_unif", "sigma_unif", "lg_est", "nonlg_est",
+                         "lg_missing", "nu", "raw_country", "raw_year",
+                         "eta", "theta_state_capacity"))
+}, warning = function(w) {
+    saveRDS(fit, "posteriors/fit_err.rds")
+    stop(w)
+})
 
 print(fit, pars = c("gamma", "lambda", "psi", "alpha", "delta"))
-
-# Check model diagnostics. Would be great if we could simply do an
-# assertion with check_hmc_diagnostics...
-n_divergent <- get_num_divergent(fit)
-n_max_treedepth <- get_num_max_treedepth(fit)
-n_bfmi <- get_low_bfmi_chains(fit) %>% length
-rhat_prop <- mean(summary(fit)$summary[, "Rhat"] < 1.01)
-
-if (n_divergent > 0 | n_max_treedepth > 0 | n_bfmi > 0 | rhat_prop < .99) {
-    print("fail :(")
-    saveRDS(fit, "posteriors/fit_err.rds")
-} else {
-    print("Model finished!")
-    saveRDS(fit, "posteriors/fit.rds")
-}
+saveRDS(fit, "posteriors/fit.rds")
 
 ###
 # Summarise model output. Start with coefficients and variance
