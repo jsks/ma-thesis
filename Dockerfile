@@ -16,7 +16,8 @@ RUN mkdir -p /root/.R
 COPY .R /root/.R
 COPY .Rprofile /root/.Rprofile
 
-RUN install2.r -e data.table dplyr loo readxl rmarkdown rstan sf testthat tidyr
+RUN install2.r -e data.table dplyr loo readxl rmarkdown rstan sf testthat tidyr \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 RUN mkdir -p /proj/thesis.utils/
 COPY R/thesis.utils /proj/thesis.utils/
