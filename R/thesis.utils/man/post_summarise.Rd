@@ -6,20 +6,25 @@
 \alias{post_summarise.stanfit}
 \title{Summarise posterior distribution}
 \usage{
-post_summarise(x, names = NULL, probs = c(0.025, 0.16, 0.5, 0.84,
-  0.975), ...)
+post_summarise(x, par.names = NULL, col.names = NULL,
+  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...)
 
-\method{post_summarise}{matrix}(x, names = NULL, probs = c(0.025, 0.16,
-  0.5, 0.84, 0.975), ...)
+\method{post_summarise}{matrix}(x, par.names = NULL, col.names = NULL,
+  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...)
 
-\method{post_summarise}{stanfit}(x, names = NULL, probs = c(0.025,
-  0.16, 0.5, 0.84, 0.975), pars = NULL, ...)
+\method{post_summarise}{stanfit}(x, par.names = NULL, col.names = NULL,
+  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), pars = NULL, ...)
 }
 \arguments{
 \item{x}{NumericMatrix or \code{stanfit} object}
 
-\item{names}{Optional CharacterVector identifying the columns from
+\item{par.names}{Optional CharacterVector identifying the columns from
 the stanfit matrix.}
+
+\item{col.names}{Optional named CharacterVector replacing the
+default column names specified by the vector names with the
+given vector elements. Note: default column names are according
+to \code{\link[=quantile]{quantile()}}, \emph{i.e.} as percentage intervals.}
 
 \item{probs}{Quantile probabilities to use when summarising \code{x}}
 
@@ -47,5 +52,8 @@ from \code{stanfit} object
 \examples{
 m <- matrix(c(rnorm(100), rnorm(100, 10, 5)), 100, 2)
 post_summarise(m)
+
+post_summarise(m, probs = c(0.2, 0.8),
+               col.names = c(`20\%` = "codelow", `80\%` = "codehigh"))
 
 }
