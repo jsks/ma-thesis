@@ -1,66 +1,295 @@
 ---
-title: Executive Constraints and Civil Conflict
+title: Executive Constraints and Civil Conflict Onset
 author: J.L.A. Krusell
+date: \today
+documentclass: scrartcl
+fontsize: 11pt
+linestretch: 1.5
+header-includes:
+    - \usepackage{etoolbox}
+    - \usepackage{lualatex-math}
+    - \usepackage{unicode-math}
+    - \appto\Shaded{\singlespacing}
 output:
     pdf_document:
+        latex_engine: lualatex
+        toc: true
+        toc_depth: 2
         pandoc_args: ["--syntax-definition", "assets/stan.xml",
                       "--highlight-style", "kate"]
 ---
 
-```{r, echo = F}
+```{r include = F, results = "hide"}
+knitr::opts_chunk$set(echo = F, eval = F)
+
+library(dplyr)
+library(precrec)
+library(scales)
+library(thesis.utils)
+
 ```
 
+## Research Design
 
-\[ y_t \sim \mathsf{Bernoulli}(\pi_t) \]
-\[ \pi_t = F(\alpha + \beta \theta_{t-1} + \delta_k + GP(t)) \]
-\[ \delta_k \sim \mathsf{Normal}(0, \sigma) \]
-\[ \sigma \sim \mathsf{HalfCauchy}(0, 1) \]
-\[ x_{jt}^\ast \sim \mathsf{Normal}(\gamma_j + \lambda_j \theta_t, \psi_j) \]
-\[ x_{j}^{obs} \sim \mathsf{Normal}(x_{j}^\ast, \tau_{j}^{obs}) \]
-\[ \theta \sim \mathsf{Normal}(0, 1) \]
-\[ \lambda \sim \mathsf{Lognormal}(0, 1) \]
-\[ \gamma \sim \mathsf{Normal}(0, 5) \]
-\[ \psi \sim \mathsf{HalfCauchy}(0, 1) \]
+To examine the relationship between civil conflict onset and executive
+constraints, I construct a dataset of relevant variables and run a
+bayesian multilevel logistic regression. In what follows, I first
+describe the independent and dependentvariables, including the
+operationalizations and data sources, and then delve into the
+regression model before finally presenting the results.
 
-We assume local item independence such that the residual variances, $\psi$, are uncorrelated.
+### Civil Conflict
 
-- v2lginvstp - Legislature investigates in practice
-- v2lgfunds - Legislature controls own resources
-- v2lgqstexp - Legislature questions officials in practice
-- v2lgoppart - Legislature opposition parties able to exercise oversight
+The dependent variable, *civil conflict onset*, was taken from the
+UCDP/PRIO Armed Conflict Dataset v19.1 (Cite) covering 1946-2018
+where intra-state conflict is defined as a violent contest over a
+government or territory between a state and non-state actor with a
+minimum threshold of 25 battle deaths within a single country-year.
+The data was merged based on country location for conflicts labeled as
+internal or internationalized internal --- *i.e.* where
+`type_of_conflict` was either 3 or 4. Multiple conflicts within the
+same years were aggregated to form a binary variable coded as 1 to
+denote the onset of at least one new civil conflict and 0 for all
+other years, including years of ongoing conflict.^[Extrasystemic
+conflicts, *i.e.* imperial or colonial conflicts, were excluded
+largely due to lack of data. Ideally, such conflicts would be merged
+based on the territory location of the conflict, however, for
+colonies, for example, there is very little easily available economic
+data and it would be undesirable to use the data for the colonizing
+power due to the often wide discrepancies in development within
+colonial empires. TODO: maybe a blurb on theory?]
 
-- v2juhcind - High court independence
-- v2juncind - Lower court independence
-- v2juhccomp - Compliance with higher court
-- v2jucomp - Compliance with judiciary
+The primary onset dates were determined according to UCDP/PRIO's
+episodic definition where a new onset is coded for the same
+incompatibility when there is at least a one year pause in the
+fighting or drop below the battle death threshold. The primary
+rationale is that civil conflicts often go through several distinct
+phases of fighting which can make it difficult to accurately code the
+end of a conflict. The episodic definition avoids potentially
+conflating briefs lulls involving the same rebel groups and leaders
+versus the re-emergence of previously long dormant
+conflicts. Furthermore, in both scenarios, the theory linking
+executive constraints to the incentives for political violence should
+still hold (TODO: possible expand here).
 
-- v2exrescon - Executive respects constitution
-- v2lgotovst - Executive oversight
+That said, because of the potential sensitivity of results to changing
+conflict definitions (cite Sambanis), all analyses were also run using
+only unique onsets.^[Likewise, appendix ? presents results
+using a higher threshold for battle deaths. The end results stay the
+same TODO]
 
+### Executive Constraints
+
+(TODO: Probably cite Sklar and/or O'Donnell here for more theoretical
+justification of operationalization)
+
+To measure formal executive constraints I use data from the Varieties
+of Democracy (V-Dem) dataset v9.0 (cite V-Dem). V-Dem is a
+cross-national time series dataset providing multidimensional,
+disaggregated data on democracy and political institutions for over
+200 countries with an overall year coverage from 1789 until 2018. The
+principal data is drawn from expert coded surveys involving a global
+network of over 3000 coders, mostly academics as well as professionals
+working in policy related fields (cite Methodology doc). Individual
+ratings are aggregated into latent variable estimates using
+hierarchical ordinal item response theory (IRT) models taking into
+account rater reliability and varying rater thresholds (cite Pemstein
+et al). ^[Thresholds relate to how the continuous latent trait for a
+given variable is mapped on to the ordinal answer categories presented
+on the survey. Due to differential item functioning, experts may
+perceive the magnitude of difference between answer items
+differently. For example, for the variable *v2elvotbuy*, election vote
+buying, experts may vary in how they interpret the difference between
+a 2 (Restricted Vote Buying) and a 3 (Almost No Vote Buying). These
+two concepts, rater reliability and varying rater thresholds,
+correspond respectively to the *discrimination* and *difficulty*
+parameters in classical IRT models.] The result is over 220 lower
+level indicators that are also combined through various aggregation
+techniques to produce over 80 mid/high-level indices. Compared to
+datasets such as Polity IV (cite), which has traditionally been
+used in most analyses of civil conflict, V-Dem provides much more fine
+grained, nuanced data, and most importantly, includes measures of
+uncertainty propagated from the IRT models. This latter point is
+crucial since ignoring measurement error, especially in models with
+noisy data and small effect sizes as is often the case in conflict
+studies, can bias estimates and lead to overconfident results (cite
+Treier & Jackman; Kyle).
+
+For the purposes of this paper, I re-estimate Lührmann *et al*'s
+horizontal accountability index (*v2x_horacc*) in V-Dem with the
+addition of several variables (cite). The *v2x_horacc* index aims to
+capture the extent to which the executive is *de facto* constrained by
+other government institutions --- more specifically, the legislature,
+judiciary, constitution, and independent investigative bodies (cite pg
+61) --- rather than the *de jure* powers of any one institutions
+vis-à-vis the executive. It is estimated as a latent variable using a
+structural equation model, thereby avoiding the arbitrary weighting of
+linear additive indices.^[A theoretical argument could be made that
+the oversight offered by each institution is a necessary condition and
+that any index should therefore be additive with equal
+weighting. However, this would be a normative measure capturing the
+degree to which a country-year fulfills an ideal concept, rather than
+measuring how constrained an executive actually is in practice.]
+
+For the two principal institutions, the legislature and the judiciary,
+to serve as effective constraints there needs to be both a *capacity*
+and *willingness* to oversee the executive. To better capture the
+former dimension, I include two additional legislative variables. In
+addition to *v2lgqstexp*, the extent to which the legislature
+questions executive branch officials, and *v2lginvstp*, the extent to
+which the legislature investigates in practice, I add *v2lgfunds*, the
+extent to which the legislature controls its own resources, and
+*v2lgoppart*, the extent to which opposition parties are able to
+exercise oversight. The remaining manifest variables are the
+same. Namely, for the judicial component: *v2juhcind*, high court
+independence; *v2juncind*, lower court independence; *v2juhccomp*, the
+degree to which the government complies with high court decisions;
+*v2jucomp*, the degree to which the government complies with lower
+court decisions.
+
+
+
+v2exrescon
+v2lgotovst
+
+How measured? FA model, include formula
+
+Measurement error (cite?)
+
+Special case for legislative variables
+
+Imputation for v2lgotovst
+
+DAG
+
+\[ x_{jt}^\ast \sim \mathsf{Normal}(\lambda_j \theta_t, \psi_t) \]
+\[ x_{jt}^{obs} \sim \mathsf{Normal}(x_{jt}^\ast, \tau_j^{obs}) \]
+
+### Controls
+
+- state capacity (GDP per capita)
+
+- gdp growth
+
+- population density
+
+- mean elevation
+
+- relevant group counts
+
+- neighbouring conflict
+
+- ongoing conflict
+
+- peace years
+
+- varying intercepts
+
+What's not included (political instability) and why
+
+### Model
+
+I model civil conflict onset as a bayesian multilevel regression where
+onset is a function of a set of predictors, including executive
+constraints and an array of control variables, together with several
+grouping factors included as partially pooled varying intercepts. The
+units of analysis are all independent country-years from 1946 until
+2016, as determined by data availability, with *n* countries indexed
+by $i = 1 \dotsc n$ and *m* years indexed by $t = 1 \dotsc m$. The
+dependent variable, conflict onset, is a Bernoulli distributed binary
+variable where 1 denotes the onset of at least one new civil conflict
+in a given country-year. The chosen link function transforming the
+linear regression output into the probability of conflict onset,
+$\pi_{it}$, is the inverse logistic such that $\pi_{it} \in [0, 1]$.
+^[Technically, the inverse logistic transforms values to the open
+interval, $(0, 1)$, but because of overflow/underflow in computer
+calculations due to floating point math the endpoints can be
+observed.]
+
+The full regression specification is then as follows:
+
+\[ y_{it} \sim \mathsf{Bernoulli}(\pi_{it}) \]
+\[ \pi_{it} = \mathsf{logit^{-1}}(\alpha + X_{it-1} \beta + \sum_{k=1}^K \delta^k_{j_{it}}) \]
+
+where **X** is a single row matrix of predictors, $\beta$ a vector of
+regression slopes, and $\delta^k$ the set of varying intercepts for
+*K* grouping factors indexed by $j_k$. To account for time
+endogeneity, all predictors are lagged by one year. They are also
+standardized by subtracting the mean and dividing by the standard
+deviation for each variable to aid in computation as well as
+comparison of the final $\beta$ estimates (cite Gelman maybe?).
+
+I place weakly informative priors on all parameters to allow the
+posterior estimates to be largely determined by the observed data
+while avoiding the more pathological values and hard constraints that
+can arise from uninformative priors (cite Stan). For the slopes and
+population intercept, given that the input data has been standardized,
+this translates into
+
+\[ \alpha \sim \mathsf{Normal}(0, 5) \]
+\[ \beta \sim \mathsf{Normal}(0, 2.5) \]
+
+Finally, for the varying intercepts modeling group-specific
+variability, I use hierarchical priors that provide a regularizing
+effect against overfitting (cite Gelman and Hill - Multilevel
+Regression).
+
+\[ \delta^k \sim \mathsf{Normal}(0, \sigma^k) \]
+\[ \sigma^k \sim \mathsf{HalfCauchy}(0, 1) \]
 
 ## Analysis
 
-```{r, echo = F}
-suppressMessages(library(bayesplot))
-suppressMessages(library(rstan))
+Estimated using HMC by stan (footnote number of iterations, burnin, and convergence)
 
-fit <- readRDS("posteriors/fit.rds")
-beta <- as.matrix(fit, pars = "beta")
+
+```{r}
+beta <- readRDS("posteriors/summary/beta.rds")
+plot_pars(beta)
 ```
 
-```{r, echo = F}
-color_scheme_set("green")
-mcmc_intervals(beta, point_est = "median") +
-    vline_0(size = 0.25, linetype = 2, color = "violet") +
-    ggplot2::scale_y_discrete(labels = c("Executive Constraints",
-                                "State Capacity",
-                                "Executive Constraints:State Capacity",
-                                "GDP per Capita Growth",
-                                "Population Density",
-                                "Mean Elevation",
-                                "Relevant Ethnic Groups",
-                                "Neighbouring Conflict",
-                                "Peace Years Logged"))
+```{r}
+input.df <- readRDS("posteriors/input_data.rds")
+p_hat <- readRDS("posteriors/summary/predicted_probs.rds")
+
+plot_dens(p_hat, groups = input.df$lepisode_onset)
+```
+
+
+```{r}
+p <- apply(p_hat, 2, median)
+x <- evalmod(scores = p, labels = input.df$lepisode_onset)
+plot(x, curvetype = c("ROC", "PRC"))
+```
+
+```{r eval = F}
+# Interaction plot
+intercept <- readRDS("posteriors/summary/intercept.rds")
+theta <- readRDS("posteriors/summary/theta.rds") %>% apply(2, median) %>% sort
+
+state <- quantile(input.df$cgdppc, probs = c(0.2, .5, 0.8))
+
+f <- function(x, y) {
+    with(input.df, intercept + beta[, 1] * x + beta[, 2] * y +
+                   beta[, 3] * x * y + beta[, 4] * mean(peace_yrs) +
+                   beta[, 5] * mean(gdpgro) + beta[, 6] * mean(pop_density)  +
+                   beta[, 7] * mean(meanelev) + beta[, 8] * mean(rlvt_groups_count) +
+                   beta[, 9] * 1 + beta[, 10] * 0)
+}
+
+par(mfrow = c(1, 3))
+for (y in state) {
+    print(y)
+    p <- boot::inv.logit(sapply(theta, f, y)) * 100
+
+    m <- apply(p, 2, median)
+    pi <- apply(p, 2, quantile, probs = c(0.2, 0.8)) %>% t
+
+    plot(theta, m, type = "l", ylim = c(min(pi[, 1]), max(pi[, 2])),
+         xlab = "Executive Constraints", ylab = "Predicted Probability")
+    lines(theta, pi[, 1], lty = 2)
+    lines(theta, pi[, 2], lty = 2)
+}
+
 
 ```
 
@@ -70,25 +299,5 @@ mcmc_intervals(beta, point_est = "median") +
 
 ## Stan Code
 
-```{stan, code=readLines("stan/model.stan"), eval=FALSE, output.var="x"}
-```
-\newpage
-
-## GAM Model
-
-```{R, echo = F, results = "asis"}
-ml <- readRDS("data/gam_model.rds")
-itsadug::gamtabs(ml, caption = "GAM Model")
-```
-
-```{R, echo = F}
-p <- predict(ml, type = "response")
-
-plot(density(p[ml$model$lepisode_onset == 0]), col = "lightblue",
-     main = "Predicted Probability Densities")
-lines(density(p[ml$model$lepisode_onset == 1]), col = "indianred")
-```
-
-```{R, echo = F}
-caTools::colAUC(p, ml$model$lepisode_onset, plotROC = T)
+```{stan, code = readLines("stan/model.stan"), eval = FALSE, output.var = "x", echo = T}
 ```

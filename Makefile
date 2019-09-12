@@ -42,8 +42,11 @@ $(post)/fa.rds: $(data)/prepped_data.RData
 
 fa: $(post)/fa.rds
 
-paper.pdf: paper.Rmd $(data)/gam_model.rds
+paper.pdf: paper.Rmd assets/stan.xml
 	Rscript -e "rmarkdown::render('paper.Rmd')"
+
+paper.html: paper.Rmd assets/stan.xml
+	Rscript -e "rmarkdown::render('paper.Rmd', output_format = 'html_document')"
 
 watch_sync:
 	fswatch --event Updated --event Removed -roe .git . | xargs -n1 -I{} scripts/sync.sh
@@ -53,4 +56,5 @@ watch_pdf:
 
 clean:
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
-		$(data)/*.rds $(data)/*.RData
+		$(data)/*.rds $(data)/*.RData \
+		paper.html paper.pdf
