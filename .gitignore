@@ -2,6 +2,7 @@
 refs/iisystem.dat
 refs/microstatessystem.dat
 
+**/*.html
 **/*.pdf
 **/*.RData
 **/*.rds
