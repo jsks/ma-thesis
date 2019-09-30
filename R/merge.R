@@ -26,7 +26,7 @@ nmc <- fread("data/raw/NMC_5_0/NMC_5_0.csv", data.table = F) %>%
     filter(year >= 1945)
 
 # Why are there duplicates in this file?!
-cow <- fread("refs/COW country codes.csv", data.table = F) %>%
+cow <- fread("refs/cow_countries.csv", data.table = F) %>%
     distinct(CCode, StateNme)
 
 nmc %<>% left_join(cow, by = c("ccode" = "CCode")) %>%
