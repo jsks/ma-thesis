@@ -1,3 +1,5 @@
+MAKEFLAGS = -j4
+
 CFLAGS += -march=x86-64 -mtune=generic -O3 -pipe
 CXXFLAGS += -march=x86-64 -mtune=generic -O3 -pipe
 CXX98FLAGS += -march=x86-64 -mtune=generic -O3 -pipe
@@ -8,6 +10,6 @@ CXX17FLAGS += -march=x86-64 -mtune=generic -O3 -pipe
 SHLIB_CXXLDFLAGS = -Wl,-S -shared
 SHLIB_CXX11LDFLAGS = -Wl,-S -shared
 SHLIB_CXX14LDFLAGS = -Wl,-S -shared
-SHLIB_CXX17LDFLAGS = -Wl,-S -shared
+cHLIB_CXX17LDFLAGS = -Wl,-S -shared
 SHLIB_FCLDFLAGS = -Wl,-S -shared
 SHLIB_LDFLAGS = -Wl,-S -shared

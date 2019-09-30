@@ -29,4 +29,6 @@ RUN R CMD build thesis.utils \
     && R CMD INSTALL thesis.utils_*.tar.gz \
     && rm -rf thesis.utils*
 
+# Compile stan models with "-march=native"
+RUN sed -i -r 's/(x86-64|generic)/native/g' /root/.R/Makevars
 CMD ["R"]
