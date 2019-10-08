@@ -7,21 +7,29 @@ suppressMessages(library(dplyr))
 suppressMessages(library(rstan))
 suppressMessages(library(thesis.utils))
 
-options(warn = 2)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = T)
 
 dir.create("posteriors/summary", recursive = T, showWarnings = F)
 load("data/prepped_data.RData")
 
+final.df %<>%
+    select(country_name, year, lepisode_onset, peace_yrs, reduced_idx,
+           cgdppc, gdpgro, pop_density, meanelev, rlvt_groups_count,
+           neighbour_conflict, peace_yrs, ongoing) %>%
+    na.omit
+dbg_info(final.df)
+
+saveRDS(final.df, "posteriors/input_data.rds")
+
 ###
 # Control variables
-X <- select(final.df, gdpgro, pop_density, meanelev, rlvt_groups_count,
-            neighbour_conflict, peace_yrs) %>%
-    na.omit %>%
+X <- final.df %>%
+    select(-country_name, -year, -lepisode_onset, -reduced_idx, -cgdppc) %>%
     data.matrix
 
 lg_present <- lgbicam == 1
+print(colnames(lg_mm$obs))
 
 ###
 # Final stan input list
@@ -58,41 +66,27 @@ str(data)
 stopifnot(!sapply(data, anyNA))
 
 init <- list(lg_est = data$lg, nonlg_est = data$nonlg)
-tryCatch({
-    fit <- stan("stan/model.stan", data = data, seed = 101010,
-                iter = 4000, thin = 2, control = list(max_treedepth = 12),
-                init = rep(list(init), 4), include = F,
-                pars = c("psi_unif", "sigma_unif", "lg_est", "nonlg_est",
-                         "lg_missing", "nu", "raw_country", "raw_year",
-                         "eta", "theta_state_capacity"))
-}, warning = function(w) {
-    saveRDS(fit, "posteriors/fit_err.rds")
-    stop(w)
-})
+fit <- stan("stan/model.stan", data = data, seed = 101010,
+            iter = 4000, thin = 2, control = list(max_treedepth = 12),
+            init = rep(list(init), 4), include = F,
+            pars = c("psi_unif", "sigma_unif", "lg_est", "nonlg_est",
+                     "lg_missing", "nu", "raw_country", "raw_year",
+                     "eta", "theta_state_capacity"))
 
 print(fit, pars = c("gamma", "lambda", "psi", "alpha", "delta"))
 saveRDS(fit, "posteriors/fit.rds")
 
 ###
-# Summarise model output. Start with coefficients and variance
-# parameters from factor model.
-post_summarise(fit, pars = c("lambda", "psi", "alpha", "delta")) %>%
-    saveRDS("posteriors/summary/fa_coef.rds")
+# Summarise model output. Keep only 4 decimal places to save memory
+# when compiling our Rmarkdown manuscript and pick a better
+# compression algorithm for file size.
+take <- . %>% as.matrix(fit, pars = .) %>% round(4)
 
-# Exec constraint estimates
-post_summarise(fit, pars = "theta") %>%
-    mutate(country_name = constraints.df$country_name,
-           year = constraints.df$year) %>%
-    saveRDS("posteriors/summary/theta.rds")
+take("theta") %>% saveRDS("posteriors/summary/theta.rds", compress = "bzip2")
+take("p_hat") %>% saveRDS("posteriors/summary/predicted_probs.rds", compress = "bzip2")
 
-post_summarise(fit, pars = "p_hat") %>%
-    mutate(country_name = final.df$country_name,
-           year = final.df$year) %>%
-    saveRDS("posteriors/summary/predicted_probs.rds")
+beta <- take("beta")
+colnames(beta) <- c("exec_constraints", "state_capacity", "exec*state", colnames(X))
+saveRDS(beta, "posteriors/summary/beta.rds", compress = "bzip2")
 
-# Conflict regression coefficients, keep these standardized
-coefficient_names <- c("exec_constraints", "state_capacity",
-                       "exec*state", colnames(X))
-beta <- post_summarise(fit, pars = "beta", names = coefficient_names)
-
-saveRDS(beta, "posteriors/summary/beta.rds")
+take("intercept") %>% saveRDS("posteriors/summary/intercept.rds")

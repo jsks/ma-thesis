@@ -3,7 +3,7 @@ raw       := $(data)/raw
 post      := posteriors
 
 all: paper.pdf
-.PHONY: clean html pdf watch_sync watch_pdf
+.PHONY: clean watch_sync watch_pdf
 
 clean:
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
