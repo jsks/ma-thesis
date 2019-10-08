@@ -132,6 +132,7 @@ acd <- readRDS("data/raw/UcdpPrioConflict_v19_1.rds")
 
 # Civil conflict + extrasystemic (colonial/imperial wars)
 # conflict_id = 418 is the United States vs Al Qaeda starting in 2001
+# --- why isn't extrasystemic??
 civil <- filter(acd, type_of_conflict %in% c(1, 3, 4), conflict_id != 418) %>%
     mutate(gwno_loc = as.character(gwno_loc)) %>%
     separate_rows(gwno_loc, sep = ",") %>%
@@ -144,27 +145,6 @@ filter(ctable, gwid %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
 counts.df <- group_by(civil, gwno_loc, year) %>%
     summarise(n_conflicts = n(),
               intensity = max(intensity_level),
-              type_of_conflict = max(type_of_conflict))
-
-# Also inherit conflict counts from parent country for newly
-# independent countries. We inherit based on the territory location of
-# the conflict. This won't affect our `ongoing` variable in the final
-# dataset, but it will change our peace_yrs calculation, for example:
-# Eritrea, Namibia etc etc, which would otherwise have inflated
-# counts.
-inherited.df <- civil %>%
-    mutate(territory_gwno = ctable$gwid[match(territory_name, ctable$country_name)]) %>%
-    filter(!is.na(territory_gwno) & gwno_loc != territory_gwno) %>%
-    group_by(territory_gwno, year) %>%
-    summarise(n_conflicts = n(),
-              intensity = max(intensity_level),
-              type_of_conflict = max(type_of_conflict)) %>%
-    rename(gwno_loc = territory_gwno)
-
-counts.df %<>% bind_rows(inherited.df) %>%
-    group_by(gwno_loc, year) %>%
-    summarise(n_conflicts = sum(n_conflicts),
-              intensity = max(intensity),
               type_of_conflict = max(type_of_conflict))
 
 neighbours.df <- readRDS("data/neighbours.rds") %>%
@@ -182,7 +162,7 @@ episode_ucdp <- group_by(civil, gwno_loc, conflict_id, start_date2) %>%
     summarise(episode_onset = 1,
               year = min(year),
               start_prec2 = ifelse(first(start_prec2) %in% 6:7, 1, 0),
-              gwno_a = first(gwno_a),
+              episode_gwno_a = first(gwno_a),
               episode_intensity = max(intensity_level),
               episode_type = first(type_of_conflict),
               episode_incompatibility = first(incompatibility)) %>%
@@ -211,11 +191,7 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
     mutate(ongoing = ifelse(is.na(n_conflicts), 0, 1),
            neighbour_conflict = ifelse(is.na(n_neighbour_conflicts), 0, 1),
            onset = ifelse(is.na(onset), 0, 1),
-           episode_onset = ifelse(is.na(episode_onset), 0, 1),
-           lonset = lead(onset),
-           lonset_intensity = lead(onset_intensity),
-           lepisode_onset = lead(episode_onset),
-           lepisode_intensity = lead(episode_intensity))
+           episode_onset = ifelse(is.na(episode_onset), 0, 1))
 
 # Calculate number of peace years since last ongoing civil conflict or
 # independence. For countries censored due to start date, start
