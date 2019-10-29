@@ -1,4 +1,10 @@
 #!/bin/sh
+#
+# CLI arguments are passed directly to make in the spawned
+# container. If the environmental variable CLEANUP is defined and set
+# to 1, then the container will be automatically removed following
+# completion.
+###
 
 set -e
 
@@ -17,3 +23,7 @@ container=$($CMD ps -l --format "{{.Names}}")
 
 echo "Launched: $container"
 $CMD logs -f $container
+
+if [ "${CLEANUP:-0}" = 1 ]; then
+    docker container rm $container
+fi

@@ -7,16 +7,16 @@ executive constraints and civil conflict onset.
 
 The following raw data sources are required. For copyright reasons
 they are not distributed in this repository and need to be downloaded
-manually and placed list locations under `data/`.
+manually and placed in the following locations:
 
-- [CShapes 0.6]() (`data/raw/cshapes_0.6/cshapes.shp`)
-- [GROWup]() (`data/raw/growup/data.csv`)
-- [Maddison 2018]() (`data/raw/mpd2018.xlsx`)
-- [NMC 5.0]() (`data/raw/NMC_5_0/NMC_5_0.csv`)
-- [UCDP v19.1]() (`data/raw/UcdpPrioConflict_v19_1.rds`)
-- [V-Dem CY-Full v9]() (`data/raw/V-Dem-CY-Full+Others-v9.rds`)
+- [CShapes 0.6]() (`./data/raw/cshapes_0.6/cshapes.shp`)
+- [GROWup]() (`./data/raw/growup/data.csv`)
+- [Maddison 2018]() (`./data/raw/mpd2018.xlsx`)
+- [NMC 5.0]() (`./data/raw/NMC_5_0/NMC_5_0.csv`)
+- [UCDP v19.1]() (`./data/raw/UcdpPrioConflict_v19_1.rds`)
+- [V-Dem CY-Full v9]() (`./data/raw/V-Dem-CY-Full+Others-v9.rds`)
 
-The full replication pipeline was designed to be run from a `docker`
+The full replication pipeline is designed to be run from a `docker`
 container.
 
 The pre-built image used in the latest version of the pdf can be
@@ -41,17 +41,18 @@ following script can be used:
 
 ```sh
 # Launches a detached instance of `jsks/conflict_onset` with `./`
-# mounted at /proj
+# mounted at /proj. Default output will be `./paper.pdf`.
 $ scripts/run.sh
 ```
 
-Any additional arguments to `run.sh` will be passed to `Make`, the
+Any additional arguments to `run.sh` will be passed to `make`, the
 taskrunner for the underlying pipeline (example: dry-run with make,
-`scripts/run.sh -n`).
+`scripts/run.sh -n`). For replication purposes `make` should not be
+accessed directly, but there are several convenience rules defined for
+development workflows that can be listed with `make help`.
 
 By default, `make` will invoke recipes serially and all `stan` models
 are run with 4 chains in parallel.
-
 
 ## License
 
