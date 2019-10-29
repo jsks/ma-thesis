@@ -6,8 +6,11 @@ RUN apt-get update \
         libopenblas-base \
         libopenblas-dev \
         libudunits2-dev \
+        lmodern \
         pandoc \
         pandoc-citeproc \
+        texlive-luatex \
+        texlive-latex-extra \
         texlive-latex-recommended \
         texlive-fonts-recommended \
     && rm -rf /var/lib/apt/lists/*
