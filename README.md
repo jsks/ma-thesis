@@ -17,10 +17,8 @@ manually and placed in the following locations:
 - [V-Dem CY-Full v9]() (`./data/raw/V-Dem-CY-Full+Others-v9.rds`)
 
 The full replication pipeline is designed to be run from a `docker`
-container.
-
-The pre-built image used in the latest version of the pdf can be
-downloaded from [dockerhub](https://dockerhub.com/jsks/conflict_onset).
+container. A pre-built image used in the latest version of the pdf can
+be downloaded from [dockerhub](https://dockerhub.com/jsks/conflict_onset).
 
 ```sh
 $ docker pull jsks/conflict_onset

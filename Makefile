@@ -10,7 +10,7 @@ help:
 		sort | \
 		awk -F ':.*##' '{ printf "\033[01;34m%-15s \033[00;37m%s\033[0m\n", $$1, $$2 }'
 
-clean: ## Remove all generated files excluding model output
+clean: ## Remove all generated files, excluding model output
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
 		$(data)/*.rds $(data)/*.RData *.html *.pdf
 
