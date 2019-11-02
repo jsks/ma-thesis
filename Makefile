@@ -1,9 +1,11 @@
-data      := data
-raw       := $(data)/raw
-post      := posteriors
+manuscript := paper.Rmd
+
+data := data
+raw  := $(data)/raw
+post := posteriors
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: clean watch_sync watch_pdf
+.PHONY: help clean watch_sync watch_pdf wc
 
 help:
 	@egrep '^\S+:.*##' $(MAKEFILE_LIST) | \
@@ -14,14 +16,20 @@ clean: ## Remove all generated files, excluding model output
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
 		$(data)/*.rds $(data)/*.RData *.html *.pdf
 
-watch_sync: ## Autosync proj files to host 'gce'
+watch_sync: ## Autosync project files to host 'gce'
 	@fswatch --event Updated --event Removed -roe .git . | \
 		xargs -n1 -I{} scripts/sync.sh
 
 watch_pdf: ## Autobuild PDF in a container instance
 	@export CLEANUP=1; \
-		fswatch --event Updated -oe .git paper.Rmd | \
+		fswatch --event Updated -oe .git $(manuscript) | \
 		xargs -n1 -I{} scripts/run.sh paper.pdf
+
+wc: ## Rough estimate of word count
+	@sed '/^```/,/^```/d' $(manuscript) | \
+		pandoc --quiet --from markdown --to plain | \
+		wc -w | \
+		sed 's/^[[:space:]]*/word count: /'
 
 $(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R
 	Rscript R/geo.R
@@ -44,8 +52,8 @@ $(post)/fit.rds: $(data)/prepped_data.RData R/model.R stan/model.stan
 	@mkdir -p $(post)
 	Rscript R/model.R
 
-%.pdf: paper.Rmd assets/stan.xml
+%.pdf: $(manuscript) assets/stan.xml
 	Rscript -e "rmarkdown::render('$<', output_file = '$@')"
 
-%.html: paper.Rmd assets/sakura.css assets/stan.xml
+%.html: $(manuscript) assets/sakura.css assets/stan.xml
 	Rscript -e "rmarkdown::render('$<', 'html_document', '$@')"
