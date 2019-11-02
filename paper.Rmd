@@ -2,7 +2,7 @@
 title: Executive Constraints and Civil Conflict Onset
 author: J.L.A. Krusell
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
-documentclass: scrartcl
+documentclass: scrreprt
 fontsize: 11pt
 linestretch: 1.5
 header-includes:
@@ -26,16 +26,91 @@ output:
         toc: true
 ---
 
+[//]: # Setup R environment for entire doc
 ```{r include = F, results = "hide"}
-# Start by setting up our R env
 knitr::opts_chunk$set(echo = F, eval = F)
 
 library(dplyr)
-library(precrec)
-library(scales)
 library(thesis.utils)
-
 ```
+
+[//]: # Force TOC on separate page
+\newpage
+
+# Introduction {-}
+
+# Theoretical Overview {-}
+
+## Institutions and Civil Conflict
+
+This paper takes as a starting premise a definition of institutions as
+being "systems of established and embedded social rules that structure
+social interactions" (cite Hodgson). More informally, we can consider
+them to be the "rules of the game", encompassing for example codified
+laws, norms, and shared understandings, all of which can constrain or
+enable behaviour by influencing the perceptions and preferences of
+actors through incentives and deterrents.^[None of which is meant to
+imply that institutions stand external to actor perceptions and
+preferences as unchanging features. Rather, institutions are social
+constructs subject to changing normative values and able to be
+reinforced or undermined by behavioural feedback loops. This latter
+point is especially interesting within the context of civil conflict
+considering how the development of various institutions and conflict
+incidence can be jointly determined; however, it remains outside the
+scope of this paper.] Furthermore, over time, the habits formed from
+these systems create expectations of stable patterns of behaviour
+thereby shaping the interactions between actors by reducing
+uncertainty (cite North). Although there is a wide variety of
+institutions, the present focus will be on the type of institutions
+which govern political behaviour.
+
+This exposition is relevant to the study of civil conflict for both
+motivation-based and opportunity-based explanatory accounts. To the
+extent that the onset of civil conflict is a longer process featuring
+waves of escalation and de-escalation rather than a single one-off
+event (Florea), institutions are a key influence on the constitutive
+interactions between state and non-state actors. For example, they can
+shift the opportunity costs of violence altering the mobilization
+capacity of would be rebel groups. Institutions can also ensure
+credible commitments towards negotiated settlements, assuming that
+actors are rational and able to internalize the cost of violence such
+that a bargained solution is preferable to fighting (Blattman &
+Fearon). And, their quality can shape the capacity of the state to
+suppress or co-opt potential opposition. None of these examples are
+meant to form an exhaustive list. Instead the point is to demonstrate
+the number of different ways in which institutions can enter into the
+theoretical discussions about civil conflict.
+
+Unsurprisingly, insofar as the role of institutions has been examined
+by previous literature the focus has largely been on the broader
+notion of democracy, which at a minimum is a system regulating access
+to political power through popular representation determined by free
+and competitive elections (Schumpter). Democracy has been hypothesised
+to have a pacifying domestic effect according to two predominant
+mechanisms. The first is centered on the concept of relative
+deprivation, or inequalities in value expectations and value
+capabilities, as a primary source of discontent that can motivate
+collective violence (Gurr 1970). [^gurr] Democracy is thought to
+decrease the amount of political discontent by providing avenues for
+free expression and adjudicating group conflicts through non-violent
+institutional means (Hegre).
+
+[^gurr]: Gurr explains value expectations as being that which we think
+    we are entitled to and value capabilities as that which we think
+    we are capable of attaining. As Gurr then states, relative
+    deprivation is the perceived discrepancy between the two. The link
+    to collective violence, however, is conditional on the discontent
+    being politicized, by which it is meant that the source of the
+    discrepancy is identified and a normative and utilitarian
+    justification is given for violent action, before finally being
+    actualized.  Quantitative studies tend to focus on the first
+    stage, the propensity for political regimes to generate
+    discontent, given the difficultly of measuring the variables that
+    may affect politicisation and actualisation.
+
+## Executive Constraints
+
+# Empirics {-}
 
 ## Research Design
 
@@ -434,9 +509,9 @@ for (y in state) {
 
 ```
 
-\newpage
+# Conclusion {-}
 
-# Appendix
+# Appendix {-}
 
 ## Stan Code
 
