@@ -5,7 +5,7 @@ raw  := $(data)/raw
 post := posteriors
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: help clean watch_sync watch_pdf wc
+.PHONY: clean dump_Rdeps help watch_sync watch_pdf wc
 
 help:
 	@egrep '^\S+:.*##' $(MAKEFILE_LIST) | \
@@ -32,7 +32,12 @@ wc: ## Rough estimate of word count
 		wc -w | \
 		sed 's/^[[:space:]]*/word count: /'
 
-$(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R
+# Records R package versions from the latest run into the csv file
+# 'Rdependencies.csv'
+dump_Rdeps:
+	Rscript R/deps.R
+
+$(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R | dump_Rdeps
 	Rscript R/geo.R
 
 $(data)/merged_data.rds: $(raw)/V-Dem-CY-Full+Others-v9.rds \
