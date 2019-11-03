@@ -49,20 +49,22 @@ social interactions" (cite Hodgson). More informally, we can consider
 them to be the "rules of the game", encompassing for example codified
 laws, norms, and shared understandings, all of which can constrain or
 enable behaviour by influencing the perceptions and preferences of
-actors through incentives and deterrents.^[None of which is meant to
-imply that institutions stand external to actor perceptions and
-preferences as unchanging features. Rather, institutions are social
-constructs subject to changing normative values and able to be
-reinforced or undermined by behavioural feedback loops. This latter
-point is especially interesting within the context of civil conflict
-considering how the development of various institutions and conflict
-incidence can be jointly determined; however, it remains outside the
-scope of this paper.] Furthermore, over time, the habits formed from
-these systems create expectations of stable patterns of behaviour
-thereby shaping the interactions between actors by reducing
-uncertainty (cite North). Although there is a wide variety of
-institutions, the present focus will be on the type of institutions
+actors through incentives and deterrents. Furthermore, over time, the
+habits formed from these systems create expectations of stable
+patterns of behaviour thereby shaping the interactions between actors
+by reducing uncertainty (cite North). Although there is a wide variety
+of institutions, the present focus will be on the type of institutions
 which govern political behaviour.
+
+[^institutions]: None of which is meant to imply that institutions
+    stand external to actor perceptions and preferences as unchanging
+    features. Rather, institutions are social constructs subject to
+    changing normative values and able to be reinforced or undermined
+    by behavioural feedback loops. This latter point is especially
+    interesting within the context of civil conflict considering how
+    the development of various institutions and conflict incidence can
+    by jointly determined; however, it remains outside the scope of
+    this paper.
 
 This exposition is relevant to the study of civil conflict for both
 motivation-based and opportunity-based explanatory accounts. To the
@@ -93,7 +95,18 @@ capabilities, as a primary source of discontent that can motivate
 collective violence (Gurr 1970). [^gurr] Democracy is thought to
 decrease the amount of political discontent by providing avenues for
 free expression and adjudicating group conflicts through non-violent
-institutional means (Hegre).
+institutional means (Hegre). The second mechanism highlights the risk
+of future shifts in the distribution of power in undermining the
+attempt to reach a bargained solution to avoid war between two parties
+in conflict. More specifically, a future change in favor of the
+relative strength of one of the parties can provide an incentive to
+later renege. This influences the present degree to which concessions
+can be offered and parties are willing to credibly commit
+(Powell). Within the domestic sphere, democracy offers a possible
+solution by formalising the regular contest of power with full
+enfranchisement, thereby providing a *de jure* guarantee for the
+balance of power (Acemoglu and Robinson), and should, likewise,
+decrease the likelihood of civil conflict.
 
 [^gurr]: Gurr explains value expectations as being that which we think
     we are entitled to and value capabilities as that which we think
@@ -107,6 +120,51 @@ institutional means (Hegre).
     stage, the propensity for political regimes to generate
     discontent, given the difficultly of measuring the variables that
     may affect politicisation and actualisation.
+
+Despite the theoretical basis linking democracy to reduced risks for
+civil conflict, the empirical results tend to be mixed. Hegre *et al*
+(2001), for example, find that democracies are at a lower risk for
+civil conflict; however, no more so than fully authoritarian
+states. Instead, anocratic regimes in between democracy and
+authoritarianism are considered to be the most prone. The explanatory
+logic is that both democratic and fully authoritarian states tend to
+be consolidated regimes. In the case of the former, this means the
+presence of institutions conducive to conflict resolution, and in the
+case of the latter, the capacity to violently repress
+dissent. Anocratic regimes are by their very nature transitory, partly
+open and partly repressive, encouraging political discontent against
+the state without the capacity to fully suppress opposition.
+
+In contrast, studies emphasizing the importance of political and
+economic opportunities for rebellion in understanding when and where
+conflicts break out, such as Fearon and Laitin (2003) and Collier,
+Hoeffler, and Rohner (2009), find democracy to be insignificant. In
+similar fashion, democracy is associated with higher levels of
+political rights, respect for ethnic and religious minorities, and
+less repression, thus being a proxy for the latent level of political
+discontent against the state. However, even if the number of political
+grievances vary across regime types, they are still ubiquitous enough
+to be a poor explanation for why conflict breaks out in only a
+relatively small subset of countries. Instead, the argument follows
+that the structural conditions conducive to rebellion are the
+determining factors.[^opportunities]
+
+[^opportunities]: For Fearon and Laitin these structural conditions
+    are related to the features which make rebellion militarily
+    viable.  Specifically, there's a higher risk of conflict onset
+    where state capacity is weak, principally understood in terms of
+    state revenue and its impact on policing and counterinsurgency
+    operations; large impoverished populations; and insurgents have a
+    terrain advantage. Collier *et al* start from the premise that war
+    is expensive and the primary impediment to a rebellion is its
+    financial feasibility relative to the strength of the state. On
+    the basis of their results they go so far as provide support to
+    the proposition, "where a rebellion is financially and militarily
+    feasible it will occur." Both approaches, however, reach the same
+    conclusion concerning the empirical evidence surrounding the role
+    of democracy.
+
+Subsequent research
 
 ## Executive Constraints
 
