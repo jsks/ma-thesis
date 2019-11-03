@@ -26,7 +26,8 @@ watch_pdf: ## Autobuild PDF in a container instance
 		xargs -n1 -I{} scripts/run.sh paper.pdf
 
 wc: ## Rough estimate of word count
-	@sed '/^```/,/^```/d' $(manuscript) | \
+	@# All text except codeblocks, toc, appendix, and bibliography
+	@sed -e '/^```/,/^```/d' -e '/Appendix/,$$d' $(manuscript) | \
 		pandoc --quiet --from markdown --to plain | \
 		wc -w | \
 		sed 's/^[[:space:]]*/word count: /'
