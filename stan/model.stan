@@ -119,3 +119,28 @@ model {
                       Z_country[country_id] +
                       Z_year[year_id]);
 }
+
+generated quantities {
+  vector[J_obs] lg_star;
+  vector[J] nonlg_star;
+
+  vector[N] nu;
+  vector[N] log_lik;
+  vector[N] p_hat;
+
+  lg_star = lg_est[, 1];
+  nonlg_star = nonlg_est[, 1];
+
+  nu = X * beta[4:] +
+    beta[1] * theta[exec_idx] +
+    beta[2] * state_capacity +
+    beta[3] * theta_state_capacity +
+    alpha +
+    Z_country[country_id] +
+    Z_year[year_id];
+
+  for (i in 1:N)
+    log_lik[i] = bernoulli_logit_lpmf(y[i] | nu[i]);
+
+  p_hat = inv_logit(nu);
+}
