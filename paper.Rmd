@@ -24,6 +24,7 @@ output:
         css: assets/sakura.css
         smart: true
         toc: true
+abstract: Lorem ipsum
 ---
 
 [//]: # Setup R environment for entire doc
@@ -45,16 +46,16 @@ library(thesis.utils)
 
 This paper takes as a starting premise a definition of institutions as
 being "systems of established and embedded social rules that structure
-social interactions" (cite Hodgson). More informally, we can consider
+social interactions" [@Hodgson2006]. More informally, we can consider
 them to be the "rules of the game", encompassing for example codified
 laws, norms, and shared understandings, all of which can constrain or
 enable behaviour by influencing the perceptions and preferences of
-actors through incentives and deterrents. Furthermore, over time, the
-habits formed from these systems create expectations of stable
-patterns of behaviour thereby shaping the interactions between actors
-by reducing uncertainty (cite North). Although there is a wide variety
-of institutions, the present focus will be on the type of institutions
-which govern political behaviour.
+actors through incentives and deterrents.[^institutions] Furthermore,
+over time, the habits formed from these systems create expectations of
+stable patterns of behaviour thereby shaping the interactions between
+actors by reducing uncertainty [@North1990]. Although there is a wide
+variety of institutions, the present focus will be on the type of
+institutions which govern political behaviour.
 
 [^institutions]: None of which is meant to imply that institutions
     stand external to actor perceptions and preferences as unchanging
@@ -70,43 +71,47 @@ This exposition is relevant to the study of civil conflict for both
 motivation-based and opportunity-based explanatory accounts. To the
 extent that the onset of civil conflict is a longer process featuring
 waves of escalation and de-escalation rather than a single one-off
-event (Florea), institutions are a key influence on the constitutive
-interactions between state and non-state actors. For example, they can
-shift the opportunity costs of violence altering the mobilization
-capacity of would be rebel groups. Institutions can also ensure
-credible commitments towards negotiated settlements, assuming that
-actors are rational and able to internalize the cost of violence such
-that a bargained solution is preferable to fighting (Blattman &
-Fearon). And, their quality can shape the capacity of the state to
-suppress or co-opt potential opposition. None of these examples are
-meant to form an exhaustive list. Instead the point is to demonstrate
-the number of different ways in which institutions can enter into the
-theoretical discussions about civil conflict.
+event [@Florea2012; @Sambanis2004b], institutions are a key influence
+on the constitutive interactions between state and non-state
+actors. For example, they can shift the opportunity costs of violence
+altering the mobilization capacity of would be rebel
+groups. Institutions can also determine the extent to which the state
+is seen as accountable to and representative of the larger population,
+thereby influencing the legitimacy of anti-government violence.  And,
+their quality can shape the capacity of the state to suppress or
+co-opt potential opposition. Although the preceding examples are far
+from forming an exhaustive list, there are thus a number of different
+ways in which institutions can enter into theoretical discussions
+about civil conflict.
 
 Unsurprisingly, insofar as the role of institutions has been examined
 by previous literature the focus has largely been on the broader
 notion of democracy, which at a minimum is a system regulating access
 to political power through popular representation determined by free
-and competitive elections (Schumpter). Democracy has been hypothesised
-to have a pacifying domestic effect according to two predominant
-mechanisms. The first is centered on the concept of relative
-deprivation, or inequalities in value expectations and value
+and competitive elections [@Schumpeter1962]. Democracy serves as a
+proxy for a number of normatively desirable institutions and has been
+hypothesised to have a pacifying domestic effect according to two
+predominant mechanisms. The first is centered on the concept of
+relative deprivation, or inequalities in value expectations and value
 capabilities, as a primary source of discontent that can motivate
-collective violence (Gurr 1970). [^gurr] Democracy is thought to
+collective violence [@Gurr1970]. [^gurr] Democracy is thought to
 decrease the amount of political discontent by providing avenues for
 free expression and adjudicating group conflicts through non-violent
-institutional means (Hegre). The second mechanism highlights the risk
-of future shifts in the distribution of power in undermining the
-attempt to reach a bargained solution to avoid war between two parties
-in conflict. More specifically, a future change in favor of the
-relative strength of one of the parties can provide an incentive to
-later renege. This influences the present degree to which concessions
-can be offered and parties are willing to credibly commit
-(Powell). Within the domestic sphere, democracy offers a possible
-solution by formalising the regular contest of power with full
-enfranchisement, thereby providing a *de jure* guarantee for the
-balance of power (Acemoglu and Robinson), and should, likewise,
-decrease the likelihood of civil conflict.
+institutional means --- for example, through the regular occurrence of
+free and fair elections [@Hegre2014]. The second mechanism assumes
+that violent conflict is costly and that there exists a bargained
+solution preferable to fighting, assuming that actors are rational and
+able to internalize the cost of violence [@Fearon1995]. One of the
+reasons why a bargained solution may be impossible is the risk of
+future shifts in the distribution of power. More specifically, a
+future change in favor of relative strength of one of the parties can
+provide an incentive to later renege. This influences the present
+degree to which concessions can be offered and parties are willing to
+credibly commit [@Powell2006]. Within the domestic sphere, democracy
+offers a possible solution by formalising the regular contest of power
+with full enfranchisement, thereby providing a *de jure* guarantee for
+the balance of power [@Origins2006], and should, likewise, decrease
+the likelihood of civil conflict.
 
 [^gurr]: Gurr explains value expectations as being that which we think
     we are entitled to and value capabilities as that which we think
@@ -122,41 +127,46 @@ decrease the likelihood of civil conflict.
     may affect politicisation and actualisation.
 
 Despite the theoretical basis linking democracy to reduced risks for
-civil conflict, the empirical results tend to be mixed. Hegre *et al*
-(2001), for example, find that democracies are at a lower risk for
-civil conflict; however, no more so than fully authoritarian
+civil conflict, the empirical results tend to be mixed. @Hegre2001,
+for example, find that democracies are at a lower risk for civil
+conflict; however, no more so than fully authoritarian
 states. Instead, anocratic regimes in between democracy and
 authoritarianism are considered to be the most prone. The explanatory
 logic is that both democratic and fully authoritarian states tend to
 be consolidated regimes. In the case of the former, this means the
-presence of institutions conducive to conflict resolution, and in the
-case of the latter, the capacity to violently repress
-dissent. Anocratic regimes are by their very nature transitory, partly
-open and partly repressive, encouraging political discontent against
-the state without the capacity to fully suppress opposition.
+presence of institutions conducive to conflict resolution such that
+the opportunity for rebellion may be present, given the presence of
+civil liberties conducive to organizing, but there is a notable lack
+in motivation for collective violence. For the latter, authoritarian
+regimes may produce a significant amount of political discontent;
+however, the opportunity is lacking due to the state's capacity and
+willingness to violently repress dissent. Anocratic regimes are by
+their very nature transitory, partly open and partly repressive,
+encouraging political discontent against the state without the
+capacity to either accommodate or suppress opposition.
 
 In contrast, studies emphasizing the importance of political and
 economic opportunities for rebellion in understanding when and where
-conflicts break out, such as Fearon and Laitin (2003) and Collier,
-Hoeffler, and Rohner (2009), find democracy to be insignificant. In
-similar fashion, democracy is associated with higher levels of
+conflicts break out, such as @Fearon2003 and @Collier2009, find
+democracy to be insignificant. According to their theoretical
+expositions, democracy should be associated with higher levels of
 political rights, respect for ethnic and religious minorities, and
 less repression, thus being a proxy for the latent level of political
-discontent against the state. However, even if the number of political
-grievances vary across regime types, they are still ubiquitous enough
-to be a poor explanation for why conflict breaks out in only a
-relatively small subset of countries. Instead, the argument follows
-that the structural conditions conducive to rebellion are the
-determining factors.[^opportunities]
+discontent against the state. However, the argument follows that even
+if the number of political grievances vary across regime types, they
+are still ubiquitous enough to be a poor explanation for why conflict
+breaks out in only a relatively small subset of countries. Instead,
+the determining factors for conflict onset are the structural
+conditions conducive to rebellion.[^opportunities]
 
 [^opportunities]: For Fearon and Laitin these structural conditions
     are related to the features which make rebellion militarily
     viable.  Specifically, there's a higher risk of conflict onset
     where state capacity is weak, principally understood in terms of
     state revenue and its impact on policing and counterinsurgency
-    operations; large impoverished populations; and insurgents have a
-    terrain advantage. Collier *et al* start from the premise that war
-    is expensive and the primary impediment to a rebellion is its
+    operations; large impoverished populations; and insurgents having
+    a terrain advantage. Collier *et al* start from the premise that
+    war is expensive and the primary impediment to a rebellion is its
     financial feasibility relative to the strength of the state. On
     the basis of their results they go so far as provide support to
     the proposition, "where a rebellion is financially and militarily
@@ -164,7 +174,102 @@ determining factors.[^opportunities]
     conclusion concerning the empirical evidence surrounding the role
     of democracy.
 
-Subsequent research
+To provide a more nuanced picture, an ongoing strain of research has
+been dedicated to disaggregating measures of democracy into either
+finer regime type categories or specific measures of individual
+political institutions. The theories offered tend to follow a general
+formula whereby formal lack or poor quality of some institution(s),
+measured either directly or proxied by regime type, undermines the
+capacity of the state to prevent armed insurgency and/or incentivises
+opposition violence by restricting the opportunities for political
+participation and increasing political discontent. For example,
+@Carey2007 examines the executive selection process of Sub-Saharan
+Africa and argues that executive elections, even when they are of poor
+quality, reduce the risk of large-scale violent dissent. @Fjelde2010a
+breaks down authoritarian regime types in Africa attributing the
+significant variation in conflict risk to the differing institutional
+configurations affecting a regime's ability to coerce or co-opt the
+opposition. The conclusion is that previous indeterminate results
+regarding the link between political institutions and conflict risk
+may have been hamstrung by aggregate measures which poorly reflect the
+within-group variation of political regimes. In a larger sample
+including democratic polities, @Goldstone2010 create a regime
+classification scheme based on measures for openness of executive
+recruitment and competitiveness of political participation, as well as
+factionalism in order to distinguish between partial democracies. They
+offer a theory of civil conflict occurring in countries where elite
+divisions undermine the capacity of the state to defeat an insurgency
+and claim that a relatively parsimonious model including their regime
+classification offers better predictive accuracy than previous
+analyses and provides evidence that political institutions are a
+dominant driving factor for both political instability and civil
+conflict. Finally, @Bartusevic2018 construct a regime typology focused
+specifically on electoral features, which are argued form the
+essential core of the concept of democracy. Where there are
+constraints on electoral contestation, the authors contend that such
+constraints restrict the opportunities for non-violent political
+participation thereby legitimising anti-government violence and
+self-selecting recruits into rebel groups willing to engage in armed
+conflict. Evidence is presented which the authors claim supports not
+just the significance of regime type, but a negative monotonic
+relationship between democracy and the risk of civil conflict.
+
+Studies utilising individual measures beyond regime classification
+have been largely focused on the concept of governance. For instance,
+@Taydas2010 examine institutional quality as a means to capturing a
+regime's governing capacity theorised to be linked to conflict onset
+both in terms of political discontent --- a regime's inability to
+govern effectively and respond to public needs leading to grievances
+and a loss in legitimacy --- and political opportunities for rebellion
+--- poor institutional quality undermines the state's ability to
+handle a nascent, violent uprising. Specifically, they assess
+corruption, rule of law, and bureaucratic quality and present evidence
+that all three are negatively related to civil conflict
+onset. Similarly, @Hegre2015a argue that the presence of formal
+representative institutions does not fully capture the extent to which
+a regime is capable of realizing policy goals benefiting the
+public. Poor quality of government can therefore undermine the
+legitimacy of a regime when citizens identify the state as responsible
+for relative deprivation. In their empirical analysis, the authors
+separate informal institutions related to good governance from formal
+democratic institutions and find both important for reducing the
+incidence of civil conflict, or in this specific case the recurrence
+of conflict.
+
+Taken together, this recent literature on civil conflict onset points
+to the ongoing importance of political institutions. There remains,
+however, significant work to be done identifying the causal mechanisms
+and effects of specific institutions, especially in terms of further
+disaggregating the concept of democracy beyond ever finer
+classifications of regime type [@ari2016]. Furthermore, to the extent
+that previous research has mostly focused on the effects of
+institutions on would-be rebel motivation and/or political opportunity
+structures, there is also a gap in terms of empirical analyses on how
+institutions shape the behaviour of the state in the lead up to a
+civil conflict. Even in strictly economic explanations of civil
+conflict, giving explanatory primacy either to greed-based motivation
+or economic conditions conducive for rebellion, the state is a key
+actor. How a state responds to dissent structures the opportunity
+costs of violence as well as the salience of calls to mobilization by
+rebel leaders. This latter point is especially relevant in linking
+regime legitimacy to conflict since public perception is shaped not
+simply by a regime's formal structure, but by its conduct in repeated
+interactions with the public. To this end, it is imperative to examine
+the types of institutions which enable or constrain actions by the
+state which exacerbate the risk of conflict onset beyond state
+capacity.
+
+There are of course a large number of institutions whose presence and
+quality can influence the behaviour of the state. Given the importance
+of the executive as a central authority, however, especially in times
+of political crisis, institutions which affect the executive's
+decision making should be pertinent. Chief among these is the idea of
+executive constraints, or the formal constraints on executive power by
+other the branches of government. By analyzing executive constraints
+we should get a better understanding of how executive power can
+influence the risk of conflict onset and hopefully be able to
+differentiate between anocratic regimes featuring similar levels of
+state capacity and quality of elections.
 
 ## Executive Constraints
 
