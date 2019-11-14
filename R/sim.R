@@ -20,12 +20,12 @@ D <- 6
 theta <- rnorm(N)
 
 gamma <- rnorm(D, 0, 5)
-lambda <- rhnorm(D, 1)
-psi <- rweibull(D, 2, 1)
+lambda <- rlnorm(D, 0, 0.5)
+psi <- rweibull(D, 5, 1)
 
 # Legislative variables
-eta <- rnorm(1, 0, 1)
-delta <- rhnorm(1, 5)
+eta <- rnorm(1)
+delta <- rlnorm(1, 0, 0.5)
 
 xi <- eta + delta * theta
 
@@ -35,19 +35,19 @@ stopifnot(any(w == 1))
 N_obs <- sum(w)
 obs_idx <- which(w == 1)
 
-lg <- xi[obs_idx] %*% t(lambda[1:3]) + mvrnorm(N_obs, rep(0, 3), diag(psi[1:3]))
+lg <- theta[obs_idx] %*% t(lambda[1:3]) + mvrnorm(N_obs, rep(0, 3), diag(psi[1:3]))
 lg <- sweep(lg, 2, gamma[1:3], `+`)
 
-lg_err <- matrix(rgamma(N_obs * ncol(lg), 5, 10) / 2, N_obs, ncol(lg))
+lg_err <- matrix(rgamma(N_obs * ncol(lg), 5, 5), N_obs, ncol(lg))
 lg_obs <- matrix(NA, N_obs, ncol(lg))
 for (i in 1:ncol(lg))
     lg_obs[, i] <- lg[, i] + rnorm(N_obs, 0, lg_err[, i])
 
-# Non-legislative
+# Non-legislative variables
 nonlg <- theta %*% t(lambda[4:6]) + mvrnorm(N, rep(0, 3), diag(psi[4:6]))
 nonlg <- sweep(nonlg, 2, gamma[4:6], `+`)
 
-nonlg_err <- matrix(rgamma(N * ncol(nonlg), 5, 10) / 2, N, ncol(nonlg))
+nonlg_err <- matrix(rgamma(N * ncol(nonlg), 5, 5), N, ncol(nonlg))
 nonlg_obs <- matrix(NA, N, ncol(nonlg))
 for (i in 1:ncol(nonlg))
     nonlg_obs[, i] <- nonlg[, i] + rnorm(N, 0, nonlg_err[, i])
@@ -79,7 +79,7 @@ p <- inv.logit(alpha + beta[1] * theta + beta[2] * state_capacity +
                years[year_idx] + countries[country_idx])
 
 y <- rbinom(N, 1, p)
-mean(y)
+sprintf("%d simulated conflicts out of %d country-years", sum(y), N)
 
 ###
 # Fit full stan model
@@ -109,15 +109,16 @@ data <- list(J = N,
 str(data)
 
 fit <- stan("stan/model.stan", data = data, iter = 4000, thin = 2,
-            control = list(adapt_delta = 0.95), seed = 1992)
+            control = list(adapt_delta = 0.95), seed = 1992, include = F,
+            pars = c("psi_unif", "sigma_unif", "lg_est", "nonlg_est",
+                     "raw_country", "raw_year", "nu", "theta_state_capacity"))
+
+save.image("posteriors/simulated.RData")
 
 print(fit, pars = c("lambda", "psi", "gamma", "delta", "alpha", "beta", "sigma"))
 
 ###
 # Plot estimated quantiles vs true values
-lambda <- as.matrix(fit, pars = "lambda")
-lambda[, 1] * sdlg_obs
-
 post <- as.matrix(fit, pars = c("lambda", "psi", "gamma", "delta", "eta",
                                 "alpha", "beta", "sigma")) %>%
     apply(2, quantile, probs = c(0.025, 0.975)) %>%
@@ -146,3 +147,27 @@ ggplot(full.df, aes(parameter, point, color = type)) +
     geom_point() +
     geom_errorbar(aes(parameter, ymin = codelow, ymax = codehigh),
                   width = 0)
+
+###
+# Plot latent factor
+latent <- as.matrix(fit, pars = "theta") %>%
+    apply(2, quantile, probs = c(0.025, 0.5, 0.975)) %>%
+    t %>%
+    as.data.frame %>%
+    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
+    mutate(true_value = theta) %>%
+    arrange(true_value) %>%
+    mutate(idx = 1:n())
+
+ggplot(latent, aes(median, true_value)) + geom_point()
+
+ggplot(latent, aes(idx, true_value)) +
+    geom_point(col = "darkgrey") +
+    geom_errorbar(aes(ymin = codelow, ymax = codehigh), alpha = 0.2, col = "darkblue")
+
+
+# % correctly predicted within CI
+with(latent, ifelse(true_value <= codehigh & true_value >= codelow, T, F) %>% mean)
+
+with(latent[w == 1, ], ifelse(true_value <= codehigh & true_value >= codelow, T, F) %>% mean)
+with(latent[w == 0, ], ifelse(true_value <= codehigh & true_value >= codelow, T, F) %>% mean)

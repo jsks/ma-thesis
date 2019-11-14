@@ -88,11 +88,11 @@ model {
   theta ~ std_normal();
 
   gamma ~ normal(0, 5);
-  lambda ~ lognormal(0, 1);
-  psi ~ weibull(2, 1);
+  lambda ~ lognormal(0, 0.5);
+  psi ~ weibull(5, 1);
 
   eta ~ normal(0, 5);
-  delta ~ lognormal(0, 1);
+  delta ~ lognormal(0, 0.5);
 
   lgbicam ~ bernoulli_logit(xi);
 
@@ -100,7 +100,7 @@ model {
     lg[, i] ~ normal(lg_est[, i], lg_se[, i]);
     nonlg[, i] ~ normal(nonlg_est[, i], nonlg_se[, i]);
 
-    lg_est[, i] ~ normal(gamma[i] + lambda[i] * xi[obs_idx], psi[i]);
+    lg_est[, i] ~ normal(gamma[i] + lambda[i] * theta[obs_idx], psi[i]);
     nonlg_est[, i] ~ normal(gamma[i + lg_D] + lambda[i + lg_D] * theta, psi[i + lg_D]);
   }
 
