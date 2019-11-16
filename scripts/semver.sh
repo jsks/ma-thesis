@@ -50,12 +50,12 @@ validate() {
     read next_major next_minor next_patch <<< "$1"
     IFS=""
 
-    if (( next_major < major )) ||
-           (( next_minor < minor )) ||
-           (( next_patch <= patch )); then
-        printf "Current version %s >= %s\n" "$tag" "$1"
-        exit 127
-    fi
+    (( next_major > major )) && return 0
+    (( next_minor > minor )) && return 0
+    (( next_patch > patch )) && return 0
+
+    printf "Current version %s >= %s\n" "$tag" "$1"
+    exit 127
 }
 
 ## Main
@@ -70,7 +70,7 @@ tag=$(git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
 
 next_version="${tag%.*}.$(( ${tag##*.} + 1 ))"
 
-while getopts 'hs:' opt; do
+while getopts 'hs:m:' opt; do
     case $opt in
         h)
             help;;
