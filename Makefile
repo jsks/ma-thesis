@@ -4,13 +4,18 @@ data := data
 raw  := $(data)/raw
 post := posteriors
 
+blue  := \033[01;34m
+grey  := \033[00;37m
+reset := \033[0m
+
 all: paper.pdf ## Default rule: paper.pdf
 .PHONY: clean dump_Rdeps help watch_sync watch_pdf wc
 
 help:
 	@egrep '^\S+:.*##' $(MAKEFILE_LIST) | \
 		sort | \
-		awk -F ':.*##' '{ printf "\033[01;34m%-15s \033[00;37m%s\033[0m\n", $$1, $$2 }'
+		awk -F ':.*##' \
+			'{ printf "$(blue)%-15s $(grey)%s$(reset)\n", $$1, $$2 }'
 
 clean: ## Remove all generated files, excluding model output
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
@@ -58,8 +63,8 @@ $(post)/fit.rds: $(data)/prepped_data.RData R/model.R stan/model.stan
 	@mkdir -p $(post)
 	Rscript R/model.R
 
-%.pdf: $(manuscript) assets/stan.xml
+%.pdf: $(manuscript) library.bib assets/stan.xml
 	Rscript -e "rmarkdown::render('$<', output_file = '$@')"
 
-%.html: $(manuscript) assets/sakura.css assets/stan.xml
+%.html: $(manuscript) library.bib assets/sakura.css assets/stan.xml
 	Rscript -e "rmarkdown::render('$<', 'html_document', '$@')"

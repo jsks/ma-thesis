@@ -2,6 +2,9 @@
 title: Executive Constraints and Civil Conflict Onset
 author: J.L.A. Krusell
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
+bibliography: library.bib
+csl: assets/american-journal-of-political-science.csl
+link-citations: true
 documentclass: scrreprt
 fontsize: 11pt
 linestretch: 1.5
@@ -674,11 +677,18 @@ for (y in state) {
 
 # Conclusion {-}
 
-# Appendix {-}
+# Appendices {-}
 
-## Stan Code
+## Appendix A - Stan Code {#appendix-a}
 
 ```{stan, code = readLines("stan/model.stan"), eval = FALSE, output.var = "x", echo = T}
 ```
 
-## Prior Predictive Check
+\newpage
+
+## Appendix B - Prior Predictive Check {#appendix-b}
+
+
+# References {-}
+
+\singlespacing
