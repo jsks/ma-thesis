@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# Release script bumping current project version including git tag,
+# thesis.utils version, and container image according to semantic 
+# versioning.
+###
 
 ## Utility functions
 usage() {
@@ -15,8 +20,8 @@ bumping the current patch version.
 
 Options:
         -h Useless help message
-        -m Tagging message
-        -s Specify version number
+        -m Git tagging message
+        -s Specify version number in the form of MAJOR.MINOR.PATCH
 EOF
 
 exit
@@ -59,10 +64,6 @@ if [ -n "$(git diff --name-only --staged)" ]; then
     exit 127
 fi
 
-if [ -n "$(git status -s)" ] && ! confirm "Uncommitted changes"; then
-    exit 127
-fi
-
 root=$(git rev-parse --show-toplevel)
 tag=$(git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
 : ${tag:="0.0.0"}
@@ -84,6 +85,8 @@ while getopts 'hs:' opt; do
 done
 
 set -e
+
+[ -n "$(git status -s)" ] && confirm "Uncommitted changes"
 confirm "Bumping version to v$next_version"
 
 sed -i "s/Version:.*/Version: $next_version/" $root/R/thesis.utils/DESCRIPTION
@@ -92,4 +95,4 @@ git commit -m "Prepare release v$next_version"
 
 git tag -a "v$next_version" -m $msg
 
-sh $root/scripts/build.sh
+sh $root/scripts/build.sh "$next_version"
