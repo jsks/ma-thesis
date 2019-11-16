@@ -8,7 +8,7 @@ if [ -n "$1" ]; then
 fi
 
 if which podman 2>&1 >/dev/null; then
-    podman build -t "docker.io/jsks/conflict_onset$tag" .
+    podman build --format docker -t "docker.io/jsks/conflict_onset$tag" .
     podman push "docker.io/jsks/conflict_onset$tag"
 else
     docker build -t "jsks/conflict_onset$tag" .
