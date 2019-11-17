@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Release script bumping current project version including git tag,
-# thesis.utils version, and container image according to semantic 
+# thesis.utils version, and container image according to semantic
 # versioning.
 ###
 
@@ -39,23 +39,20 @@ confirm() {
     esac
 }
 
-validate() {
-    if ! grep -E '^[0-9]+[.][0-9]+[.][0-9]+$' <<< "$1" >/dev/null; then
-        printf "Invalid semver: %s\n" "$1"
-        exit 127
-    fi
-
+compare() {
     IFS=.
     read major minor patch <<< "$tag"
     read next_major next_minor next_patch <<< "$1"
     IFS=""
 
     (( next_major > major )) && return 0
-    (( next_minor > minor )) && return 0
-    (( next_patch > patch )) && return 0
+    (( next_major < major )) && return 1
 
-    printf "Current version %s >= %s\n" "$tag" "$1"
-    exit 127
+    (( next_minor > minor )) && return 0
+    (( next_minor < minor )) && return 1
+
+    (( next_patch > patch )) && return 0
+    (( next_patch <= patch )) && return 1
 }
 
 ## Main
@@ -77,7 +74,16 @@ while getopts 'hs:m:' opt; do
         m)
             msg=$OPTARG;;
         s)
-            validate $OPTARG
+            if ! grep -E '^[0-9]+[.][0-9]+[.][0-9]+$' <<< "$OPTARG" >/dev/null; then
+                printf "Invalid semver: %s\n" "$OPTARG"
+                exit 127
+            fi
+
+            if ! compare $OPTARG; then
+                printf "Current version %s >= %s\n" "$tag" "$OPTARG"
+                exit 127
+            fi
+
             next_version=$OPTARG;;
         *)
             usage;;
