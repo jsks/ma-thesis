@@ -8,6 +8,9 @@
 
 set -e
 
+tag=$(git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
+: ${tag:="latest"}
+
 which podman 2>&1 >/dev/null && CMD=podman || CMD=docker
 
 # No arrays in posix sh...
@@ -21,4 +24,5 @@ if [ "${CLEANUP:-0}" = 1 ]; then
     rm_opts="--rm"
 fi
 
-$CMD run -a stdout -a stderr $mount_opts $rm_opts jsks/conflict_onset make $@
+$CMD run -a stdout -a stderr $mount_opts $rm_opts \
+     "jsks/conflict_onset:$tag" make $@

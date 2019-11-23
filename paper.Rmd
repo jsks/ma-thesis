@@ -24,7 +24,6 @@ output:
         pandoc_args: ["--syntax-definition", "assets/stan.xml",
                       "--highlight-style", "kate"]
     html_document:
-        css: assets/sakura.css
         smart: true
         toc: true
 abstract: Lorem ipsum
