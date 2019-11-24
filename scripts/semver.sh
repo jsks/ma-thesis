@@ -99,7 +99,7 @@ sed -i "s/Version:.*/Version: $next_version/" $root/R/thesis.utils/DESCRIPTION
 git add $root/R/thesis.utils/DESCRIPTION
 git commit -m "Prepare release v$next_version"
 
-git tag -a "v$next_version" -m $msg
+git tag -a "v$next_version" -m "$msg"
 git push --follow-tags
 
 sh $root/scripts/build.sh "$next_version"
