@@ -3,7 +3,7 @@ title: Executive Constraints and Civil Conflict Onset
 author: J.L.A. Krusell
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 bibliography: library.bib
-csl: assets/american-journal-of-political-science.csl
+csl: assets/american-political-science-association.csl
 link-citations: true
 documentclass: scrreprt
 fontsize: 11pt
@@ -54,10 +54,10 @@ laws, norms, and shared understandings, all of which can constrain or
 enable behaviour by influencing the perceptions and preferences of
 actors through incentives and deterrents.[^institutions] Furthermore,
 over time, the habits formed from these systems create expectations of
-stable patterns of behaviour thereby shaping the interactions between
-actors by reducing uncertainty [@North1990]. Although there is a wide
-variety of institutions, the present focus will be on the type of
-institutions which govern political behaviour.
+stable patterns of behaviour thereby further shaping the interactions
+between actors by reducing uncertainty [@North1990]. Although there is
+a wide variety of institutions, the present focus will be on the type
+of institutions which govern political behaviour.
 
 [^institutions]: None of which is meant to imply that institutions
     stand external to actor perceptions and preferences as unchanging
@@ -106,8 +106,8 @@ solution preferable to fighting, assuming that actors are rational and
 able to internalize the cost of violence [@Fearon1995]. One of the
 reasons why a bargained solution may be impossible is the risk of
 future shifts in the distribution of power. More specifically, a
-future change in favor of relative strength of one of the parties can
-provide an incentive to later renege. This influences the present
+future change in favor of the relative strength of one of the parties
+can provide an incentive to later renege. This influences the present
 degree to which concessions can be offered and parties are willing to
 credibly commit [@Powell2006]. Within the domestic sphere, democracy
 offers a possible solution by formalising the regular contest of power
@@ -219,14 +219,14 @@ relationship between democracy and the risk of civil conflict.
 Studies utilising individual measures beyond regime classification
 have been largely focused on the concept of governance. For instance,
 @Taydas2010 examine institutional quality as a means to capturing a
-regime's governing capacity theorised to be linked to conflict onset
-both in terms of political discontent --- a regime's inability to
-govern effectively and respond to public needs leading to grievances
-and a loss in legitimacy --- and political opportunities for rebellion
---- poor institutional quality undermines the state's ability to
-handle a nascent, violent uprising. Specifically, they assess
-corruption, rule of law, and bureaucratic quality and present evidence
-that all three are negatively related to civil conflict
+regime's governing capacity which is theorised to be linked to
+conflict onset both in terms of political discontent --- a regime's
+inability to govern effectively and respond to public needs leading to
+grievances and a loss in legitimacy --- and political opportunities
+for rebellion --- poor institutional quality undermines the state's
+ability to handle a nascent, violent uprising. Specifically, they
+assess corruption, rule of law, and bureaucratic quality and present
+evidence that all three are negatively related to civil conflict
 onset. Similarly, @Hegre2015a argue that the presence of formal
 representative institutions does not fully capture the extent to which
 a regime is capable of realizing policy goals benefiting the
@@ -247,33 +247,174 @@ classifications of regime type [@ari2016]. Furthermore, to the extent
 that previous research has mostly focused on the effects of
 institutions on would-be rebel motivation and/or political opportunity
 structures, there is also a gap in terms of empirical analyses on how
-institutions shape the behaviour of the state in the lead up to a
+institutions also shape the behaviour of the state in the lead up to a
 civil conflict. Even in strictly economic explanations of civil
-conflict, giving explanatory primacy either to greed-based motivation
-or economic conditions conducive for rebellion, the state is a key
-actor. How a state responds to dissent structures the opportunity
-costs of violence as well as the salience of calls to mobilization by
-rebel leaders. This latter point is especially relevant in linking
-regime legitimacy to conflict since public perception is shaped not
-simply by a regime's formal structure, but by its conduct in repeated
-interactions with the public. To this end, it is imperative to examine
-the types of institutions which enable or constrain actions by the
-state which exacerbate the risk of conflict onset beyond state
-capacity.
+conflict where explanatory primacy is given to either greed-based
+motivation or economic conditions conducive for rebellion, the state
+is a key actor. How a state responds to dissent structures the
+opportunity costs of violence as well as the salience of calls to
+mobilization by rebel leaders. This latter point is especially
+relevant in linking regime legitimacy to conflict since public
+perception is shaped not simply by a regime's formal structure, but by
+its conduct in repeated interactions with the public. To this end, it
+is imperative to examine the types of institutions which exacerbate
+the risk of conflict onset by enabling or constraining certain actions
+by the state.
 
-There are of course a large number of institutions whose presence and
-quality can influence the behaviour of the state. Given the importance
-of the executive as a central authority, however, especially in times
-of political crisis, institutions which affect the executive's
-decision making should be pertinent. Chief among these is the idea of
-executive constraints, or the formal constraints on executive power by
-other the branches of government. By analyzing executive constraints
-we should get a better understanding of how executive power can
-influence the risk of conflict onset and hopefully be able to
-differentiate between anocratic regimes featuring similar levels of
-state capacity and quality of elections.
+There are of course a large variety of political institutions whose
+presence and quality can influence the behaviour of the state.  Given
+the importance of the executive as a central authority, however,
+especially in times of political crisis, institutions which affect the
+executive's decision making should be pertinent. Chief among these is
+the idea of executive constraints --- more formally, the institutional
+constraints by other government bodies on the executive's ability to
+abuse power and act unilaterally. Executive constraints can be
+considered a subset of horizontal accountability and imply the
+existence of state agents --- such as the legislature or the judiciary
+--- with both the legal mandate and willingness to oversee or sanction
+the executive thus serving as a deterrent to the forms of
+authoritarian excesses in executive power which may be linked to civil
+conflict. [^ODonnell]
+
+[^ODonnell]: Adapted from the definition of horizontal accountability
+    offered by @ODonnell1998 who further argues that horizontal
+    accountability can potentially be a distinguishing feature between
+    consolidated democracies and newly democratic states, the latter
+    of which may have free and open elections, but are considerably
+    weaker in upholding liberal notions of individual freedom against
+    state power and republican notions of representation. In this way,
+    executive constraints can possibly aid in discriminating the types
+    of partially democratized regimes which may be at a heightened
+    risk for civil conflict.
+
+The final motivation for examining executive constraints is that in
+terms of previous research, the empirical evidence is
+conflicted. @Getmansky2013, for example, offers a theory of executive
+constraints playing a role in risk aversion in democratic polities;
+however, they find their measure to be insignificant in predicting the
+outbreak of insurgencies. On the other hand, @Fjelde2009 with a theory
+tying executive constraints to public goods provisioning reports a
+significant interaction term with public spending. In both cases an
+ordinal measure of executive constraints from Polity IV
+[@Marshall2019] was used. This leaves open both further work on
+additional theoretical mechanisms and analyses using other datasets.
 
 ## Executive Constraints
+
+There are three general pathways which can theoretically link the
+concept of executive constraints to the onset of civil conflict:
+executive looting and state weakness, credible commitments to
+bargained solutions, and the impact of violent repression by the state
+on rebel mobilization. In the case of the first, the absence of
+effective constraints enables leaders to loot state resources
+[@Blattman2017], diverting funds for the purposes of personal
+rent-seeking and corruption, which can undermine the administrative
+and military capacity of the state to combat a nascent
+insurgency. Furthermore, such environments allow leaders to pay
+selective benefits to close supporters at the expense of wider
+redistributive policies. To the extent that the provisioning of public
+goods may ameliorate grievances against the state and co-opt potential
+opposition, a reduced risk for civil conflict could be expected where
+there is a high level of redistributive public spending and the
+presence of quality institutions able to check the ability of the
+executive to engage in cronyism [@Fjelde2009]. Finally, the lack of
+accountability stemming from missing executive constraints could make
+the state an attractive prize to predatory rebel groups; however,
+prior empirical evidence lends little credence to this mechanism
+[@Bazzi2014].
+
+The second pathway relates to the willingness of both the regime and
+opposition to credibly commit to bargained solutions to avoid
+conflict. For the opposition, the presence of government institutions
+able to hold the executive to account with the threat, for example, of
+investigations, sanctions, or court rulings reduces the uncertainty
+over whether the current leader will later renege. From the
+perspective of the regime, executive constraints serve to limit future
+violent retributions if oppositional groups were to take power. This
+latter point is especially salient in situations where a leader has
+previously relied on violent repression to stay in power and fears
+extralegal punishment. It should be noted, however, that in such
+authoritarian settings the antecedent lack of effective executive
+constraints does not explain why the leader decides to negotiate in
+the first place. But, insofar as the bargained solution includes a
+transition of power with democratic reforms, and possibly even
+immunity for the current members of the regime, the inclusion of
+future checks against the executive serves as a guarantee for the
+current agreement thereby increasing the incentive to commit.
+
+The final pathway involves the impact of executive constraints on
+shaping the ability of rebel groups to recruit new members. In order
+to mount an effective challenge to the state, rebel leaders need to be
+able to mobilize fighters while avoiding defections. However,
+participating in an armed rebellion is a costly endeavour. Non-elites
+face both the immediate risk of fighting as well as the possibility of
+future reprisals by the government. Furthermore, given that most civil
+conflicts are protracted events against an often times much stronger
+opponent the short-term utility from participation is relatively
+low. Thus, rebel leaders must be able to offer proportionate selective
+benefits to offset the associated costs of fighting
+[@Mason1996]. [^rational] These benefits can include not only economic
+payoffs, but also protection from government violence. When the
+government engages in violent repression, especially in the form of
+indiscriminate violence, the cost of non-participation is
+raised. Rebel groups can provide local security guarantees against
+government reprisals such that the opportunity cost of fighting is
+lowered, thereby incentivizing participation [@Regan2005]. However,
+this is predicated on the government lacking the capacity to fully
+eradicate any rebel group. Where that capacity exists the state is
+free to engage in reprisals.
+
+[^rational]: TODO: Assuming rational actors...
+
+It is at this point where the concept of executive constraints then
+enters into the calculus. Leaders in nondemocratic states are more
+likely to engage in violent repression as a response to internal
+dissent [@Davenport2007a]. Executive constraints provide an
+accountability mechanism deterring state violence by the leader
+against their own citizens. Thus, where there are strong and effective
+constraints on the executive, the opportunity cost for joining the
+rebel side should be higher. Rebel leaders will then have to rely more
+heavily on economic selective benefits [@Regan2005], creating a higher
+barrier for mobilization and decreasing the risk of civil conflict
+onset. It should be noted though, that where this relationship may not
+hold is in situations of low intensity insurgencies involving
+predatory rebel groups solely motivated by rent-seeking. The threshold
+for mobilization in such scenarios is significantly lower than in full
+scale civil wars, meaning that rebel groups can initiate a conflict
+regardless of the current level of state repression.
+
+Taken together, none of the aforementioned mechanisms are mutually
+exclusive, and it is beyond the scope of the present paper to properly
+adjudicate between them; however, they do converge on a single
+testable proposition. Namely that higher levels of executive
+constraints should be associated with a lowered risk of civil conflict
+onset. That this may not be the case is either because executive
+constraints are indeterminate to the risk of civil conflict or that
+there is actually a positive relationship between the two. In the case
+of the latter, it could be possible that constrained executives are
+less able to effectively deal with violent challenges because of risk
+aversion to violence and/or from the slowdown from having to seek
+approval from various stakeholders before committing to decisive
+action. Given the theoretical pathways listed above, however, there is
+nonetheless a justified prior belief in favor of there existing a
+negative relationship.
+
+One final caveat, hitherto the relationship of executive constraints
+to the notion of vertical accountability --- constraints on leaders by
+free and open multiparty elections as well as an independent and
+critical media --- has been left unspecified. This is not to diminish
+the role of elections or the media; indeed, vertical accountability
+can plausibly play a role in all of the mentioned mechanisms. For
+example, studies on state repression have emphasised the importance of
+non-elites in being able to vote elected offices out of office as an
+effective deterrent against negative sanctioning by leaders
+[@BuenoDeMesquita2005; @Davenport2007]. But elections occur only
+intermittently and it is not an automatic given that voters will
+punish an incumbent, especially when that repression is against an
+oppressed minority community. Furthermore, while the media can expose
+wrongdoing by government officials, legal punishment can only flow
+through government bodies [@ODonnell1998]. Thus, executive constraints
+are interesting in their own right.
 
 # Empirics {-}
 
@@ -686,6 +827,12 @@ for (y in state) {
 \newpage
 
 ## Appendix B - Prior Predictive Check {#appendix-b}
+
+\newpage
+
+## Appendix C - Convergence Statistics {#appendix-c}
+
+\newpage
 
 
 # References {-}

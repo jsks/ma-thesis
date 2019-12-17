@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE language SYSTEM "language.dtd">
+<!--
+ Modified from https://github.com/KDE/syntax-highlighting which
+ was released under MIT License
+
+ Modified by Eric N. Brown 2019
+-->
 <language name="Stan"
           section="Scientific"
           version="1"
           kateversion="5.0"
           indenter="cstyle"
           extensions="*.stan;*.stanfuncs"
-          license="MIT">
+          license="MIT"
+          casesensitive="true">
   <highlighting>
     <list name="controlflow">
       <item>break</item>
@@ -17,6 +23,8 @@
       <item>in</item>
       <item>return</item>
       <item>while</item>
+      <item>print</item>
+      <item>reject</item>
     </list>
     <list name="keywords">
       <item>reject</item>
@@ -42,20 +50,293 @@
       <item>cov_matrix</item>
       <item>void</item>
     </list>
+    <list name="distributions">
+      <item>normal</item>
+      <item>multi_normal</item>
+      <item>bernoulli</item>
+      <item>bernoulli_logit</item>
+      <item>bernoulli_logit_glm</item>
+      <item>binomial</item>
+      <item>binomial_logit</item>
+      <item>beta_binomial</item>
+      <item>hypergeometric</item>
+      <item>categorical</item>
+      <item>categorical_logit</item>
+      <item>ordered_logistic</item>
+      <item>ordered_probit</item>
+      <item>neg_binomial</item>
+      <item>neg_binomial_2</item>
+      <item>neg_binomial_2_log</item>
+      <item>neg_binomial_2_log_glm</item>
+      <item>poisson</item>
+      <item>poisson_log</item>
+      <item>poisson_log_glm</item>
+      <item>multinomial</item>
+      <item>std_normal</item>
+      <item>normal_id_glm</item>
+      <item>exp_mod_normal</item>
+      <item>skew_normal</item>
+      <item>student_t</item>
+      <item>cauchy</item>
+      <item>double_exponential</item>
+      <item>logistic</item>
+      <item>gumbel</item>
+      <item>lognormal</item>
+      <item>chi_square</item>
+      <item>inv_chi_square</item>
+      <item>scaled_inv_chi_square</item>
+      <item>exponential</item>
+      <item>gamma</item>
+      <item>inv_gamma</item>
+      <item>weibull</item>
+      <item>frechet</item>
+      <item>rayleigh</item>
+      <item>wiener</item>
+      <item>pareto</item>
+      <item>pareto_type_2</item>
+      <item>beta</item>
+      <item>beta_proportion</item>
+      <item>von_mises</item>
+      <item>uniform</item>
+      <item>multi_normal_prec</item>
+      <item>multi_normal_cholesky</item>
+      <item>multi_gp</item>
+      <item>multi_gp_cholesky</item>
+      <item>multi_student_t</item>
+      <item>gaussian_dlm_obs</item>
+      <item>dirichlet</item>
+      <item>lkj_corr</item>
+      <item>lkj_corr_cholesky</item>
+      <item>wishart</item>
+      <item>inv_wishart</item>
+    </list>
+    <list name="functions">
+      <!-- special functions -->
+      <item>integrate_1d</item>
+      <item>integrate_ode</item>
+      <item>integrate_ode_rk45</item>
+      <item>integrate_ode_bdf</item>
+      <item>algebra_solver</item>
+      <item>map_rect</item>
+      <!-- integer functions -->
+      <item>abs</item>
+      <item>int_step</item>
+      <item>min</item>
+      <item>max</item>
+      <!-- real functions -->
+      <item>exp</item>
+      <item>pi</item>
+      <item>e</item>
+      <item>sqrt2</item>
+      <item>log2</item>
+      <item>log10</item>
+      <item>not_a_number</item>
+      <item>positive_infinity</item>
+      <item>negative_infinity</item>
+      <item>machine_precision</item>
+      <!-- boolean functions -->
+      <item>step</item>
+      <item>is_inf</item>
+      <item>is_nan</item>
+      <!-- step functions -->
+      <item>fabs</item>
+      <item>fdim</item>
+      <item>fmin</item>
+      <item>fmax</item>
+      <item>fmod</item>
+      <item>floor</item>
+      <item>ceil</item>
+      <item>round</item>
+      <item>trun</item>
+      <!-- power -->
+      <item>sqrt</item>
+      <item>cbrt</item>
+      <item>sqaure</item>
+      <item>exp</item>
+      <item>exp2</item>
+      <item>log</item>
+      <item>log2</item>
+      <item>log10</item>
+      <item>pow</item>
+      <item>inv</item>
+      <item>inv_sqrt</item>
+      <item>inv_square</item>
+      <!-- trigonometry -->
+      <item>hypot</item>
+      <item>cos</item>
+      <item>sim</item>
+      <item>tan</item>
+      <item>acos</item>
+      <item>asin</item>
+      <item>atan</item>
+      <item>atan2</item>
+      <item>cosh</item>
+      <item>sinh</item>
+      <item>tanh</item>
+      <item>acosh</item>
+      <item>asinh</item>
+      <item>atanh</item>
+      <!-- link functions -->
+      <item>logit</item>
+      <item>inv_logit</item>
+      <item>inv_cloglog</item>
+      <!-- probability -->
+      <item>erf</item>
+      <item>erfc</item>
+      <item>Phi</item>
+      <item>inv_Phi</item>
+      <item>Phi_approx</item>
+      <item>binary_log_loss</item>
+      <item>owens_t</item>
+      <!-- combinatorial -->
+      <item>inc_beta</item>
+      <item>lbeta</item>
+      <item>tgamma</item>
+      <item>lgamma</item>
+      <item>digamma</item>
+      <item>trigamma</item>
+      <item>lmgamma</item>
+      <item>gamma_p</item>
+      <item>gamma_q</item>
+      <item>binomial_coefficient_log</item>
+      <item>choose</item>
+      <item>bessel_first_kind</item>
+      <item>bessel_second_kind</item>
+      <item>modified_bessel_first_kind</item>
+      <item>modified_bessel_second_kind</item>
+      <item>falling_factorial</item>
+      <item>lchoose</item>
+      <item>log_fallingfactorial</item>
+      <item>rising_factorial</item>
+      <item>log_rising_factorial</item>
+      <!-- composed -->
+      <item>expm1</item>
+      <item>fma</item>
+      <item>multiply_log</item>
+      <item>lmultiply</item>
+      <item>log1p</item>
+      <item>log1m</item>
+      <item>log1p_exp</item>
+      <item>log1m_exp</item>
+      <item>log_diff_exp</item>
+      <item>log_mix</item>
+      <item>log_sum_exp</item>
+      <item>log_inv_logit</item>
+      <item>log1m_inv_logit</item>
+      <!-- array operations -->
+      <item>sum</item>
+      <item>prod</item>
+      <item>mean</item>
+      <item>variance</item>
+      <item>sd</item>
+      <item>distance</item>
+      <item>squared_distance</item>
+      <item>dims</item>
+      <item>num_elements</item>
+      <item>size</item>
+      <item>rep_array</item>
+      <item>append_array</item>
+      <item>sort_asc</item>
+      <item>sort_desc</item>
+      <item>sort_indices_asc</item>
+      <item>sort_indices_desc</item>
+      <item>rank</item>
+      <!-- matrix operations -->
+      <item>num_elements</item>
+      <item>rows</item>
+      <item>cols</item>
+      <item>dot_product</item>
+      <item>columns_dot_product</item>
+      <item>rows_dot_product</item>
+      <item>dot_self</item>
+      <item>columns_dot_self</item>
+      <item>rows_dot_self</item>
+      <item>tcrossprod</item>
+      <item>crossprod</item>
+      <item>quad_form</item>
+      <item>quad_form_diag</item>
+      <item>quad_form_sym</item>
+      <item>trace_quad_form</item>
+      <item>trace_gen_quad_form</item>
+      <item>multiply_lower_tri_self_transpose</item>
+      <item>diag_pre_multiply</item>
+      <item>diag_post_multiply</item>
+      <item>rep_vector</item>
+      <item>rep_row_vector</item>
+      <item>rep_matrix</item>
+      <item>diagonal</item>
+      <item>diag_matrix</item>
+      <item>col</item>
+      <item>row</item>
+      <item>block</item>
+      <item>sub_col</item>
+      <item>sub_row</item>
+      <item>head</item>
+      <item>tail</item>
+      <item>segment</item>
+      <item>append_col</item>
+      <item>append_row</item>
+      <item>softmax</item>
+      <item>log_softmax</item>
+      <item>cumulative_sum</item>
+      <item>cov_exp_quad</item>
+      <item>mdivide_left_tri_low</item>
+      <item>mdivide_right_tri_low</item>
+      <item>mdivide_left_spd</item>
+      <item>mdivide_right_spd</item>
+      <item>matrix_exp</item>
+      <item>matrix_exp_multiply</item>
+      <item>scale_matrix_exp_multiply</item>
+      <item>trace</item>
+      <item>determinant</item>
+      <item>log_determinant</item>
+      <item>inverse</item>
+      <item>inverse_spd</item>
+      <item>eigenvalues_sym</item>
+      <item>eigenvectors_sym</item>
+      <item>qr_thin_Q</item>
+      <item>qr_thin_R</item>
+      <item>qr_Q</item>
+      <item>qr_R</item>
+      <item>cholesky_decompose</item>
+      <item>singular_values</item>
+      <!-- sparse matrix operations -->
+      <item>csr_extract_w</item>
+      <item>csr_extract_v</item>
+      <item>csr_extract_u</item>
+      <item>csr_to_dense_matrix</item>
+      <item>csr_matrix_times_vector</item>
+      <!-- mixed operations -->
+      <item>to_matrix</item>
+      <item>to_vector</item>
+      <item>to_row_vector</item>
+      <item>to_array_2d</item>
+      <item>to_array_1d</item>
+    </list>
     <contexts>
       <context attribute="Normal Text" lineEndContext="#stay" name="Normal">
         <DetectSpaces />
-        <DetectChar attribute="Comment" context="Hash comment" char="#"/>
+
+        <!-- Comments -->
+        <!--<DetectChar attribute="Comment" context="Hash comment" char="#"/>-->
         <Detect2Chars attribute="Comment" context="C-style comment" char="/" char1="/"/>
         <Detect2Chars attribute="Comment" context="Block comment" char="/" char1="*" beginRegion="Comment"/>
+
+        <!-- incrementing log-density target -->
         <RegExpr attribute="Keyword" context="#stay" String="\btarget\s*\+=" />
+        <WordDetect attribute="Keyword" context="#stay" String="\btarget()\b" />
+
         <DetectChar attribute="Operator" context="After less-than" char="&lt;" />
         <DetectChar attribute="Punctuation" context="After comma" char="," />
         <DetectChar attribute="Operator" context="After Right Paren" char=")" />
-        <RegExpr attribute="Keyword" context="#stay" String="\b(functions|(transformed\s+)?(data|parameters)|model|generated\s+quantities)\b" />
+
+        <!-- program blocks -->
+        <RegExpr attribute="Block" context="#stay" String="\b(functions|(transformed\s+)?(data|parameters)|model|generated\s+quantities)\b" />
         <keyword attribute="Control Flow" context="#stay" String="controlflow" />
         <keyword attribute="Keyword" context="#stay" String="keywords" />
+        <keyword attribute="Function" context="#stay" String="functions" />
         <keyword attribute="Data Type" context="#stay" String="types" />
+        <DetectChar attribute="Assignment" context="Distribution start" char="~" />
         <RegExpr attribute="Identifier" context="#stay" String="[A-Za-z][A-Za-z0-9_]*" />
         <Float attribute="Real" />
         <Int attribute="Int" />
@@ -77,6 +358,10 @@
         <RegExpr attribute="Doc Tag" String="@(return|param)\b" context="#stay" />
         <Detect2Chars attribute="Comment" context="#pop" char="*" char1="/" endRegion="Comment"/>
       </context>
+      <context attribute="Normal Text" name="Distribution start" lineEndContext="#stay" fallthrough="true" fallthroughContext="#pop" >
+        <DetectSpaces />
+        <keyword attribute="Distribution" context="#pop" String="distributions" />
+      </context>
       <context attribute="Normal Text" name="After comma" lineEndContext="#stay" fallthrough="true" fallthroughContext="#pop" >
         <DetectSpaces />
         <RegExpr context="Upper Bound" String="upper\s*=" lookAhead="true" />
@@ -85,6 +370,8 @@
         <DetectSpaces />
         <RegExpr context="Upper Bound" String="upper\s*=" lookAhead="true" />
         <RegExpr context="Lower Bound" String="lower\s*=" lookAhead="true" />
+        <RegExpr context="Offset" String="offset\s*=" lookAhead="true" />
+        <RegExpr context="Multiplier" String="multiplier\s*=" lookAhead="true" />
       </context>
       <context attribute="Normal Text" name="After Right Paren" lineEndContext="#stay" fallthrough="true" fallthroughContext="#pop" >
         <DetectSpaces />
@@ -98,6 +385,14 @@
         <RegExpr attribute="Keyword" String="lower" context="#stay" />
         <DetectChar attribute="Punctuation" char="=" context="#pop" />
       </context>
+      <context attribute="Normal Text" name="Offset" lineEndContext="#stay" >
+        <RegExpr attribute="Keyword" String="offset" context="#stay" />
+        <DetectChar attribute="Punctuation" char="=" context="#pop" />
+      </context>
+      <context attribute="Normal Text" name="Multiplier" lineEndContext="#stay" >
+        <RegExpr attribute="Keyword" String="multiplier" context="#stay" />
+        <DetectChar attribute="Punctuation" char="=" context="#pop" />
+      </context>
       <context attribute="Normal Text" name="Truncation" lineEndContext="#stay" >
         <DetectChar attribute="Keyword" char="T" context="#stay" />
         <DetectChar attribute="Punctuation" char="[" context="#pop" />
@@ -107,7 +402,10 @@
       <itemData name="Normal Text"  defStyleNum="dsNormal" spellChecking="false"/>
       <itemData name="Control Flow" defStyleNum="dsControlFlow" spellChecking="false"/>
       <itemData name="Keyword"      defStyleNum="dsKeyword" spellChecking="false"/>
+      <itemData name="Function"     defStyleNum="dsKeyword" spellChecking="false"/>
       <itemData name="Data Type"    defStyleNum="dsDataType" spellChecking="false"/>
+      <itemData name="Block"        defStyleNum="dsAttribute" spellChecking="false"/>
+      <itemData name="Distribution" defStyleNum="dsBuiltIn" spellChecking="false"/>
       <itemData name="Int"          defStyleNum="dsDecVal" spellChecking="false"/>
       <itemData name="Real"         defStyleNum="dsFloat" spellChecking="false"/>
       <itemData name="String"       defStyleNum="dsString"/>
