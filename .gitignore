@@ -5,6 +5,7 @@ refs/microstatessystem.dat
 
 **/*.html
 **/*.pdf
+**/*.tex
 **/*.RData
 **/*.rds
 **/*.Rhistory
@@ -13,6 +14,7 @@ refs/microstatessystem.dat
 
 **/*.Rcheck/
 
+build/
 data/
 docs/
 replications/
