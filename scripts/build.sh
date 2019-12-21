@@ -26,8 +26,6 @@ exit
 }
 
 ## Main
-[ -n "$1" ] && usage
-
 while getopts 'hpt' opt; do
     case $opt in
         h)
@@ -39,16 +37,21 @@ while getopts 'hpt' opt; do
     esac
 done
 
+shift $(($OPTIND - 1))
+[ -n "$1" ] && usage
+
+which podman 2>&1 >/dev/null && cmd=podman || cmd=docker
+
 tag=$(git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
 : ${tag:="latest"}
 
 img_name="jsks/conflict_onset:$tag"
 printf "Building $img_name\n"
 
-if which podman 2>&1 >/dev/null; then
-    podman build --format docker -t "$img_name" .
-    [ -n "$PUSH_IMG" ] && podman push "$img_name" "docker.io/$img_name"
+if [ "$cmd" == "podman" ]; then
+    $cmd build --format docker -t "$img_name" .
 else
-    docker build -t "$img_name" .
-    [ -n "$PUSH_IMG" ] && docker push "$img_name"
+    $cmd build -t "$img_name" .
 fi
+
+[ -n "$PUSH_IMG" ] && $cmd push "$img_name"

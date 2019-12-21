@@ -5,6 +5,8 @@
 # versioning.
 ###
 
+set -e
+
 ## Utility functions
 usage() {
     printf "Usage: ./$(basename $0) [-h] [-m <msg>] [-s <semver>]\n"
@@ -56,8 +58,6 @@ compare() {
 }
 
 ## Main
-[ -n "$1" ] && usage
-
 if [ -n "$(git diff --name-only --staged)" ]; then
     printf "Finish commit before updating version number\n"
     exit 127
@@ -92,7 +92,8 @@ while getopts 'hs:m:' opt; do
     esac
 done
 
-set -e
+shift $(($OPTIND - 1))
+[ -n "$1" ] && usage
 
 [ -n "$(git status -s)" ] && confirm "Uncommitted changes"
 confirm "Bumping version to v$next_version"
