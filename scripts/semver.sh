@@ -56,6 +56,8 @@ compare() {
 }
 
 ## Main
+[ -n "$1" ] && usage
+
 if [ -n "$(git diff --name-only --staged)" ]; then
     printf "Finish commit before updating version number\n"
     exit 127
@@ -102,4 +104,4 @@ git commit -m "Prepare release v$next_version"
 git tag -a "v$next_version" -m "$msg"
 git push --follow-tags
 
-sh $root/scripts/build.sh
+sh $root/scripts/build.sh -p
