@@ -7,13 +7,15 @@ RUN apt-get update \
         libopenblas-dev \
         libudunits2-dev \
         lmodern \
-        pandoc \
-        pandoc-citeproc \
         texlive-luatex \
         texlive-latex-extra \
         texlive-latex-recommended \
         texlive-fonts-recommended \
     && rm -rf /var/lib/apt/lists/*
+
+RUN wget 'https://github.com/jgm/pandoc/releases/download/2.9/pandoc-2.9-1-amd64.deb' \
+    && dpkg -i pandoc-2.9-1-amd64.deb \
+    && rm pandoc-2.9-1-amd64.deb
 
 RUN mkdir -p /root/.R
 COPY .R /root/.R
