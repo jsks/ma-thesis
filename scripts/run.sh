@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# Launches an attached container instance using either docker or
-# podman with CLI arguments passed directly to `make`. If the
-# environmental variable CLEANUP is defined and set to 1, then the
-# container will be automatically removed following completion.
+# Launches an interactive container instances with CLI arguments
+# passed directly to `make`. If the env variable CLEANUP is defined
+# and set to 1, then the container will be automatically removed
+# following completion.
 ###
 
 set -e
@@ -24,5 +24,4 @@ if [ "${CLEANUP:-0}" = 1 ]; then
     rm_opts="--rm"
 fi
 
-$CMD run -a stdout -a stderr $mount_opts $rm_opts \
-     "jsks/conflict_onset:$tag" make $@
+$CMD run -it $mount_opts $rm_opts "jsks/conflict_onset:$tag" make $@

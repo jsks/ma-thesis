@@ -9,7 +9,10 @@ grey  := \033[00;37m
 reset := \033[0m
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: clean dump_Rdeps help watch_sync watch_pdf wc
+.PHONY: bash clean help watch_sync watch_pdf wc
+
+bash: ## Drop into bash. Only useful with run.sh to launch interactive shell in container.
+	@bash
 
 help:
 	@egrep '^\S+:.*##' $(MAKEFILE_LIST) | \
@@ -39,10 +42,10 @@ wc: ## Rough estimate of word count
 
 # Records R package versions from the latest run into the csv file
 # 'Rdependencies.csv'
-dump_Rdeps:
+Rdependencies.csv:
 	Rscript R/deps.R
 
-$(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R | dump_Rdeps
+$(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R | Rdependencies.csv
 	Rscript R/geo.R
 
 $(data)/merged_data.rds: $(raw)/V-Dem-CY-Full+Others-v9.rds \
