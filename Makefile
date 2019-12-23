@@ -2,6 +2,7 @@ manuscript := paper.Rmd
 
 data := data
 raw  := $(data)/raw
+refs := refs
 post := posteriors
 
 blue  := \033[01;34m
