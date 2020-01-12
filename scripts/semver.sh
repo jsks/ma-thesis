@@ -96,7 +96,7 @@ shift $(($OPTIND - 1))
 [ -n "$1" ] && usage
 
 [ -n "$(git status -s)" ] && confirm "Uncommitted changes"
-confirm "Bumping version to v$next_version"
+confirm "Bumping version from v$tag to v$next_version"
 
 sed -i "s/Version:.*/Version: $next_version/" $root/R/thesis.utils/DESCRIPTION
 git add $root/R/thesis.utils/DESCRIPTION
