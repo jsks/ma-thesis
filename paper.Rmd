@@ -37,9 +37,6 @@ library(dplyr)
 library(thesis.utils)
 ```
 
-[//]: # Force TOC on separate page
-\newpage
-
 # Introduction {-}
 
 # Theoretical Overview {-}
@@ -272,7 +269,7 @@ abuse power and act unilaterally. Executive constraints can be
 considered a subset of horizontal accountability and imply the
 existence of state agents --- such as the legislature or the judiciary
 --- with both the legal mandate and willingness to oversee or sanction
-the executive thus serving as a deterrent to the forms of
+the executive thus serving as deterrents to the forms of
 authoritarian excesses in executive power which may be linked to civil
 conflict. [^ODonnell]
 
@@ -294,10 +291,10 @@ constraints playing a role in risk aversion in democratic polities;
 however, they find their measure to be insignificant in predicting the
 outbreak of insurgencies. On the other hand, @Fjelde2009 with a theory
 tying executive constraints to public goods provisioning reports a
-significant interaction term with public spending. In both cases an
-ordinal measure of executive constraints from Polity IV
-[@Marshall2019] was used. This leaves open both further work on
-additional theoretical mechanisms and analyses using other datasets.
+significant interaction term with public spending. Both cases use the
+ordinal measure of executive constraints form Polity IV
+[@Marshall2019]. This leaves open further work on additional
+theoretical mechanisms and analyses using other datasets.
 
 ## Executive Constraints
 
@@ -388,16 +385,25 @@ exclusive, and it is beyond the scope of the present paper to properly
 adjudicate between them; however, they do converge on a single
 testable proposition. Namely that higher levels of executive
 constraints should be associated with a lowered risk of civil conflict
-onset. That this may not be the case is either because executive
-constraints are indeterminate to the risk of civil conflict or that
-there is actually a positive relationship between the two. In the case
-of the latter, it could be possible that constrained executives are
-less able to effectively deal with violent challenges because of risk
-aversion to violence and/or from the slowdown from having to seek
-approval from various stakeholders before committing to decisive
-action. Given the theoretical pathways listed above, however, there is
-nonetheless a justified prior belief in favor of there existing a
-negative relationship.
+onset.  As discussed, this may be conditional though on the relative
+capacity of the state --- if executive constraints affect the
+mobilization potential for rebel groups, then in situations where the
+government is willing to engage in repression and has the strength to
+fully suppress the opposition, the impact of executive constraints on
+civil conflict onset should be diminished. Furthermore, even if the
+mobilization mechanism is not valid, the relationship could still be
+confounded by the overall opportunity for rebellion --- the degree of
+executive constraints may not be particularly relevant in relatively
+stable countries with, for example, high levels of economic
+development, little to no ethnic fractionalisation, and no easily
+lootable resources to finance a rebellion. Regardless of
+conditionalities, contrary results would indicate either that
+executive constraints are indeterminate to the risk of civil conflict
+or possibly that there is even a positive relationship since
+constrained executives may be less able to effectively deal with
+violent challenges due to risk aversion to violence and/or from the
+slowdown of having to seek approval from a plurality of stakeholders
+before committing to decisive action.
 
 One final caveat, hitherto the relationship of executive constraints
 to the notion of vertical accountability --- constraints on leaders by
@@ -422,31 +428,125 @@ are interesting in their own right.
 
 To examine the relationship between civil conflict onset and executive
 constraints, I construct a dataset of relevant variables and run a
-bayesian multilevel logistic regression. In what follows, I first
-describe the independent and dependent variables, including the
-operationalizations and data sources, and then delve into the
-regression model before finally presenting the results.
+bayesian structural equation model with a measurement model estimating
+executive constraints as a latent construct and a multilevel logistic
+regression relating the latent construct to the observed outcome,
+civil conflict. The use of bayesian methods is particularly
+advantageous in this setting since the constructed dataset is
+comprised of the entire finite population of countries within a
+non-random subset of years given only non-stochastic
+missingness. Traditional frequentist estimators are inappropriate due
+to the assumption that the observed data is drawn from a random,
+repeatable generative mechanism. This is readily apparent when
+attempting to interpret a frequentist confidence interval in the given
+context. A standard confidence interval for a selected level of
+significance, $\alpha$, reports only that $(1 - \alpha) 100 \%$ of the
+calculated confidence intervals from additional inferences done on
+repeated samples are expected to contain the true population value
+[@Western1994]. However, for the current analysis the desired target
+is really to be able to calculate directly the probability that the
+current uncertainty interval contains the true value given the data
+and the model specification. Bayesianism offers a solution by casting
+probability as degrees of belief in some event wherein inference is
+then the process of updating those prior beliefs in light of new
+data. When using bayesian methods, parameters such as regression
+coefficients are considered to be random, meaning that prior beliefs
+in the form of probability distributions can be assigned and posterior
+probability distributions estimated from observed data [@Western1999].
+
+In what follows, I will first describe the regression portion of the
+model before delving into the independent and dependent variables,
+including the operationalizations and data sources as well as the
+measurement model for executive constraints.[^model]
+
+[^model]: The model itself is written in Stan [@Carpenter2017] and run
+    using the `CmdStan` interface [@Team2019a] with
+    pre/post-processing done using `R` [@Team2019]. The model code is
+    available in [Appendix A](#appendix-a) and a fully reproducible
+    pipeline composed of all replication scripts is available at
+    [https://github.com/jsks/ma-thesis](https://github.com/jsks/ma-thesis).
+
+### Regression Model
+
+I model civil conflict onset as a bayesian multilevel regression where
+onset is a function of a set of predictors, including executive
+constraints and an array of control variables, together with several
+grouping factors included as partially pooled varying intercepts. The
+units of analysis are all independent country-years from 1946 until
+2016, as determined by data availability, with *I* countries indexed
+by $i = 1 \dotsc I$ and *T* years indexed by $t = 1 \dotsc T$. The
+dependent variable, conflict onset, is a Bernoulli distributed binary
+variable where 1 denotes the onset of at least one new civil conflict
+in a given country-year. The chosen link function transforming the
+linear regression output into the probability of conflict onset,
+$\nu_{it}$, is the inverse logistic such that $\nu_{it} \in [0,
+1]$. [^invlogit]
+
+[^invlogit]: Technically, the inverse logistic transforms values to
+    the open interval, $(0, 1)$, but due to overflow/underflow in
+    floating point calculations by computers the endpoints can be
+    observed.
+
+The full regression specification is then as follows:
+\begin{align*}
+  y_{it} & \sim \mathsf{Bernoulli}(\nu_{it}) \\
+  \nu_{it} & = \mathsf{logit^{-1}}(\alpha + X_{it-1} \beta +
+                 \sum_{k=1}^K \zeta^k_{j_{it}})
+\end{align*}
+
+where **X** is a single row matrix of predictors, $\beta$ a vector of
+regression slopes, and $\zeta^k$ the set of varying intercepts for *K*
+grouping factors indexed by $j_k$. For the present analysis there is
+only two grouping factors, year and country, to account for
+cross-sectional unmodeled heterogeneity between countries and over
+time [@Shor2007]. All predictors are also lagged by one year to
+control for time endogeneity and standardized by substracting the mean
+and dividing by the standard deviation for each variable to aid in
+computation as well as comparison of the final $\beta$ estimates.
+
+I place weakly informative priors on all parameters to allow the
+posterior estimates to be largely determined by the observed data
+while avoiding the more pathological values and hard constraints that
+can arise from uninformative priors. For the slopes and population
+intercept, given that the input data has been standardized, this
+translates to:
+\begin{align*}
+    \alpha & \sim \mathsf{Normal}(0, 5) \\
+    \beta & \sim \mathsf{Normal}(0, 2.5)
+\end{align*}
+
+Finally, for the varying intercepts modeling group-specific
+variability, I use hierarchical priors to provide a regularizing
+effect against overfitting [@Gelman2007].
+\begin{align*}
+    \zeta^k_j & \sim \mathsf{Normal}(0, \sigma^k) \\
+    \sigma^k & \sim \mathsf{HalfCauchy}(0, 1)
+\end{align*}
 
 ### Civil Conflict
 
-The dependent variable, *civil conflict onset*, was taken from the
-UCDP/PRIO Armed Conflict Dataset v19.1 (Cite) where intra-state
-conflict is defined as a violent contest over a government or
-territory between a state and non-state actor with a minimum threshold
-of 25 battle deaths within a single country-year with a coverage from
-1946 to 2018.  The data was merged based on country location for
-conflicts labeled as internal or internationalized internal --- *i.e.*
-where *type_of_conflict* was either 3 or 4. Multiple conflicts within
-the same years were aggregated to form a binary variable coded as 1 to
-denote the onset of at least one new civil conflict and 0 for all
-other years, including years of ongoing conflict.^[Extrasystemic
-conflicts, *i.e.* imperial or colonial conflicts, were excluded
-largely due to lack of data. Ideally, such conflicts would be merged
-based on the territory location of the conflict, however, for
-colonies, for example, there is very little easily available economic
-data and it would be undesirable to use the data for the colonizing
-power due to the often wide discrepancies in development within
-colonial empires. TODO: maybe a blurb on theory?]
+The dependent variable, *civil conflict onset*, is taken from the
+UCDP/PRIO Armed Conflict Dataset v19.1 [@Gleditsch2002;
+@Pettersson2019] where intra-state conflict is defined as a violent
+contest over a government or territory between a state and non-state
+actor with a minimum threshold of 25 battle deaths within a single
+country-year with a coverage from 1946 to 2018.  The data was merged
+based on country location for conflicts labeled as internal or
+internationalized internal --- *i.e.* where *type_of_conflict* was
+either 3 or 4. Multiple conflicts within the same years were
+aggregated to form a binary variable coded as 1 to denote the onset of
+at least one new civil conflict and 0 for all other years, including
+years of ongoing conflict.[^conflict_type]
+
+[^conflict_type]: Extrasystemic conflicts, *i.e.* imperial or colonial
+    conflicts, were excluded largely due to lack of data. Ideally,
+    such conflicts would be merged based on the territory location of
+    the conflict, however, for colonies, for example, there is very
+    little easily available economic data and it would be undesirable
+    to use the data for the colonizing power due to the often wide
+    discrepancies in development within colonial empires. TODO: maybe
+    a blurb on theory?
+
 
 The primary onset dates were determined according to UCDP/PRIO's
 episodic definition where a new onset is coded for the same
@@ -462,306 +562,294 @@ executive constraints to the incentives for political violence should
 still hold (TODO: possible expand here).
 
 That said, because of the potential sensitivity of results to changing
-conflict definitions (cite Sambanis), all analyses were also run using
-only unique onsets.^[Likewise, appendix ? presents results
-using a higher threshold for battle deaths. The end results stay the
-same TODO]
+conflict definitions [@Sambanis2004b], all analyses were also run using
+only unique onsets.
 
-### Executive Constraints
+### Measuring Executive Constraints
 
-(TODO: Probably cite Sklar and/or O'Donnell here for more theoretical
-justification of operationalization, maybe even define institutions as
-well)
-
-To measure formal executive constraints I use data from the Varieties
-of Democracy (V-Dem) dataset v9.0 (cite V-Dem). V-Dem is a
+To measure executive constraints I use data from the Varieties of
+Democracy (V-Dem) dataset v9.0 [@Coppedge2019]. V-Dem is a
 cross-national time series dataset providing multidimensional,
 disaggregated data on democracy and political institutions for over
 200 countries with an overall year coverage from 1789 until 2018. The
 principal data is drawn from expert coded surveys involving a global
-network of over 3000 coders, mostly academics as well as professionals
-working in policy related fields (cite Methodology doc). Individual
-ratings are aggregated into latent variable estimates using
-hierarchical ordinal item response theory (IRT) models taking into
-account rater reliability and varying rater thresholds (cite Pemstein
-et al). ^[Thresholds relate to how the continuous latent trait for a
-given variable is mapped on to the ordinal answer categories presented
-on the survey. Due to differential item functioning, experts may
-perceive the magnitude of difference between answer items
-differently. For example, for the variable *v2elvotbuy*, election vote
-buying, experts may vary in how they interpret the difference between
-a 2 (Restricted Vote Buying) and a 3 (Almost No Vote Buying). These
-two concepts, rater reliability and varying rater thresholds,
-correspond respectively to the *discrimination* and *difficulty*
-parameters in classical IRT models.] The result is over 220 lower
-level indicators that are also combined through various aggregation
+network of over 3000 coders, most of whom are academics as well as
+professionals working in policy related fields. Individual ratings are
+aggregated into latent variable estimates using hierarchical ordinal
+item response theory (IRT) models taking into account rater
+reliability and varying rater thresholds
+[@Pemstein2019]. [^thresholds] The result is over 220 lower level
+indicators that are also combined through various aggregation
 techniques to produce over 80 indices. Compared to datasets such as
-Polity IV (cite), which has traditionally been used in most analyses
-of civil conflict, V-Dem provides much more fine grained, nuanced
-data, and most importantly, includes measures of uncertainty
-propagated from the IRT models. This latter point is crucial since
-ignoring measurement error, especially in models with noisy data and
-small effect sizes as is often the case in conflict studies, can bias
-estimates and lead to overconfident results (cite Treier & Jackman;
-Kyle).
+Polity IV, which has traditionally been used in most analyses of civil
+conflict, V-Dem provides much more fine grained, nuanced data, and
+most importantly, includes measures of uncertainty propagated from the
+IRT models. This latter point is crucial since ignoring measurement
+error, especially in models with noisy data and small effect sizes as
+is often the case in conflict studies, can bias estimates and lead to
+overconfident results [@Treier2008; @Marquardt2019].
 
-For the purposes of this paper, I re-estimate Lührmann *et al*'s
-horizontal accountability index (*v2x_horacc*) in V-Dem with the
-addition of several variables (cite). The *v2x_horacc* index aims to
-capture the extent to which the executive is *de facto* constrained by
-other government institutions --- more specifically, the legislature,
-judiciary, constitutional norms, and independent investigative bodies
-(cite pg 61) --- rather than the *de jure* powers of any one
-institution *vis-à-vis* the executive. It is estimated as a latent
-variable using a structural equation model thereby avoiding the
-arbitrary weighting of linear additive indices.^[A theoretical
-argument could be made that the oversight offered by each institution
-is a necessary condition and that any index should therefore be
-additive with equal weighting. However, this would be a normative
-measure capturing the degree to which a country-year fulfills an ideal
-concept, rather than measuring how constrained an executive actually
-is in practice.]
+
+[^thresholds]: Thresholds relate to how the continuous latent trait
+    for a given variable is mapped on to the ordinal answer categories
+    presented on the survey. Due to differential item functioning,
+    experts may perceive the magnitude of difference between answer
+    items differently. For example, for the variable *v2elvotbuy*,
+    election vote buying, experts may vary in how they interpret the
+    difference between a 2 ("Restricted Vote Buying") and a 3 ("Almost
+    No Vote Buying"). These two concepts, rater reliability and
+    varying rater thresholds, correspond respectively to the
+    *discrimination* and *difficulty* parameters in classical IRT
+    models.
+
+For the purposes of this paper, I estimate an index measuring
+executive constraints from a factor analysis of several manifest
+variables drawn from the V-Dem dataset. The aim is to capture the
+extent to which the executive is *de facto* constrained by other
+government institutions --- more specifically, the legislature,
+judiciary, and independent investigative bodies --- rather than the
+*de jure* powers of any one institution *vis-à-vis* the executive, and
+to do so using a latent variable model that avoids the arbitrary
+weighting of linear additive indices.[^additive] The aggregation
+method is largely similar to the accountability index created by
+@Luhrmann2017 and the presidentialism index created by @Sigman2018. By
+creating a separate index, however, I am able to adjust the list of
+included manifest variables as well as embed the factor analysis
+within the larger regression model such that the uncertainty from the
+latent factor propagates as a result of the estimation process.
+
+[^additive]: A theoretical argument could be made that the oversight
+    offered by each institution is a necessary condition and that any
+    index should therefore be additive with equal weighting. However,
+    this would be a normative measure capturing the degree to which a
+    country-year fulfills an ideal concept, rather than measuring how
+    constrained an executive actually is in practice.
 
 For the legislature and the judiciary, the two principal government
-branches most able to check the power of the executive, there needs to be
-both a *capacity* and *willingness* for oversight. To better capture
-the former dimension, I include two additional legislative
-variables. Besides *v2lgqstexp*, legislature questions executive
-branch officials, and *v2lginvstp*, legislature investigates in
-practice, I add *v2lgfunds*, legislature controls its own resources,
-and *v2lgoppart*, opposition parties able to exercise oversight. The
-remaining manifest variables are unchanged. Namely, for the judicial
-component: *v2juhcind*, high court independence; *v2juncind*, lower
-court independence; *v2juhccomp*, the degree to which the government
-complies with high court decisions; *v2jucomp*, the degree to which
-the government complies with lower court decisions. Norms relating to
-the status of the constitution are captured by *v2exrescon*, executive
-respects constitution, and the final dimension, independent
-investigative bodies, by *v2lgovost*, executive oversight by bodies
-other than the legislature.
+branches most able to check the power of the executive, there needs to
+be both a *capacity* and *willingness* for oversight. Thus, I include
+the following legislative variables: *v2lgoppart*, opposition parties
+able to exercise oversight; *v2lgfunds*, legislature controls its own
+resources; *v2lginvstp*, legislature investigates in practice;
+*v2lgqstexp*, legislature questions executive branch officials. For
+the judicial component: *v2juhcind*, high court independence;
+*v2juncind*, lower court independence; *v2juhccomp*, the degree to
+which the government complies with high court decisions; *v2jucomp*,
+the degree to which the government complies with lower court
+decisions. And for the final dimension, independent investigative
+bodies, I include the variable *v2lgovost*, executive oversight by
+bodies other than the legislature.
 
-For the estimation of the latent index I largely follow the approach
-taken by *v2x_horacc* with two notable exceptions. The first is that I
-model the measurement error in the manifest variables using the
-reported posterior standard deviations from V-Dem --- available as
-_v2\*\_sd_. The second is that for computational reasons I allow the
-judicial variables to impact the latent factor directly rather than
-nested within a second latent factor (TODO: better justification). The
-result is the following model specification.
-
-For $m$ country-years indexed by $i \in I = \{1, \dotsc, n\}$ and $n$
-manifest variables indexed by $p \in P = \{1, \dotsc, n\}$, let $Z \in
+Given the listed manifest variables, the estimation technique is then
+as follows: for $m$ country-years indexed by $i = 1 \dotsc m$ and $n$
+manifest variables indexed by $j = 1 \dotsc n$, let $Z \in
 \mathbb{R}^{m \times n}$ be the matrix of manifest variables measured
 with an observed degree of error, $Z^\ast \in \mathbb{R}^{m \times n}$
-the matrix of latent true values, and $\theta$ the unidimensional
-latent factor measuring executive constraints. Further, let $Q(Z_{\ast
-p})$ be a property defined as true when $Z_{\ast p}$ denotes a
-legislative variables and otherwise false.
+the matrix of unobserved true values, and $\theta$ the unidimensional
+latent factor of length $m$ measuring executive constraints.
 
 I first model the measurement error in the manifest variables by
 assuming that the observed values are drawn from a normal distribution
-where the location parameters are the latent true values and the scale
-the observed posterior standard deviations (cite McElreath).^[An even
-more sensible approach would be to directly embed the individual IRT
-models aggregating the manifest variables into the larger executive
-constraints measurement model (cite Kyle). However, this prohibitively
-increases the run time of the model.]
-\[ Z_{ip} \sim \mathsf{Normal}(Z^\ast_{ip}, \tau_{ip}) \]
+where the location parameters are the latent true values and the
+scale, $u$, the observed posterior standard deviations derived from
+the IRT posterior distributions. [^err]
+\[ Z_{ij} \sim \mathsf{Normal}(Z^\ast_{ij}, u_{ij}) \]
+
+[^err]: An ideal approach would be to directly embed the individual
+    IRT models aggregating the manifest variables into the larger
+    executive constraints measurement model [@Marquardt2019]. However,
+    this prohibitively increases the run time of the model.
 
 The latent values for the manifest variables are then modeled as
-functions of the latent factor $\theta$. For the non-legislative
-variables the mapping functions are identical to a standard factor
-analytic approach.
-\[
-  Z^\ast_{ip} \sim \mathsf{Normal}(\gamma_p + \lambda_p \theta_i, \psi_p)
-  \mbox{\quad if } p \in P \mid \neg Q(Z_{\ast p})
-\]
+functions of the latent factor $\theta$ where the mapping function is
+a standard factor analysis.
+\[ Z^\ast_{ij} \sim \mathsf{Normal}(\gamma_j + \lambda_j \theta_i, \psi_j) \]
 
-where $\lambda$ is the variable specific factor loading, $\gamma$ the
-population intercept, and $\psi$ the scale of the error terms.
+where $\lambda$ is the manifest variable specific factor loading,
+$\gamma$ the population intercept, and $\psi$ the scale of the error
+term. I assume local item independence such that the error terms,
+$(\psi_1, \dotsc, \psi_n)$, are uncorrelated (cite Lord &
+Novick). Furthermore, for the purposes of identifying the likelihood,
+the scale of the latent factor, $\theta$, is fixed to mean $0$ and
+standard deviation $1$ while the factor loadings, $(\lambda_1, \dotsc,
+\lambda_n)$, are constrained to be positive [@Jackman2009]. The
+positive constraints follow theory since all of the manifest variables
+exhibit the same scale direction and should be positively correlated
+with the latent factor.[^corr] Finally, similar to the regression
+coefficients, I select weakly informative priors.
+\begin{align*}
+    \gamma & \sim \mathsf{Normal}(0, 5) \\
+    \lambda & \sim \mathsf{LogNormal}(0, 1) \\
+    \psi & \sim \mathsf{Weibull}(2, 1)
+\end{align*}
 
-In the case of the legislative variables there is the added issue of
-missing observations for country-years lacking a
+[^corr]: In general, the direction of the ordinal answer categories
+    for the lower level V-Dem indicators is from low to high, *i.e.*
+    $0$ is the "worst" and the highest value the "best." For example,
+    for *v2lginvstp*, legislature investigates in practice, $0$
+    denotes that it is extremely unlikely that the legislature
+    conducts an investigation where the outcome would be unfavorable
+    for the sitting executive and the highest category, $4$, denotes
+    that it is certain or nearly certain (CITE V-Dem codebook).
+
+Finally, in the case of the legislative variables there is the added
+issue of missing observations for country-years lacking a
 legislature.[^missing] For those observations, given the centrality of
 the legislature as a potential constraint against the executive, the
 latent factor should ideally be lower conditional on the other
 manifest variables. However, since the manifest variables are
-themselves latent variables, minimal values cannot be imputed without
-a nonlinear transformation to a bounded scale. I thus follow
-*v2x_horacc* in mediating the effect of the latent factor on the
-legislative variables by the presence of the legislature using a
-dichotomized version of *v2lgbicam*, how many chambers does the
-legislature contain, denoted by the Bernoulli distributed variable,
-$w$, where country-years with a sitting legislature are given a $1$
-and country-years where the legislature is missing or has been
-suspended, $0$. The probability of a legislature being present,
-$\pi_i$, is then a linear function of the latent factor, $\theta$,
-transformed by the inverse logistic such that $\pi_i \in [0,
-1]$.^[Technically, the inverse logistic transforms values to the open
-interval, $(0, 1)$, but due to overflow/underflow in floating point
-calculations by computers the endpoints can be observed.] The
-legislative manifest variables are in turn treated as functions of the
-linear predictor for $w$ (cite pg 63). The practical effect is that
-where there is data for the legislative manifest variables, the latent
-factor is informed by the measured institutional quality of the
+themselves unbounded latent variables, minimal values cannot be
+imputed without a nonlinear transformation to a bounded scale. I thus
+take a cue from *v2x_horacc* and include into the model a dichotomized
+version of *v2lgbicam*, how many chambers does the legislature
+contain, denoted by the Bernoulli distributed variable, $w$, where
+country-years with a sitting legislature are given a $1$ and
+country-years where the legislature is missing or has been suspended,
+$0$. The probability of a legislature being present, $\pi_i$, is then
+a linear function of the latent factor, $\theta$, transformed by the
+inverse logistic such that $\pi_i \in [0, 1]$. The practical effect is
+that where there is data for the legislative manifest variables, the
+latent factor is informed by the measured institutional quality of the
 legislature. Where data is missing due to the suspension or lack of a
 legislature, the latent factor is down weighted by the linear function
 predicting $w$, conditional on the observed values of the remaining
-manifest variables.
+manifest variables. The resulting model specification, including
+priors, is as follows:
 \begin{align*}
-  w_i & \sim \mathsf{Bernoulli}(\pi_i) \\
-  \pi_i & = \mathsf{logit}^{-1}(\xi_i) \\
-  \xi_i & = \eta + \delta \theta_i \\
-  Z^\ast_{ip} & \sim \mathsf{Normal}(\gamma_p + \lambda_p \xi_i, \psi_p)
-    \mbox{\quad if } p \in P \mid Q(Z_{\ast p}) \land w_i = 1
+    w_i & \sim \mathsf{Bernoulli}(\pi_i) \\
+    \pi_i & = \mathsf{logit}^{-1}(\eta + \delta \theta_i) \\
+    \eta & \sim \mathsf{Normal}(0, 5) \\
+    \delta & \sim \mathsf{LogNormal}(0, 1)
 \end{align*}
 
 [^missing]: Missingness due to the lack of of a particular
-institution, for example the suspension of high court, is an issue for
-the other manifest variables as well. However, only the existence of
-the legislature is coded by V-Dem as a separate variable. Furthermore,
-practically speaking, none of the other manifest variables exhibit the
-same systematic pattern of missingness in the dataset as the
-legislative variables. Whereas there are 1608 country-years lacking a
-legislature ($13.4\%$ of all post-1945 country-years), only 115 are
-missing data for at least one of the judicial variables ($1\%$) and
-only 58 are missing for *v2exrescon* ($0.5\%$). The variable
-*v2lgotovst*, executive oversight by bodies other than the
-legislature, is an outlier with 1619 country-years missing ($13.5\%$)
-since there is an error in V-Dem's v9.0 dataset whereby it has been
-cleaned according to when the legislature is missing. Thus, I impute
-*v2lgotovst* within the larger model where the legislature is missing
-by drawing missing values from a normal distribution with a mean and
-standard deviation estimated from the observed *v2lgotovst* data. No
-other country-years or variables are imputed. The rationale is that,
-disregarding data processing issues, missingness in V-Dem can arise
-either from a lack of expert coders or lack of information. The latter
-scenario will most likely be correlated with country-years where there
-is a crisis or significant political instability, such as coups or
-civil war, where extreme values are more probable. Since it cannot be
-assumed that the values are completely missing at random, the data
-generative process for missingness cannot be modeled without
-potentially introducing bias into the estimates.
+    institution, for example the suspension of high court, is an issue
+    for the other manifest variables as well. However, only the
+    existence of the legislature is coded by V-Dem as a separate
+    variable. Furthermore, practically speaking, none of the other
+    manifest variables exhibit the same systematic pattern of
+    missingness in the dataset as the legislative variables. Whereas
+    there are 1608 country-years lacking a legislature, or
+    approximately $13.4\%$ of all post-1945 country-years, only 115
+    are missing data for at least one of the judicial variables
+    ($1\%$) and only 58 are missing for *v2exrescon* ($0.5\%$). The
+    variable *v2lgotovst*, executive oversight by bodies other than
+    the legislature, is an outlier with 1619 country-years missing
+    ($13.5\%$ missingness) since there is an error in V-Dem's v9.0
+    dataset whereby it has been cleaned according to when the
+    legislature is missing. Thus, I impute *v2lgotovst* within the
+    larger model where the legislature is missing by drawing missing
+    values from a normal distribution with a mean and standard
+    deviation estimated from the observed *v2lgotovst* data. No other
+    country-years or variables are imputed. The rationale is that,
+    disregarding data processing issues, missingness in V-Dem can
+    arise either from a lack of expert coders or lack of
+    information. The latter scenario will most likely be correlated
+    with country-years where there is a crisis or significant
+    political instability, such as coups or civil war, where extreme
+    values are more probable. Since it cannot be assumed that the
+    values are completely missing at random, the data generative
+    process for missingness cannot be modeled without potentially
+    introducing bias into the estimates.
 
-Finally, for the both the legislative and non-legislative mapping
-functions I assume local item independence such that the elements of
-$\Psi$ are uncorrelated (cite Lord & Novick). Furthermore, for the
-purposes of identifying the likelihood the scale of the latent factor,
-$\theta$, is fixed to mean $0$ and standard deviation $1$ while the
-slopes, $\Lambda$ and $\delta$, are constrained to be positive (cite
-Jackman). The positive constraints are drawn from theory since all of
-the manifest variables exhibit the same scale direction and should be
-positively correlated with the latent factor. Similarly, the presence
-of the legislature should be positively correlated with higher values
-of the latent factor, *i.e.* greater executive constraints.
+### Additional Variables
 
-### Controls
+As mentioned during the theoretical discussion of possible mechanisms,
+executive constraints alone are insufficient in determining the
+outbreak of conflict. One possible mediator is the relative capacity
+of the state. For the present analysis I follow @Fearon2003 in using
+GDP per capita as a proxy for the state's administrative and military
+capacity by roughly capturing the revenue potential available to the
+state. This is far from being an ideal proxy for state capacity; GDP
+per capita could also capture economic grievances as well as the
+relative ease of financing a rebellion given low wages
+[@Hendrix2010]. Data on GDP per capita, however, is significantly more
+complete than other common competing measures such as bureaucratic
+quality or tax revenue as a percent of GDP.[^wbgi] Furthermore, it is
+more correlated with the administrative aspects of state capacity than
+measures focused solely on military strength, such as military
+expenditures [@Hendrix2010]. Thus, I use the natural log of the
+*RGDP^o* variable, constant price real GDP, from Penn World Tables
+(PWT) v9.1 (1950-2017) to allow for both cross-country and
+cross-temporal comparisons of GDP per capita [@Feenstra2015] and
+include an interaction term between GDP per capita and the latent
+measure for executive constraints to capture the conditional
+relationship.
 
-In addition to the data on conflict onset and executive constraints, I
-also include a number of standard controls drawn largely from previous
-literature, the most important of which is state capacity. According
-to the theory outlined earlier, the impact of executive constraints on
-decreasing the probability of conflict onset should be conditional on
-the relative capacity of the state. The lack of executive constraints
-most likely increases the risk of civil conflict when state capacity
-is low and the central government is willing to use repression, but
-lacks the ability to fully suppress the opposition. To measure state
-capacity I follow Fearon & Laitin in using GDP per capita as a proxy
-for the state's administrative and military capacity by roughly
-capturing the revenue potential available to the state (cite). As a
-data source, I use the natural log of the *RGDP^e* variable, constant
-price real GDP, from Penn World Tables v9.1 (1950-2017) to allow for
-both cross-country and cross-temporal comparisons of GDP per capita
-(cite)^[TODO: Expand on why Penn World Tables] and include an
-interaction term between GDP per capita and the latent measure for
-executive constraints to capture the conditional relationship.
+[^wbgi]: For example, the World Bank governance indicator on
+    government effectiveness extends back only until 1996 (TODO:
+    cite). Given that measures of institutional quality often change
+    fairly slowly, punctuated only by abrupt events such as coups or
+    revolutions, an extended time series is desirable. Furthermore, in
+    the specific case of bureaucratic quality, there is the added
+    issue of endogeneity. An unconstrained executive may seek to
+    promote government corruption and undermine both meritocratic
+    recruitment into the bureaucracy as well as its impartiality.
 
+In addition to state capacity, I also include a number of standard
+variables drawn largely from previous literature. The list of
+variables are not meant to provide an all encompassing theory of civil
+conflict, but rather roughly capture the most relevant dimensions of
+opportunity structure for armed conflict.  This includes a single year
+lagged measure of GDP per capita growth from PWT in order to capture
+short term economic shocks, which may affect both the strength and
+legitimacy of the state [@Bazzi2014]. I also include a measure of mean
+elevation from the GROWup dataset [@Girardin2015] to capture terrain
+advantageous for conducting an insurgency [@Fearon2003] as well as a
+measure of population density derived from population data from PWT
+and the area in square kilometers for each country from
+GROWup. Countries with a higher population density may require a more
+extensive and competent central administration and policing force in
+order to suppress violent dissent [@Fearon2003]. There's also the
+possibility that a high population density increases the competition
+for resources. If the state is identified as the source of a
+particular scarcity, the risk of civil conflict may increase. Finally,
+I include measures of ethnic fractionalization in the form of the
+number of political relevant ethnic groups and the percent of the
+population facing discrimination. Where there are significant ethnic
+cleavages and state sponsored discrimination, ethnic ties can
+facilitate collective action thereby lowering the mobilization costs
+of rebel groups [@Cederman2011].
 
+To control for the time endogeneity of conflict --- past and current
+civil conflicts can impact the present risk of conflict onset as well
+as the level of executive constraints --- I include a dummy variable
+for ongoing conflict and the log of peace years [@Hegre2015a]. [^time]
+To account for spillover effects, I include a dummy variable for
+whether a neighbouring country is currently experiencing a civil
+conflict. One notable lack is a general measure of political
+instability, which I omit since it would be highly correlated with
+executive constraints and could potentially bias results, at least for
+years of crisis where the risk of civil conflict is highest. I do,
+however, include a dummy variable for independence year since newly
+sovereign states may be particularly weak.
 
-- state capacity (GDP per capita)
+[^time]: To be more specific, civil conflicts can be highly
+    destabilizing and severely affect the governing and military
+    capacity of a state, increasing the risk for an additional
+    conflict onset. Moreover, in times of particularly intense
+    conflict, wartime powers may be granted to the executive bypassing
+    normal institutional constraints. Thus, ongoing conflict is a
+    potential confounder since it can influence both the probability
+    of the outcome as well as the executive constraints
+    measure.
 
-- gdp growth
-
-- population density
-
-- mean elevation
-
-- relevant group counts
-
-- neighbouring conflict
-
-- ongoing conflict
-
-- peace years
-
-- varying intercepts
-
-What's not included (political instability) and why
-
-### Regression Model
-
-I model civil conflict onset as a bayesian multilevel regression where
-onset is a function of a set of predictors, including executive
-constraints and an array of control variables, together with several
-grouping factors included as partially pooled varying intercepts. The
-units of analysis are all independent country-years from 1946 until
-2016, as determined by data availability, with *n* countries indexed
-by $i = 1 \dotsc n$ and *m* years indexed by $t = 1 \dotsc m$. The
-dependent variable, conflict onset, is a Bernoulli distributed binary
-variable where 1 denotes the onset of at least one new civil conflict
-in a given country-year. The chosen link function transforming the
-linear regression output into the probability of conflict onset,
-$\nu_{it}$, is the inverse logistic such that $\nu_{it} \in [0, 1]$.
-
-The full regression specification is then as follows:
-\begin{align*}
-  y_{it} & \sim \mathsf{Bernoulli}(\nu_{it}) \\
-  \nu_{it} & = \mathsf{logit^{-1}}(\alpha + X_{it-1} \beta + \sum_{k=1}^K \zeta^k_{j_{it}})
-\end{align*}
-
-where **X** is a single row matrix of predictors, $\beta$ a vector of
-regression slopes, and $\delta^k$ the set of varying intercepts for
-*K* grouping factors indexed by $j_k$. To account for time
-endogeneity, all predictors are lagged by one year. They are also
-standardized by subtracting the mean and dividing by the standard
-deviation for each variable to aid in computation as well as
-comparison of the final $\beta$ estimates (cite Gelman maybe?).
-
-I place weakly informative priors on all parameters to allow the
-posterior estimates to be largely determined by the observed data
-while avoiding the more pathological values and hard constraints that
-can arise from uninformative priors (cite Stan). For the slopes and
-population intercept, given that the input data has been standardized,
-this translates into
-
-\[ \alpha \sim \mathsf{Normal}(0, 5) \]
-\[ \beta \sim \mathsf{Normal}(0, 2.5) \]
-
-Finally, for the varying intercepts modeling group-specific
-variability, I use hierarchical priors that provide a regularizing
-effect against overfitting (cite Gelman and Hill - Multilevel
-Regression).
-
-\[ \delta^k \sim \mathsf{Normal}(0, \sigma^k) \]
-\[ \sigma^k \sim \mathsf{HalfCauchy}(0, 1) \]
+    Regarding the peace years, the variable is calculated as
+    the number of years since the last conflict-year, including
+    conflict-years from extrasystemic conflicts. For countries left
+    censored due to the dataset starting date, I set the start of the
+    peace year calculation to 1946, the end of World War II. The
+    rationale is that World War II was a significant international
+    event that reshaped the world order and even had domestic
+    consequences for countries not directly involved. For newly
+    independent countries, I use the independence date as the start
+    year.
 
 ## Analysis
 
-Measurement model:
-\begin{align*}
-  \theta & \sim \mathsf{Normal}(0, 1) \\
-  \delta, \lambda & \sim \mathsf{LogNormal}(0, 1) \\
-  \eta, \gamma & \sim \mathsf{Normal}(0, 5) \\
-  \psi & \sim \mathsf{Weibull(2, 1)}
-\end{align*}
+### Latent Factor Model
 
-Regression parameters:
-\begin{align*}
-  \beta & \sim \mathsf{Normal}(0, 2.5) \\
-  \alpha & \sim \mathsf{Normal}(0, 5) \\
-  \zeta^k & \sim \mathsf{Normal}(0, \sigma^k) \\
-  \sigma & \sim \mathsf{HalfCauchy}(0, 1)
-\end{align*}
+### Conflict Onset Regression
 
 
 ```{r}
@@ -819,18 +907,18 @@ for (y in state) {
 
 # Appendices {-}
 
-## Appendix A - Stan Code {#appendix-a}
+## A - Stan Code {#appendix-a}
 
 ```{stan, code = readLines("stan/model.stan"), eval = FALSE, output.var = "x", echo = T}
 ```
 
 \newpage
 
-## Appendix B - Prior Predictive Check {#appendix-b}
+## B - Prior Simulation {#appendix-b}
 
 \newpage
 
-## Appendix C - Convergence Statistics {#appendix-c}
+## C - Convergence Statistics {#appendix-c}
 
 \newpage
 
