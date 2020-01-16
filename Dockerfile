@@ -2,9 +2,11 @@ FROM r-base:3.6.2
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        git \
         libgdal-dev \
         libopenblas-base \
         libopenblas-dev \
+        libssl-dev \
         libudunits2-dev \
         lmodern \
         texlive-luatex \
@@ -20,7 +22,11 @@ RUN wget 'https://github.com/jgm/pandoc/releases/download/2.9/pandoc-2.9-1-amd64
 RUN mkdir -p /root/.R
 COPY .R /root/.R
 
-RUN install2.r -e data.table dplyr loo readxl rmarkdown rstan sf testthat tidyr \
+# Unfortunately, cmdstanr is still pulling in rstan as a dependency :(
+RUN install2.r -e data.table devtools dplyr extraDistr ggplot2 \
+        loo readxl rmarkdown sf testthat tidyr \
+    && Rscript -e "devtools::install_github('stan-dev/cmdstanr')" \
+    && Rscript -e "cmdstanr::install_cmdstan()" \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 RUN mkdir -p /proj/thesis.utils/

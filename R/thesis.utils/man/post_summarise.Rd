@@ -2,35 +2,14 @@
 % Please edit documentation in R/post.R
 \name{post_summarise}
 \alias{post_summarise}
-\alias{post_summarise.matrix}
-\alias{post_summarise.stanfit}
 \title{Summarise posterior distribution}
 \usage{
-post_summarise(x, par.names = NULL, col.names = NULL,
-  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...)
-
-\method{post_summarise}{matrix}(x, par.names = NULL, col.names = NULL,
-  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), ...)
-
-\method{post_summarise}{stanfit}(x, par.names = NULL, col.names = NULL,
-  probs = c(0.025, 0.16, 0.5, 0.84, 0.975), pars = NULL, ...)
+post_summarise(x, ...)
 }
 \arguments{
 \item{x}{NumericMatrix or \code{stanfit} object}
 
-\item{par.names}{Optional CharacterVector identifying the columns from
-the stanfit matrix.}
-
-\item{col.names}{Optional named CharacterVector replacing the
-default column names specified by the vector names with the
-given vector elements. Note: default column names are according
-to \code{\link[=quantile]{quantile()}}, \emph{i.e.} as percentage intervals.}
-
-\item{probs}{Quantile probabilities to use when summarising \code{x}}
-
 \item{...}{Arguments passed to methods}
-
-\item{pars}{Parameters to extract from the given stanfit object}
 }
 \description{
 Calculates quantile intervals from a posterior distribution
@@ -38,22 +17,6 @@ represented either by a NumericMatrix where rows are posterior
 draws or extracted directly from a \code{stanfit} object.
 }
 \details{
-By default, \code{post_summarise} will calculate 68% and 95%
+By default, \code{post_summarise} will calculate 68\% and 95\%
 quantile intervals in addition to the posterior median.
-}
-\section{Methods (by class)}{
-\itemize{
-\item \code{matrix}: Method for a NumericMatrix extracted
-from \code{stanfit} object
-
-\item \code{stanfit}: Method for stanfit objects
-}}
-
-\examples{
-m <- matrix(c(rnorm(100), rnorm(100, 10, 5)), 100, 2)
-post_summarise(m)
-
-post_summarise(m, probs = c(0.2, 0.8),
-               col.names = c(`20\%` = "codelow", `80\%` = "codehigh"))
-
 }

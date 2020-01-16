@@ -3,7 +3,6 @@
 \docType{package}
 \name{thesis.utils}
 \alias{thesis.utils}
-\alias{thesis.utils-package}
 \title{thesis.utils}
 \description{
 Utility functions for executive constraints and civil conflict

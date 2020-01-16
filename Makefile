@@ -4,13 +4,14 @@ data := data
 raw  := $(data)/raw
 refs := refs
 post := posteriors
+sim  := $(post)/sim
 
 blue  := \033[01;34m
 grey  := \033[00;37m
 reset := \033[0m
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: bash clean help watch_sync watch_pdf wc
+.PHONY: bash clean deps help watch_sync watch_pdf wc
 
 bash: ## Drop into bash. Only useful with run.sh to launch interactive shell in container.
 	@bash
@@ -67,8 +68,18 @@ $(post)/fit.rds: $(data)/prepped_data.RData R/model.R stan/model.stan
 	@mkdir -p $(post)
 	Rscript R/model.R
 
-%.pdf: $(manuscript) library.bib assets/stan.xml
-	Rscript -e "rmarkdown::render('$<', output_file = '$@')"
+$(sim)/parameters%rds $(sim)/theta%rds: R/sim.R
+	@rm -rf $(sim); mkdir -p $(sim)
+	Rscript R/sim.R
 
-%.html: $(manuscript) library.bib assets/sakura.css assets/stan.xml
-	Rscript -e "rmarkdown::render('$<', 'html_document', '$@')"
+deps: $(manuscript) \
+	library.bib \
+	assets/stan.xml \
+	$(sim)/parameters.rds \
+	$(sim)/theta.rds
+
+%.pdf: deps
+	Rscript -e "rmarkdown::render('$(manuscript)', output_file = '$@')"
+
+%.html: deps
+	Rscript -e "rmarkdown::render('$(manuscript)', 'html_document', '$@')"

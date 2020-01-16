@@ -31,9 +31,11 @@ abstract: Lorem ipsum
 
 [//]: # Setup R environment for entire doc
 ```{r include = F, results = "hide"}
-knitr::opts_chunk$set(echo = F, eval = F)
+knitr::opts_chunk$set(echo = F, eval = T)
 
 library(dplyr)
+library(ggplot2)
+library(gridExtra)
 library(thesis.utils)
 ```
 
@@ -764,12 +766,12 @@ Regression parameters:
 \end{align*}
 
 
-```{r}
+```{r eval = F}
 beta <- readRDS("posteriors/summary/beta.rds")
 plot_pars(beta)
 ```
 
-```{r}
+```{r eval = F}
 input.df <- readRDS("posteriors/input_data.rds")
 p_hat <- readRDS("posteriors/summary/predicted_probs.rds")
 
@@ -777,7 +779,7 @@ plot_dens(p_hat, groups = input.df$lepisode_onset)
 ```
 
 
-```{r}
+```{r eval = F}
 p <- apply(p_hat, 2, median)
 x <- evalmod(scores = p, labels = input.df$lepisode_onset)
 plot(x, curvetype = c("ROC", "PRC"))
@@ -821,12 +823,63 @@ for (y in state) {
 
 ## Appendix A - Stan Code {#appendix-a}
 
-```{stan, code = readLines("stan/model.stan"), eval = FALSE, output.var = "x", echo = T}
+```{stan, code = readLines("stan/model.stan"), eval = F, output.var = "x", echo = T}
 ```
 
 \newpage
 
 ## Appendix B - Prior Predictive Check {#appendix-b}
+
+In order
+
+```{r}
+prior_plot <- function(range, fn, ...) {
+    data.frame(x = range) %>%
+        ggplot(aes(x)) +
+        stat_function(fun = fn, ...)
+}
+
+p1 <- prior_plot(c(-20, 20), dnorm, args = list(mean = 0, sd = 5))
+p2 <- prior_plot(c(-10, 10), dnorm, args = list(mean = 0, sd = 2.5))
+p3 <- prior_plot(c(0, 5), dlnorm, args = list(meanlog = 0, sdlog = 0.5))
+p4 <- prior_plot(c(0, 2), dweibull, args = list(shape = 5, scale = 1))
+p5 <- prior_plot(c(0, 10), dhcauchy, args = list(sigma = 1))
+p6 <- prior_plot(c(0, 5), dgamma, args = list(shape = 5, rate = 5))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2, nrow = 3)
+
+```
+
+
+```{r warning = F}
+pars.df <- readRDS("posteriors/sim/parameters.rds")
+ggplot(pars.df, aes(parameter, point, color = type)) +
+    geom_point() +
+    geom_errorbar(aes(parameter, ymin = codelow, ymax = codehigh),
+                  width = 0) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r warning = F}
+latent <- readRDS("posteriors/sim/theta.rds") %>%
+    arrange(true_value) %>%
+    mutate(idx = 1:n())
+
+ggplot(latent, aes(idx, true_value)) +
+    geom_point(col = "darkgrey") +
+    geom_errorbar(aes(ymin = codelow, ymax = codehigh), alpha = 0.2, col = "darkblue") +
+    ylab("True Value") +
+    theme(axis.text.x = element_blank(),
+          axis.title.x = element_blank(),
+          axis.ticks.x = element_blank())
+```
+
+```{r results = 'hide'}
+x <- with(latent, mean(true_value <= codehigh & true_value >= codelow))
+```
+
+hello world `r x * 100`%
 
 \newpage
 

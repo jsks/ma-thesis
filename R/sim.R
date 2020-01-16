@@ -1,19 +1,16 @@
 #!/usr/bin/env Rscript
 
 library(boot)
+library(cmdstanr)
 library(dplyr)
 library(extraDistr)
 library(ggplot2)
 library(MASS)
-library(rstan)
 library(thesis.utils)
-
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = T)
 
 set.seed(6666)
 
-N <- 500
+N <- 200
 D <- 6
 
 # Start with latent model
@@ -59,7 +56,7 @@ beta <- rnorm(4, 0, 2.5)
 x <- rnorm(N, 0, 2)
 state_capacity <- rnorm(N, 0, 3)
 
-n_years <- 50
+n_years <- N / 10
 n_countries <- 10
 
 sigma <- rhcauchy(2, 1)
@@ -108,25 +105,21 @@ data <- list(J = N,
              y = y)
 str(data)
 
-fit <- stan("stan/model.stan", data = data, iter = 4000, thin = 2,
-            control = list(adapt_delta = 0.95), seed = 1992, include = F,
-            pars = c("psi_unif", "sigma_unif", "lg_est", "nonlg_est",
-                     "raw_country", "raw_year", "nu", "theta_state_capacity"))
+mod <- cmdstan_model("stan/model.stan", quiet = F,
+                     compiler_flags = "CXXFLAGS=-O3 -march=native -mtune=native")
 
-save.image("posteriors/simulated.RData")
+fit <- mod$sample(data = data, seed = 1992, num_cores = 4)
+fit$cmdstan_diagnose()
 
-print(fit, pars = c("lambda", "psi", "gamma", "delta", "alpha", "beta", "sigma"))
+fit$save_output_files("posteriors/sim/")
 
 ###
-# Plot estimated quantiles vs true values
-post <- as.matrix(fit, pars = c("lambda", "psi", "gamma", "delta", "eta",
-                                "alpha", "beta", "sigma")) %>%
-    apply(2, quantile, probs = c(0.025, 0.975)) %>%
-    t %>%
-    as.data.frame %>%
-    rename(codelow = `2.5%`, codehigh = `97.5%`) %>%
-    mutate(parameter = rownames(.),
-           type = "Posterior Est")
+# Save model parameters
+print("Summarizing model parameters")
+post <- post_summarise(fit, c("lambda", "psi", "gamma", "delta",
+                              "eta", "alpha", "beta", "sigma")) %>%
+    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
+    mutate(type = "Posterior Estimate")
 
 true_values <- data.frame(parameter = c(sprintf("lambda[%d]", seq_along(lambda)),
                                         sprintf("psi[%d]", seq_along(psi)),
@@ -143,31 +136,13 @@ true_values <- data.frame(parameter = c(sprintf("lambda[%d]", seq_along(lambda))
 full.df <- bind_rows(post, true_values) %>%
     mutate(type = as.factor(type))
 
-ggplot(full.df, aes(parameter, point, color = type)) +
-    geom_point() +
-    geom_errorbar(aes(parameter, ymin = codelow, ymax = codehigh),
-                  width = 0)
+saveRDS(full.df, "posteriors/sim/parameters.rds")
 
 ###
-# Plot latent factor
-latent <- as.matrix(fit, pars = "theta") %>%
-    apply(2, quantile, probs = c(0.025, 0.5, 0.975)) %>%
-    t %>%
-    as.data.frame %>%
-    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
-    mutate(true_value = theta) %>%
-    arrange(true_value) %>%
-    mutate(idx = 1:n())
+# Save latent factor
+print("Summarizing theta")
+latent <- post_summarise(fit, pars = "theta") %>%
+    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`)
+latent$true_value <- theta
 
-ggplot(latent, aes(median, true_value)) + geom_point()
-
-ggplot(latent, aes(idx, true_value)) +
-    geom_point(col = "darkgrey") +
-    geom_errorbar(aes(ymin = codelow, ymax = codehigh), alpha = 0.2, col = "darkblue")
-
-
-# % correctly predicted within CI
-with(latent, ifelse(true_value <= codehigh & true_value >= codelow, T, F) %>% mean)
-
-with(latent[w == 1, ], ifelse(true_value <= codehigh & true_value >= codelow, T, F) %>% mean)
-with(latent[w == 0, ], ifelse(true_value <= codehigh & true_value >= codelow, T, F) %>% mean)
+saveRDS(latent, "posteriors/sim/theta.rds")
