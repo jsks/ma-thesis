@@ -42,7 +42,7 @@ shift $(($OPTIND - 1))
 
 which podman 2>&1 >/dev/null && cmd=podman || cmd=docker
 
-tag=$(git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
+tag=$(which git >/dev/null && git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
 : ${tag:="latest"}
 
 img_name="jsks/conflict_onset:$tag"

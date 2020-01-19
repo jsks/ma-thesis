@@ -8,13 +8,13 @@
 
 set -e
 
-tag=$(git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
+tag=$(which git >/dev/null && git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
 : ${tag:="latest"}
 
 which podman 2>&1 >/dev/null && CMD=podman || CMD=docker
 
 # No arrays in posix sh...
-mount_opts="-v $(git rev-parse --show-toplevel):/proj"
+mount_opts="-v $(cd ./`dirname $0`/../ && pwd):/proj"
 if [ -d /mnt/data/posteriors ]; then
     echo "Mounting posterior map from /mnt/data"
     mount_opts="$mount_opts -v /mnt/data/posteriors:/proj/posteriors"
