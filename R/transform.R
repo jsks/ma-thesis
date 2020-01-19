@@ -34,24 +34,21 @@ for (v2 in lg_vars) {
 ###
 # Final dataset for model
 final.df <- merged.df %>%
-    select(country_name, year, onset, episode_onset, v2x_veracc,
-           peace_yrs, one_of(constraint_vars),
-           one_of(paste0(constraint_vars, "_sd")), cgdppc, gdpgro, cinc,
-           pop_density, meanelev, ongoing, v2x_horacc, v2xnp_pres,
+    select(country_name, year, lonset, lepisode_onset, peace_yrs,
+           one_of(constraint_vars), one_of(paste0(constraint_vars, "_sd")),
+           rgdpepc, rgdpepc_gro,  pop_density, meanelev, ongoing,
            rlvt_groups_count, neighbour_conflict, v2lgbicam) %>%
     filter_at(constraint_vars, all_vars(!is.na(.))) %>%
-    mutate(lepisode_onset = lead(episode_onset),
-           lonset = lead(onset),
-           cinc = normalize(cinc),
-           cgdppc = log(cgdppc) %>% normalize,
-           gdpgro = normalize(gdpgro),
+    mutate(rgdpepc = log(rgdpepc) %>% normalize,
+           rgdpepc_gro = normalize(rgdpepc_gro),
            pop_density = log(pop_density) %>% normalize,
            meanelev = log(meanelev) %>% normalize,
            peace_yrs = log(peace_yrs + 1) %>% normalize,
-           v2x_veracc = normalize(v2x_veracc),
            reduced_idx = do.call(paste,
                                  lapply(c("country_name", constraint_vars), as.symbol)) %>%
                collapse_changes)
+
+dbg_info(final.df)
 
 ###
 # Create separate dataset of manifest variables and collapse changes

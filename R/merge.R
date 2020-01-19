@@ -40,6 +40,48 @@ filter(nmc, !ccode %in% vdem$COWcode) %>%
 vdem %<>% left_join(nmc, by = c("COWcode" = "ccode", "year"))
 
 ###
+# Penn World Tables
+pwt.df <- read_xlsx("data/raw/pwt91.xlsx", sheet = 3) %>%
+    filter(!is.na(rgdpe)) %>%
+    mutate(country =
+               case_when(country == "Bolivia (Plurinational State of)" ~ "Bolivia",
+                         grepl("Ivoire", country) ~ "Ivory Coast",
+                         country == "D.R. of the Congo" ~ "Democratic Republic of the Congo",
+                         country == "Congo" ~ "Republic of the Congo",
+                         country == "Cabo Verde" ~ "Cape Verde",
+                         country == "Gambia" ~ "The Gambia",
+                         country == "China, Hong Kong SAR" ~ "Hong Kong",
+                         country == "Iran (Islamic Republic of)" ~ "Iran",
+                         country == "Republic of Korea" ~ "South Korea",
+                         country == "Lao People's DR" ~ "Laos",
+                         country == "Republic of Moldova" ~ "Moldova",
+                         country == "North Macedonia" ~ "Macedonia",
+                         country == "Myanmar" ~ "Burma/Myanmar",
+                         country == "Russian Federation" ~ "Russia",
+                         country == "Eswatini" ~ "Swaziland",
+                         country == "Syrian Arab Republic" ~ "Syria",
+                         country == "U.R. of Tanzania: Mainland" ~ "Tanzania",
+                         country == "United States" ~ "United States of America",
+                         country == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
+                         country == "Viet Nam" ~ "Vietnam",
+                         T ~ country)) %>%
+    select(country_name = country, year, rgdpe, pop) %>%
+    mutate(rgdpepc = rgdpe / pop) %>%
+    arrange(country_name, year) %>%
+    group_by(country_name, idx = consecutive(year)) %>%
+    mutate(rgdpepc_gro = (rgdpepc / lag(rgdpepc) - 1)) %>%
+    ungroup %>%
+    select(-idx)
+
+setdiff(vdem$country_name, pwt.df$country_name) %>%
+    unique %>%
+    paste(collapse = "; ") %>%
+    sprintf("V-Dem countries missing from PWT: %s", .)
+
+vdem %<>% left_join(pwt.df, by = c("country_name", "year"))
+
+
+###
 # Maddison - Population & GDP
 #
 # This is already merged into V-Dem; however, we want to use rgdpnapc
@@ -83,10 +125,12 @@ maddison.df <- read_xlsx("data/raw/mpd2018.xlsx", sheet = 2) %>%
                          country == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
                          country == "Viet Nam" ~ "Vietnam",
                          T ~ country)) %>%
-    select(country_name = country, year, cgdppc, rgdpnapc, pop) %>%
+    select(country_name = country, year, cgdppc, rgdpnapc) %>%
     arrange(country_name, year) %>%
-    group_by(country_name, consecutive(year)) %>%
-    mutate(gdpgro = rgdpnapc / lag(rgdpnapc) - 1)
+    group_by(country_name, idx = consecutive(year)) %>%
+    mutate(gdpgro = rgdpnapc / lag(rgdpnapc) - 1) %>%
+    ungroup %>%
+    select(-idx)
 
 setdiff(vdem$country_name, maddison.df$country_name) %>%
     unique %>%
@@ -191,7 +235,11 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
     mutate(ongoing = ifelse(is.na(n_conflicts), 0, 1),
            neighbour_conflict = ifelse(is.na(n_neighbour_conflicts), 0, 1),
            onset = ifelse(is.na(onset), 0, 1),
-           episode_onset = ifelse(is.na(episode_onset), 0, 1))
+           episode_onset = ifelse(is.na(episode_onset), 0, 1)) %>%
+    group_by(country_name, idx = consecutive(year)) %>%
+    mutate(lepisode_onset = lead(episode_onset), lonset = lead(onset)) %>%
+    ungroup %>%
+    select(-idx)
 
 # Calculate number of peace years since last ongoing civil conflict or
 # independence. For countries censored due to start date, start
@@ -206,9 +254,10 @@ merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
 merged.df %<>%
     filter(year >= start_year, year <= end_year) %>%
     arrange(country_name, year) %>%
-    group_by(country_name) %>%
+    group_by(country_name, idx = consecutive(year)) %>%
     mutate(peace_yrs = calc_peace_yrs(year, ongoing)) %>%
-    ungroup
+    ungroup %>%
+    select(-idx)
 
 stopifnot(!is.na(merged.df$country_name))
 
