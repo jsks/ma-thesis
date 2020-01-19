@@ -26,32 +26,40 @@ post_summarise.matrix <- function(x,
 }
 
 #' @export
-post_summarise.CmdStanMCMC <- function(x, pars = NULL, ...) {
+post_summarise.posterior <- function(x, pars = NULL, ...) {
     if (is.null(pars))
         stop("Expected at least one parameter to extract from CmdStanMCMC")
 
-    m <- as.matrix(x, pars)
-    post_summarise.matrix(m, ...)
+    m <- extract(x, pars) %>% as.matrix
+    post_summarise(m, ...)
 }
 
 #' @export
-as.matrix.CmdStanMCMC <- function(x, pars = NULL, ...) {
-    if (is.null(pars))
-        stop("Expected at least one parameter to extract from CmdStanMCMC")
+read_post <- function(file) {
+    fit <- data.table::fread(file, data.table = F)
 
-    # This is memoised by cmdstanr
-    draws <- x$draws()
+    b <- grepl("^[^.]+[.]", colnames(fit))
+    if (any(b)) {
+        colnames(fit)[b] <- sub("[.]", "[", colnames(fit)[b]) %>%
+            sub("[.]", ",", .) %>%
+            paste0("]")
+    }
 
-    v <- dimnames(draws)$variable
-    idx <- sapply(pars, function(p) {
-        re <- paste0('^', p, '(\\[.*\\])?$')
-        grep(re, v)
-    }) %>% unlist
-    output <- draws[,, idx]
+    structure(fit, class = c(class(fit), "posterior"))
+}
 
-    new_dims <- c(dim(output)[1] * dim(output)[2], dim(output)[3])
-    dim(output) <- new_dims
+#' @export
+extract <- function(x, ...) UseMethod("extract", x)
 
-    colnames(output) <- v[idx]
-    output
+#' @export
+extract.posterior <- function(x, pars = NULL) {
+    idx <- lapply(pars, function(p) {
+        re <- paste0("^", p, "(\\[.*)?$")
+        grep(re, colnames(x))
+    }) %>% unlist %>% unique
+
+    if (length(idx) == 0)
+        data.frame()
+
+    x[, idx, drop = F]
 }

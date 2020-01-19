@@ -16,6 +16,7 @@ refs/microstatessystem.dat
 **/*.Rcheck/
 
 build/
+cmdstan/
 data/
 docs/
 replications/

@@ -1,5 +1,3 @@
-MAKEFLAGS = -j4
-
 CFLAGS += -march=x86-64 -mtune=generic -O3 -pipe
 CXXFLAGS += -march=x86-64 -mtune=generic -O3 -pipe
 CXX98FLAGS += -march=x86-64 -mtune=generic -O3 -pipe

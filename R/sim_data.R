@@ -1,17 +1,16 @@
 #!/usr/bin/env Rscript
 
 library(boot)
-library(cmdstanr)
 library(dplyr)
 library(extraDistr)
 library(ggplot2)
+library(jsonlite)
 library(MASS)
-library(thesis.utils)
 
 set.seed(6666)
 
-N <- 200
-D <- 6
+N <- 200L
+D <- 6L
 
 # Start with latent model
 theta <- rnorm(N)
@@ -56,8 +55,8 @@ beta <- rnorm(4, 0, 2.5)
 x <- rnorm(N, 0, 2)
 state_capacity <- rnorm(N, 0, 3)
 
-n_years <- N / 10
-n_countries <- 10
+n_years <- N %/% 10L
+n_countries <- 10L
 
 sigma <- rhcauchy(2, 1)
 countries <- rnorm(n_countries, 0, sigma[1])
@@ -79,7 +78,7 @@ y <- rbinom(N, 1, p)
 sprintf("%d simulated conflicts out of %d country-years", sum(y), N)
 
 ###
-# Fit full stan model
+# Generate json file for Stan
 data <- list(J = N,
              J_obs = sum(w),
              J_missing = sum(w == 0),
@@ -91,10 +90,10 @@ data <- list(J = N,
              lg_se = lg_err,
              nonlg = nonlg_obs,
              nonlg_se = nonlg_err,
-             lgotovst_idx = 0,
+             lgotovst_idx = 0L,
              lgbicam = w,
              N = N,
-             M = 1,
+             M = 1L,
              X = as.matrix(x),
              state_capacity = state_capacity,
              exec_idx = 1:N,
@@ -103,24 +102,14 @@ data <- list(J = N,
              country_id = country_idx,
              year_id = year_idx,
              y = y)
+
 str(data)
+stopifnot(!sapply(data, anyNA))
 
-mod <- cmdstan_model("stan/model.stan", quiet = F,
-                     compiler_flags = "CXXFLAGS=-O3 -march=native -mtune=native")
-
-fit <- mod$sample(data = data, seed = 1992, num_cores = 4)
-fit$cmdstan_diagnose()
-
-fit$save_output_files("posteriors/sim/")
+write_json(data, "data/sim_data.json", auto_unbox = T)
 
 ###
-# Save model parameters
-print("Summarizing model parameters")
-post <- post_summarise(fit, c("lambda", "psi", "gamma", "delta",
-                              "eta", "alpha", "beta", "sigma")) %>%
-    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
-    mutate(type = "Posterior Estimate")
-
+# Also save simulated parameters
 true_values <- data.frame(parameter = c(sprintf("lambda[%d]", seq_along(lambda)),
                                         sprintf("psi[%d]", seq_along(psi)),
                                         sprintf("gamma[%d]", seq_along(gamma)),
@@ -128,21 +117,11 @@ true_values <- data.frame(parameter = c(sprintf("lambda[%d]", seq_along(lambda))
                                         "eta",
                                         "alpha",
                                         sprintf("beta[%d]", seq_along(beta)),
-                                        sprintf("sigma[%d]", seq_along(sigma))),
-                          point = c(lambda, psi, gamma, delta, eta, alpha, beta, sigma),
+                                        sprintf("sigma[%d]", seq_along(sigma)),
+                                        sprintf("theta[%d]", seq_along(theta))),
+                          point = c(lambda, psi, gamma, delta, eta,
+                                    alpha, beta, sigma, theta),
                           type = "True Values",
                           stringsAsFactors = F)
 
-full.df <- bind_rows(post, true_values) %>%
-    mutate(type = as.factor(type))
-
-saveRDS(full.df, "posteriors/sim/parameters.rds")
-
-###
-# Save latent factor
-print("Summarizing theta")
-latent <- post_summarise(fit, pars = "theta") %>%
-    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`)
-latent$true_value <- theta
-
-saveRDS(latent, "posteriors/sim/theta.rds")
+saveRDS(true_values, "data/simulated_parameters.rds")

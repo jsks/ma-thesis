@@ -1,19 +1,37 @@
+SHELL = /bin/bash
+ROOT  = $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
+
 manuscript := paper.Rmd
 
-data := data
-raw  := $(data)/raw
-refs := refs
-post := posteriors
-sim  := $(post)/sim
+cmdstan    ?= cmdstan
+seed       ?= 101010
+
+num_chains := 4
+id         := $(shell seq $(num_chains))
+
+samples = $(foreach x, $(id), $(post)/%-samples-chain_$(x).csv)
+
+define get_id
+$(shell grep -Po '\d+[.]csv' <<< $(1) | sed 's/.csv//')
+endef
 
 blue  := \033[01;34m
 grey  := \033[00;37m
 reset := \033[0m
 
-all: paper.pdf ## Default rule: paper.pdf
-.PHONY: bash clean deps help watch_sync watch_pdf wc
+data    := data
+raw     := $(data)/raw
+post    := posteriors
+pars    := $(post)/parameters
+summary := $(post)/summary
 
-bash: ## Drop into bash. Only useful with run.sh to launch interactive shell in container.
+all: paper.pdf ## Default rule: paper.pdf
+.PHONY: bash clean manuscript_dependencies help watch_sync watch_pdf wc
+.SECONDARY:
+
+###
+# Convenience rules for development workflow
+bash: ## Drop into bash. Only useful to launch interactive shell in container.
 	@bash
 
 help:
@@ -47,39 +65,70 @@ wc: ## Rough estimate of word count
 Rdependencies.csv:
 	Rscript R/deps.R
 
-$(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R | Rdependencies.csv
+###
+# Data Prep
+$(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R
 	Rscript R/geo.R
 
 $(data)/merged_data.rds: $(raw)/V-Dem-CY-Full+Others-v9.rds \
 				$(raw)/NMC_5_0/NMC_5_0.csv \
+				$(raw)/pwt91.xlsx \
 				$(raw)/mpd2018.xlsx \
 				$(raw)/UcdpPrioConflict_v19_1.rds \
 				$(raw)/growup/data.csv \
 				$(data)/neighbours.rds \
-				$(refs)/cow_countries.csv \
-				$(refs)/ucdp_countries.csv \
+				refs/cow_countries.csv \
+				refs/ucdp_countries.csv \
 				R/merge.R
 	Rscript R/merge.R
 
 $(data)/prepped_data.RData: $(data)/merged_data.rds R/transform.R
 	Rscript R/transform.R
 
-$(post)/fit.rds: $(data)/prepped_data.RData R/model.R stan/model.stan
+###
+# Implicit rules for model runs
+stan/model: stan/model.stan
+	cd $(cmdstan) && $(MAKE) $(ROOT)/stan/model
+
+$(data)/%_data.json: R/%_data.R $(data)/prepped_data.RData
+	Rscript $<
+
+# Generate an implicit rules for each chain for sampling
+define cmdstan-rule
+$(post)/%-samples-chain_$(1).csv: $(data)/%_data.json stan/model
 	@mkdir -p $(post)
-	Rscript R/model.R
+	stan/model sample id=$$(call get_id,$$@) \
+		random seed=$$$$(( $$(seed) + $$(call get_id,$$@) - 1)) \
+		data file=$$< output file=$$@
+endef
+$(foreach x, $(id), $(eval $(call cmdstan-rule,$(x))))
 
-$(sim)/parameters%rds $(sim)/theta%rds: R/sim.R
-	@rm -rf $(sim); mkdir -p $(sim)
-	Rscript R/sim.R
+$(post)/%-combined.csv.gz: $(samples)
+	$(cmdstan)/bin/diagnose $^
+	@{ grep lp__ $<; sed '/^[#l]/d' $^; } | gzip > $@
 
-deps: $(manuscript) \
+###
+# Summarised posteriors from simulated data run
+$(summary)/simulated.RData: R/summarise_sim.R $(post)/sim-combined.csv.gz
+	@mkdir -p $(summary)
+	Rscript R/summarise_sim.R
+
+###
+# Summarise posteriors from full model run
+$(summary)/model.RData: R/summarise_model.R $(post)/model-combined.csv.gz
+	@mkdir -p $(summary) $(pars)
+	Rscript R/summarise_model.R
+
+###
+# Build final manuscript
+manuscript_dependencies: $(manuscript) \
 	library.bib \
 	assets/stan.xml \
-	$(sim)/parameters.rds \
-	$(sim)/theta.rds
+	Rdependencies.csv \
+	$(summary)/simulated.RData
 
-%.pdf: deps
+%.pdf: manuscript_dependencies
 	Rscript -e "rmarkdown::render('$(manuscript)', output_file = '$@')"
 
-%.html: deps
+%.html: manuscript_dependencies
 	Rscript -e "rmarkdown::render('$(manuscript)', 'html_document', '$@')"

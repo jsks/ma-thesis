@@ -24,4 +24,5 @@ if [ "${CLEANUP:-0}" = 1 ]; then
     rm_opts="--rm"
 fi
 
-$CMD run -it $mount_opts $rm_opts "jsks/conflict_onset:$tag" make $@
+$CMD run -it $mount_opts $rm_opts -e cmdstan=/cmdstan \
+     "jsks/conflict_onset:$tag" make -j4 $@

@@ -1,6 +1,10 @@
 data/*.rds
 data/*.RData
 R/thesis.utils_*.tar.gz
+stan/model
+stan/*.o
+stan/*.hpp
+stan/*.d
 *.html
 *.pdf
 \#*
@@ -8,6 +12,7 @@ R/thesis.utils_*.tar.gz
 .DS_Store
 
 .git
+cmdstan
 docs
 paper_files
 posteriors
