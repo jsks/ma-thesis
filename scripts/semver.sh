@@ -95,14 +95,17 @@ done
 shift $(($OPTIND - 1))
 [ -n "$1" ] && usage
 
+: ${msg:="Bump version"}
+
 [ -n "$(git status -s)" ] && confirm "Uncommitted changes"
 confirm "Bumping version from v$tag to v$next_version"
+confirm "Tag Message: \"$msg\""
 
 sed -i "s/Version:.*/Version: $next_version/" $root/R/thesis.utils/DESCRIPTION
 git add $root/R/thesis.utils/DESCRIPTION
 git commit -m "Prepare release v$next_version"
 
-git tag -a "v$next_version" -m "$msg"
+git tag -a "v$next_version" -m "${msg:-Bump version}"
 git push --follow-tags
 
-sh $root/scripts/build.sh -p
+sh $root/scripts/build.sh -p -t "$next_version"
