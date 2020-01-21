@@ -34,6 +34,7 @@ abstract: Lorem ipsum
 knitr::opts_chunk$set(echo = F, eval = T)
 
 library(dplyr)
+library(extraDistr)
 library(ggplot2)
 library(gridExtra)
 library(thesis.utils)
@@ -833,18 +834,28 @@ for (y in state) {
 In order
 
 ```{r}
-prior_plot <- function(range, fn, ...) {
+prior_plot <- function(range, fn, title = NULL, ...) {
     data.frame(x = range) %>%
         ggplot(aes(x)) +
-        stat_function(fun = fn, ...)
+        stat_function(fun = fn, ...) +
+        ggtitle(label = title) +
+        theme(axis.title.y = element_blank(),
+              axis.text.y = element_blank(),
+              axis.ticks.y = element_blank())
 }
 
-p1 <- prior_plot(c(-20, 20), dnorm, args = list(mean = 0, sd = 5))
-p2 <- prior_plot(c(-10, 10), dnorm, args = list(mean = 0, sd = 2.5))
-p3 <- prior_plot(c(0, 5), dlnorm, args = list(meanlog = 0, sdlog = 0.5))
-p4 <- prior_plot(c(0, 2), dweibull, args = list(shape = 5, scale = 1))
-p5 <- prior_plot(c(0, 10), dhcauchy, args = list(sigma = 1))
-p6 <- prior_plot(c(0, 5), dgamma, args = list(shape = 5, rate = 5))
+p1 <- prior_plot(c(-20, 20), dnorm, args = list(mean = 0, sd = 5),
+                 title = "Normal(0, 5)")
+p2 <- prior_plot(c(-10, 10), dnorm, args = list(mean = 0, sd = 2.5),
+                 title = "Normal(0, 2.5)")
+p3 <- prior_plot(c(0, 5), dlnorm, args = list(meanlog = 0, sdlog = 0.5),
+                 title = "Log-Normal(0, 0.5)")
+p4 <- prior_plot(c(0, 3), dweibull, args = list(shape = 5, scale = 1),
+                 title = "Weibull(5, 1)")
+p5 <- prior_plot(c(0, 10), dhcauchy, args = list(sigma = 1),
+                 title = "HalfCauchy(0, 1)")
+p6 <- prior_plot(c(0, 1), dbeta, args = list(shape1 = 5, shape2 = 5),
+                 title = "Beta(5, 5)")
 
 grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2, nrow = 3)
 
@@ -852,7 +863,8 @@ grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2, nrow = 3)
 
 
 ```{r warning = F}
-pars.df <- readRDS("posteriors/sim/parameters.rds")
+load("posteriors/sim/simulated_summary.RData")
+
 ggplot(pars.df, aes(parameter, point, color = type)) +
     geom_point() +
     geom_errorbar(aes(parameter, ymin = codelow, ymax = codehigh),
@@ -862,11 +874,10 @@ ggplot(pars.df, aes(parameter, point, color = type)) +
 ```
 
 ```{r warning = F}
-latent <- readRDS("posteriors/sim/theta.rds") %>%
-    arrange(true_value) %>%
+latent.df <- arrange(latent.df, true_value) %>%
     mutate(idx = 1:n())
 
-ggplot(latent, aes(idx, true_value)) +
+ggplot(latent.df, aes(idx, true_value)) +
     geom_point(col = "darkgrey") +
     geom_errorbar(aes(ymin = codelow, ymax = codehigh), alpha = 0.2, col = "darkblue") +
     ylab("True Value") +
@@ -876,10 +887,25 @@ ggplot(latent, aes(idx, true_value)) +
 ```
 
 ```{r results = 'hide'}
-x <- with(latent, mean(true_value <= codehigh & true_value >= codelow))
+x <- with(latent.df, mean(true_value <= codehigh & true_value >= codelow))
+
+#plot(df$lg_se[, 1], df$lg[, 1] - colMeans(lg_est))
+#plot(df$lg_se[, 1], lapply(lg_est, IQR) %>% unlist)
+
+#which(df$lg[, 1] + 2 * df$lg_se[, 1] < colMeans(lg_est) |
+#      df$lg[, 1] - 2 * df$lg_se[, 1] > colMeans(lg_est))
+
+#v <- lapply(theta_old, IQR) %>% unlist
+#plot(df$lg_se[, 1], v[df$obs_idx])
+
+#plot(density(p), xlim = c(0, 1), ylim = c(0, 2))
+#for (i in 1:100) lines(density(p_hat[i, ]), col = alpha("lightblue", 0.2))
+
+#table(colMeans(p_hat) > .5, y)
+
 ```
 
-hello world `r x * 100`%
+`r x * 100`
 
 \newpage
 
