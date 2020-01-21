@@ -9,7 +9,7 @@ seed       ?= 101010
 num_chains := 4
 id         := $(shell seq $(num_chains))
 
-samples = $(foreach x, $(id), $(post)/%-samples-chain_$(x).csv)
+samples = $(foreach x, $(id), $(post)/%/samples-chain_$(x).csv)
 
 define get_id
 $(shell grep -Po '\d+[.]csv' <<< $(1) | sed 's/.csv//')
@@ -22,8 +22,6 @@ reset := \033[0m
 data    := data
 raw     := $(data)/raw
 post    := posteriors
-pars    := $(post)/parameters
-summary := $(post)/summary
 
 all: paper.pdf ## Default rule: paper.pdf
 .PHONY: bash clean manuscript_dependencies help watch_sync watch_pdf wc
@@ -90,33 +88,34 @@ $(data)/prepped_data.RData: $(data)/merged_data.rds R/transform.R
 stan/model: stan/model.stan
 	cd $(cmdstan) && $(MAKE) $(ROOT)/stan/model
 
-$(data)/%_data.json: R/%_data.R $(data)/prepped_data.RData
+$(post)/%/data.json: R/%_data.R $(data)/prepped_data.RData
+	@mkdir -p $(@D)
 	Rscript $<
 
 # Generate an implicit rules for each chain for sampling
 define cmdstan-rule
-$(post)/%-samples-chain_$(1).csv: $(data)/%_data.json stan/model
-	@mkdir -p $(post)
+$(post)/%/samples-chain_$(1).csv: $(post)/%/data.json stan/model
 	stan/model sample id=$$(call get_id,$$@) \
 		random seed=$$$$(( $$(seed) + $$(call get_id,$$@) - 1)) \
 		data file=$$< output file=$$@
 endef
 $(foreach x, $(id), $(eval $(call cmdstan-rule,$(x))))
 
-$(post)/%-combined.csv.gz: $(samples)
+$(post)/%/combined_posteriors.csv.gz: $(samples)
 	$(cmdstan)/bin/diagnose $^
-	@{ grep lp__ $<; sed '/^[#l]/d' $^; } | gzip > $@
+	sh scripts/concat.sh -o $@ $^
+	@tar --remove-files --zstd -cf $(@D)/stan_output.tar.zst $^
 
 ###
 # Summarised posteriors from simulated data run
-$(summary)/simulated.RData: R/summarise_sim.R $(post)/sim-combined.csv.gz
-	@mkdir -p $(summary)
+$(post)/sim/simulated_summary.RData: R/summarise_sim.R \
+					$(post)/sim/combined_posteriors.csv.gz
 	Rscript R/summarise_sim.R
 
 ###
 # Summarise posteriors from full model run
-$(summary)/model.RData: R/summarise_model.R $(post)/model-combined.csv.gz
-	@mkdir -p $(summary) $(pars)
+$(post)/model/model_summary.RData: R/summarise_model.R \
+					$(post)/model/combined_posteriors.csv.gz
 	Rscript R/summarise_model.R
 
 ###
@@ -125,7 +124,7 @@ manuscript_dependencies: $(manuscript) \
 	library.bib \
 	assets/stan.xml \
 	Rdependencies.csv \
-	$(summary)/simulated.RData
+	$(post)/sim/simulated_summary.RData
 
 %.pdf: manuscript_dependencies
 	Rscript -e "rmarkdown::render('$(manuscript)', output_file = '$@')"

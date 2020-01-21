@@ -12,30 +12,30 @@ RUN apt-get update \
         texlive-latex-extra \
         texlive-latex-recommended \
         texlive-fonts-recommended \
+        zstd \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget 'https://github.com/jgm/pandoc/releases/download/2.9/pandoc-2.9-1-amd64.deb' \
     && dpkg -i pandoc-2.9-1-amd64.deb \
     && rm pandoc-2.9-1-amd64.deb
 
-RUN install2.r -e data.table dplyr extraDistr ggplot2 gridExtra jsonlite \
+RUN mkdir -p /root/.R
+COPY .R /root/.R
+
+RUN install2.r -n -1 -e data.table dplyr extraDistr ggplot2 gridExtra jsonlite \
         loo readxl rmarkdown R.utils sf testthat tidyr \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 RUN wget 'https://github.com/stan-dev/cmdstan/releases/download/v2.21.0/cmdstan-2.21.0.tar.gz' \
     && mkdir -p cmdstan \
     && tar -xvzf cmdstan-2.21.0.tar.gz --strip 1 -C cmdstan \
-    && cd cmdstan; make build -j4; cd ../ \
+    && cd cmdstan && make build -j4 && cd ../ \
     && rm cmdstan-2.21.0.tar.gz
-
-RUN mkdir -p /proj /root/.R
-COPY .R /root/.R
-COPY .Rprofile /root/
-
-WORKDIR /proj
 
 RUN mkdir -p /proj/thesis.utils/
 COPY R/thesis.utils /proj/thesis.utils/
+
+WORKDIR /proj
 
 RUN R CMD build thesis.utils \
     && R CMD check thesis.utils_*.tar.gz \

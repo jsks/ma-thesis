@@ -5,8 +5,12 @@ library(data.table)
 library(magrittr)
 library(thesis.utils)
 
-fit <- read_post("posteriors/sim-combined.csv.gz")
-true_values <- readRDS("data/simulated_parameters.rds")
+fit <- read_post("posteriors/sim/combined_posteriors.csv.gz")
+true_values <- readRDS("posteriors/sim/simulated_parameters.rds")
+
+###
+# Posterior predicted probabilities
+p_hat <- extract(fit, pars = "p_hat")
 
 ###
 # Model parameters
@@ -28,4 +32,4 @@ latent.df <- post_summarise(fit, pars = "theta") %>%
 
 latent.df$true_value <- filter(true_values, grepl("theta", parameter)) %$% point
 
-save(pars.df, latent.df, file = "posteriors/summary/simulated.RData")
+save(p_hat, pars.df, latent.df, file = "posteriors/sim/simulated_summary.RData")

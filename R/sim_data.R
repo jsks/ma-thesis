@@ -34,26 +34,27 @@ obs_idx <- which(w == 1)
 lg <- theta[obs_idx] %*% t(lambda[1:3]) + mvrnorm(N_obs, rep(0, 3), diag(psi[1:3]))
 lg <- sweep(lg, 2, gamma[1:3], `+`)
 
-lg_err <- matrix(rgamma(N_obs * ncol(lg), 5, 5), N_obs, ncol(lg))
+lg_err <- matrix(rbeta(N_obs * ncol(lg), 5, 5), N_obs, ncol(lg))
 lg_obs <- matrix(NA, N_obs, ncol(lg))
 for (i in 1:ncol(lg))
-    lg_obs[, i] <- lg[, i] + rnorm(N_obs, 0, lg_err[, i])
+    lg_obs[, i] <- rnorm(N_obs, lg[, i], lg_err[, i])
 
 # Non-legislative variables
 nonlg <- theta %*% t(lambda[4:6]) + mvrnorm(N, rep(0, 3), diag(psi[4:6]))
 nonlg <- sweep(nonlg, 2, gamma[4:6], `+`)
 
-nonlg_err <- matrix(rgamma(N * ncol(nonlg), 5, 5), N, ncol(nonlg))
+nonlg_err <- matrix(rbeta(N * ncol(nonlg), 5, 5), N, ncol(nonlg))
 nonlg_obs <- matrix(NA, N, ncol(nonlg))
 for (i in 1:ncol(nonlg))
-    nonlg_obs[, i] <- nonlg[, i] + rnorm(N, 0, nonlg_err[, i])
+    nonlg_obs[, i] <- rnorm(N, nonlg[, i], nonlg_err[, i])
 
 # Conflict regression
 alpha <- rnorm(1, 0, 5)
 beta <- rnorm(4, 0, 2.5)
 
-x <- rnorm(N, 0, 2)
-state_capacity <- rnorm(N, 0, 3)
+X <- mvrnorm(N, c(0, 2), matrix(c(2, .5, .5, 3), 2, 2))
+X <- data.frame(a = rnorm(N, 0, 2), b = rnorm(N, 0, 3))
+interaction_idx  <- 2L
 
 n_years <- N %/% 10L
 n_countries <- 10L
@@ -70,8 +71,8 @@ stopifnot(nrow(cy) == N)
 country_idx <- cy[, 1]
 year_idx <- cy[, 2]
 
-p <- inv.logit(alpha + beta[1] * theta + beta[2] * state_capacity +
-               beta[3] * theta * state_capacity + beta[4] * x +
+p <- inv.logit(alpha + beta[1] * theta + beta[2] * X[, 1] +
+               beta[3] * X[, 2] + beta[4] * theta * X[, interaction_idx] +
                years[year_idx] + countries[country_idx])
 
 y <- rbinom(N, 1, p)
@@ -92,10 +93,11 @@ data <- list(J = N,
              nonlg_se = nonlg_err,
              lgotovst_idx = 0L,
              lgbicam = w,
+
              N = N,
-             M = 1L,
-             X = as.matrix(x),
-             state_capacity = state_capacity,
+             M = 2L,
+             X = as.matrix(X),
+             interaction_idx = interaction_idx,
              exec_idx = 1:N,
              n_countries = n_countries,
              n_years = n_years,
@@ -106,7 +108,7 @@ data <- list(J = N,
 str(data)
 stopifnot(!sapply(data, anyNA))
 
-write_json(data, "data/sim_data.json", auto_unbox = T)
+write_json(data, "posteriors/sim/data.json", auto_unbox = T)
 
 ###
 # Also save simulated parameters
@@ -124,4 +126,4 @@ true_values <- data.frame(parameter = c(sprintf("lambda[%d]", seq_along(lambda))
                           type = "True Values",
                           stringsAsFactors = F)
 
-saveRDS(true_values, "data/simulated_parameters.rds")
+saveRDS(true_values, "posteriors/sim/simulated_parameters.rds")

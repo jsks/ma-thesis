@@ -20,7 +20,8 @@ data {
   int N;
   int M;
   matrix[N, M] X;
-  vector[N] state_capacity;
+
+  int<lower=0, upper=M> interaction_idx;
   int<lower=1, upper=N> exec_idx[N];
 
   int<lower=1> n_countries;
@@ -32,7 +33,12 @@ data {
 }
 
 transformed data {
+  // Total number of manifest variables in FA
   int D = lg_D + nonlg_D;
+
+  // Number of regression coefficients. Increase by one if we include
+  // an interaction term with the latent factor.
+  int n_beta = interaction_idx > 0 ? M + 1 : M;
 }
 
 parameters {
@@ -51,8 +57,8 @@ parameters {
   // Onset regression
   real alpha;
 
-  // Control vars + state_capacity * theta interaction
-  vector[M+3] beta;
+  // Size = Control vars + theta
+  vector[n_beta + 1] beta;
 
   vector[n_countries] raw_country;
   vector[n_years] raw_year;
@@ -60,18 +66,11 @@ parameters {
 }
 
 transformed parameters {
-  vector[J] xi;
-
-  vector[N] theta_state_capacity;
   vector[n_countries] Z_country;
   vector[n_years] Z_year;
   real<lower=0> sigma[2];
 
-  // Log-odds linear predictor for presence of legislature
-  xi = eta + delta * theta;
-
-  // Interaction term b/w exec constraints & state cap
-  theta_state_capacity = theta[exec_idx] .* state_capacity;
+  vector[N] nu;
 
   // sigma ~ HalfCauchy(0, 1)
   sigma = tan(sigma_unif);
@@ -81,6 +80,20 @@ transformed parameters {
 
   // Z_year ~ Normal(0, sigma[2])
   Z_year = raw_year * sigma[2];
+
+  // Regression equation
+  nu = X * beta[2:(M + 1)] +
+    beta[1] * theta[exec_idx] +
+    alpha +
+    Z_country[country_id] +
+    Z_year[year_id];
+
+  if (interaction_idx > 0) {
+    vector[N] interaction_term;
+
+    interaction_term = theta[exec_idx] .* X[, interaction_idx];
+    nu += beta[n_beta + 1] * interaction_term;
+  }
 }
 
 model {
@@ -94,14 +107,16 @@ model {
   eta ~ normal(0, 5);
   delta ~ lognormal(0, 0.5);
 
-  lgbicam ~ bernoulli_logit(xi);
+  // Linear predictor for presence of legislature
+  lgbicam ~ bernoulli_logit(eta + delta * theta);
 
   for (i in 1:lg_D) {
     lg[, i] ~ normal(lg_est[, i], lg_se[, i]);
     nonlg[, i] ~ normal(nonlg_est[, i], nonlg_se[, i]);
 
     lg_est[, i] ~ normal(gamma[i] + lambda[i] * theta[obs_idx], psi[i]);
-    nonlg_est[, i] ~ normal(gamma[i + lg_D] + lambda[i + lg_D] * theta, psi[i + lg_D]);
+    nonlg_est[, i] ~ normal(gamma[i + lg_D] + lambda[i + lg_D] * theta,
+                            psi[i + lg_D]);
   }
 
   // Onset regression
@@ -111,33 +126,12 @@ model {
   raw_country ~ std_normal();
   raw_year ~ std_normal();
 
-  y ~ bernoulli_logit(X * beta[4:] +
-                      beta[1] * theta[exec_idx] +
-                      beta[2] * state_capacity +
-                      beta[3] * theta_state_capacity +
-                      alpha +
-                      Z_country[country_id] +
-                      Z_year[year_id]);
+  y ~ bernoulli_logit(nu);
 }
 
 generated quantities {
-  vector[J_obs] lg_star;
-  vector[J] nonlg_star;
-
-  vector[N] nu;
   vector[N] log_lik;
   vector[N] p_hat;
-
-  lg_star = lg_est[, 1];
-  nonlg_star = nonlg_est[, 1];
-
-  nu = X * beta[4:] +
-    beta[1] * theta[exec_idx] +
-    beta[2] * state_capacity +
-    beta[3] * theta_state_capacity +
-    alpha +
-    Z_country[country_id] +
-    Z_year[year_id];
 
   for (i in 1:N)
     log_lik[i] = bernoulli_logit_lpmf(y[i] | nu[i]);

@@ -7,9 +7,7 @@ suppressMessages(library(dplyr))
 suppressMessages(library(jsonlite))
 suppressMessages(library(thesis.utils))
 
-options(mc.cores = parallel::detectCores())
 
-dir.create("posteriors/summary", recursive = T, showWarnings = F)
 load("data/prepped_data.RData")
 
 final.df %<>%
@@ -19,7 +17,7 @@ final.df %<>%
     na.omit
 dbg_info(final.df)
 
-saveRDS(final.df, "data/final.rds")
+saveRDS(final.df, "posteriors/model/final.rds")
 
 ###
 # Control variables
@@ -64,4 +62,4 @@ data <- list(
 str(data)
 stopifnot(!sapply(data, anyNA))
 
-write_json(data, "data/model_data.json", auto_unbox = T)
+write_json(data, "posteriors/model/data.json", auto_unbox = T)
