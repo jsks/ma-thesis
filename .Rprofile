@@ -1,1 +1,0 @@
-options(Ncpus = parallel::detectCores())
