@@ -20,18 +20,21 @@ Builds 'jsks/conflict_onset' container image.
 Options:
         -h Useless help message.
         -p Push after successful build.
+        -t Tag resulting image.
 EOF
 
 exit
 }
 
 ## Main
-while getopts 'hpt' opt; do
+while getopts 'hpt:' opt; do
     case $opt in
         h)
             help;;
         p)
             PUSH_IMG=1;;
+        t)
+            TAG="$OPTARG";;
         *)
             usage;;
     esac
@@ -42,16 +45,14 @@ shift $(($OPTIND - 1))
 
 which podman 2>&1 >/dev/null && cmd=podman || cmd=docker
 
-tag=$(which git >/dev/null && git describe --tags --abbrev=0 2>/dev/null | cut -c 2-)
-: ${tag:="latest"}
-
-img_name="jsks/conflict_onset:$tag"
-printf "Building $img_name\n"
-
 if [ "$cmd" == "podman" ]; then
-    $cmd build --format docker -t "$img_name" .
+    $cmd build --format docker -t jsks/conflict_onset .
 else
-    $cmd build -t "$img_name" .
+    $cmd build -t jsks/conflict_onset .
 fi
 
-[ -n "$PUSH_IMG" ] && $cmd push "$img_name"
+[ -n "$PUSH_IMG" ] && $cmd push jsks/conflict_onset
+if [ -n "$TAG" ]; then
+    $cmd tag jsks/conflict_onset jsks/conflict_onset:"$TAG"
+    [ -n "$PUSH_IMG" ] && $cmd push jsks/conflict_onset:"$TAG"
+fi
