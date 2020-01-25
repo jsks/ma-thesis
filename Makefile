@@ -53,7 +53,7 @@ watch_pdf: ## Autobuild PDF in a container instance
 
 wc: ## Rough estimate of word count
 	@# All text except codeblocks, toc, appendix, and bibliography
-	@sed -e '/^```/,/^```/d' -e '/Appendix/,$$d' $(manuscript) | \
+	@sed -e '/^```/,/^```/d' -e '/Appendices/,$$d' $(manuscript) | \
 		pandoc --quiet --from markdown --to plain | \
 		wc -w | \
 		sed 's/^[[:space:]]*/word count: /'
