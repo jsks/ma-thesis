@@ -16,13 +16,18 @@ header-includes:
     - \appto\Shaded{\singlespacing}
     - \BeforeBeginEnvironment{align*}{\begin{singlespace}\vspace*{-\baselineskip}}
     - \AfterEndEnvironment{align*}{\end{singlespace}\noindent\ignorespaces}
+    - \counterwithout{table}{chapter}
+    - \counterwithout{figure}{chapter}
 output:
     pdf_document:
+        fig_caption: true
+        keep_tex: true
         latex_engine: lualatex
         toc: true
         toc_depth: 2
         pandoc_args: ["--syntax-definition", "assets/stan.xml",
-                      "--highlight-style", "kate"]
+                      "--highlight-style", "kate",
+                      "--filter", "pandoc-crossref"]
     html_document:
         smart: true
         toc: true
@@ -31,13 +36,22 @@ abstract: Lorem ipsum
 
 [//]: # Setup R environment for entire doc
 ```{r include = F, results = "hide"}
-knitr::opts_chunk$set(echo = F, eval = T)
-
 library(dplyr)
 library(extraDistr)
 library(ggplot2)
 library(gridExtra)
+library(magrittr)
+library(kableExtra)
+library(knitr)
+library(tidyr)
+
+# Load last to ensure nothing overwrites our namespace
 library(thesis.utils)
+
+options(knitr.kable.NA = ".")
+opts_chunk$set(echo = F, eval = T, warning = F, fig.width = 5,
+               fig.height = 3)
+
 ```
 
 # Introduction {-}
@@ -431,7 +445,7 @@ are interesting in their own right.
 
 To examine the relationship between civil conflict onset and executive
 constraints, I construct a dataset of relevant variables and run a
-bayesian structural equation model with a measurement model estimating
+bayesian structural equation model with a measurement portion estimating
 executive constraints as a latent construct and a multilevel logistic
 regression relating the latent construct to the observed outcome,
 civil conflict. The use of bayesian methods is particularly
@@ -441,7 +455,7 @@ non-random subset of years given only non-stochastic
 missingness. Traditional frequentist estimators are inappropriate due
 to the assumption that the observed data is drawn from a random,
 repeatable generative mechanism. This is readily apparent when
-attempting to interpret a frequentist confidence interval in the given
+attempting to interpret a frequentist confidence interval in the present
 context. A standard confidence interval for a selected level of
 significance, $\alpha$, reports only that $(1 - \alpha) 100 \%$ of the
 calculated confidence intervals from additional inferences done on
@@ -462,28 +476,30 @@ model before delving into the independent and dependent variables,
 including the operationalizations and data sources as well as the
 measurement model for executive constraints.[^model]
 
-[^model]: The model itself is written in Stan [@Carpenter2017] and run
-    using the `CmdStan` interface [@Team2019a] with
-    pre/post-processing done using `R` [@Team2019]. The model code is
-    available in [Appendix A](#appendix-a) and a fully reproducible
-    pipeline composed of all replication scripts is available at
+[^model]: The model code is written in Stan [@Carpenter2017] and was
+    run with the `CmdStan` interface [@Team2019a] using four parallel
+    chains at 2000 iterations each with a warmup of 1000. Convergence
+    was assessed according to the potential scale reduction factor
+    $\hat{R}$ and effective sample size (ESS) [@Vehtari2019] as well as
+    standard Stan diagnostics. The full code is available in
+    [Appendix A](#appendix-a) and a fully reproducible pipeline
+    compromised of replication scripts is available at
     [https://github.com/jsks/ma-thesis](https://github.com/jsks/ma-thesis).
 
 ### Regression Model
 
-I model civil conflict onset as a bayesian multilevel regression where
-onset is a function of a set of predictors, including executive
-constraints and an array of control variables, together with several
-grouping factors included as partially pooled varying intercepts. The
-units of analysis are all independent country-years from 1946 until
-2016, as determined by data availability, with *I* countries indexed
-by $i = 1 \dotsc I$ and *T* years indexed by $t = 1 \dotsc T$. The
-dependent variable, conflict onset, is a Bernoulli distributed binary
-variable where 1 denotes the onset of at least one new civil conflict
-in a given country-year. The chosen link function transforming the
-linear regression output into the probability of conflict onset,
-$\nu_{it}$, is the inverse logistic such that $\nu_{it} \in [0,
-1]$. [^invlogit]
+I model civil conflict onset as a multilevel regression where onset is
+a function of a set of predictors, including executive constraints and
+an array of control variables, together with several grouping factors
+included as partially pooled varying intercepts. The units of analysis
+are all independent country-years from 1951 until 2017, as determined
+by data availability, with *I* countries indexed by $i = 1 \dotsc I$
+and *T* years indexed by $t = 1 \dotsc T$. The dependent variable,
+conflict onset, is a Bernoulli distributed binary variable where 1
+denotes the onset of at least one new civil conflict in a given
+country-year. The chosen link function transforming the linear
+regression output into the probability of conflict onset, $\nu_{it}$,
+is the inverse logistic such that $\nu_{it} \in [0, 1]$. [^invlogit]
 
 [^invlogit]: Technically, the inverse logistic transforms values to
     the open interval, $(0, 1)$, but due to overflow/underflow in
@@ -497,9 +513,9 @@ The full regression specification is then as follows:
                  \sum_{k=1}^K \zeta^k_{j_{it}})
 \end{align*}
 
-where **X** is a single row matrix of predictors, $\beta$ a vector of
+where **X** is a vector of predictors, $\beta$ the vector of
 regression slopes, and $\zeta^k$ the set of varying intercepts for *K*
-grouping factors indexed by $j_k$. For the present analysis there is
+grouping factors indexed by $j_k$. For the present analysis there are
 only two grouping factors, year and country, to account for
 cross-sectional unmodeled heterogeneity between countries and over
 time [@Shor2007]. All predictors are also lagged by one year to
@@ -518,9 +534,9 @@ translates to:
     \beta & \sim \mathsf{Normal}(0, 2.5)
 \end{align*}
 
-Finally, for the varying intercepts modeling group-specific
-variability, I use hierarchical priors to provide a regularizing
-effect against overfitting [@Gelman2007].
+For the varying intercepts modeling group-specific variability, I use
+hierarchical priors to provide a regularizing effect against
+overfitting [@Gelman2007].
 \begin{align*}
     \zeta^k_j & \sim \mathsf{Normal}(0, \sigma^k) \\
     \sigma^k & \sim \mathsf{HalfCauchy}(0, 1)
@@ -534,7 +550,7 @@ UCDP/PRIO Armed Conflict Dataset v19.1 [@Gleditsch2002;
 contest over a government or territory between a state and non-state
 actor with a minimum threshold of 25 battle deaths within a single
 country-year with a coverage from 1946 to 2018.  The data was merged
-based on country location for conflicts labeled as internal or
+based on the government side for conflicts labeled as internal or
 internationalized internal --- *i.e.* where *type_of_conflict* was
 either 3 or 4. Multiple conflicts within the same years were
 aggregated to form a binary variable coded as 1 to denote the onset of
@@ -576,10 +592,10 @@ cross-national time series dataset providing multidimensional,
 disaggregated data on democracy and political institutions for over
 200 countries with an overall year coverage from 1789 until 2018. The
 principal data is drawn from expert coded surveys involving a global
-network of over 3000 coders, most of whom are academics as well as
+network of over 3000 coders, most of whom are academics or
 professionals working in policy related fields. Individual ratings are
 aggregated into latent variable estimates using hierarchical ordinal
-item response theory (IRT) models taking into account rater
+item response theory (IRT) models which take into account rater
 reliability and varying rater thresholds
 [@Pemstein2019]. [^thresholds] The result is over 220 lower level
 indicators that are also combined through various aggregation
@@ -605,14 +621,14 @@ overconfident results [@Treier2008; @Marquardt2019].
     *discrimination* and *difficulty* parameters in classical IRT
     models.
 
-For the purposes of this paper, I estimate an index measuring
-executive constraints from a factor analysis of several manifest
+For the purposes of this paper I estimate an index measuring
+executive constraints from a factor analysis of multiple manifest
 variables drawn from the V-Dem dataset. The aim is to capture the
 extent to which the executive is *de facto* constrained by other
 government institutions --- more specifically, the legislature,
 judiciary, and independent investigative bodies --- rather than the
 *de jure* powers of any one institution *vis-à-vis* the executive, and
-to do so using a latent variable model that avoids the arbitrary
+to do so using a latent variable aggregation that avoids the arbitrary
 weighting of linear additive indices.[^additive] The aggregation
 method is largely similar to the accountability index created by
 @Luhrmann2017 and the presidentialism index created by @Sigman2018. By
@@ -653,7 +669,7 @@ latent factor of length $m$ measuring executive constraints.
 
 I first model the measurement error in the manifest variables by
 assuming that the observed values are drawn from a normal distribution
-where the location parameters are the latent true values and the
+where the location parameters are the unobserved true values and the
 scale, $u$, the observed posterior standard deviations derived from
 the IRT posterior distributions. [^err]
 \[ Z_{ij} \sim \mathsf{Normal}(Z^\ast_{ij}, u_{ij}) \]
@@ -664,14 +680,14 @@ the IRT posterior distributions. [^err]
     this prohibitively increases the run time of the model.
 
 The latent values for the manifest variables are then modeled as
-functions of the latent factor $\theta$ where the mapping function is
-a standard factor analysis.
+functions of the latent factor $\theta$ with a standard factor
+analytic mapping function.
 \[ Z^\ast_{ij} \sim \mathsf{Normal}(\gamma_j + \lambda_j \theta_i, \psi_j) \]
 
-where $\lambda$ is the manifest variable specific factor loading,
-$\gamma$ the population intercept, and $\psi$ the scale of the error
-term. I assume local item independence such that the error terms,
-$(\psi_1, \dotsc, \psi_n)$, are uncorrelated (cite Lord &
+In the preceding equation, $\lambda$ is the variable specific factor
+loading, $\gamma$ the population intercepts, and $\psi$ the scale of
+the error term. I assume local item independence such that the error
+terms, $(\psi_1, \dotsc, \psi_n)$, are uncorrelated (cite Lord &
 Novick). Furthermore, for the purposes of identifying the likelihood,
 the scale of the latent factor, $\theta$, is fixed to mean $0$ and
 standard deviation $1$ while the factor loadings, $(\lambda_1, \dotsc,
@@ -679,7 +695,7 @@ standard deviation $1$ while the factor loadings, $(\lambda_1, \dotsc,
 positive constraints follow theory since all of the manifest variables
 exhibit the same scale direction and should be positively correlated
 with the latent factor.[^corr] Finally, similar to the regression
-coefficients, I select weakly informative priors.
+coefficients, I select the following weakly informative priors:
 \begin{align*}
     \gamma & \sim \mathsf{Normal}(0, 5) \\
     \lambda & \sim \mathsf{LogNormal}(0, 1) \\
@@ -755,7 +771,7 @@ priors, is as follows:
     process for missingness cannot be modeled without potentially
     introducing bias into the estimates.
 
-### Additional Variables
+### Additional Covariates
 
 As mentioned during the theoretical discussion of possible mechanisms,
 executive constraints alone are insufficient in determining the
@@ -792,40 +808,41 @@ relationship.
 In addition to state capacity, I also include a number of standard
 variables drawn largely from previous literature. The list of
 variables are not meant to provide an all encompassing theory of civil
-conflict, but rather roughly capture the most relevant dimensions of
-opportunity structure for armed conflict.  This includes a single year
-lagged measure of GDP per capita growth from PWT in order to capture
-short term economic shocks, which may affect both the strength and
-legitimacy of the state [@Bazzi2014]. I also include a measure of mean
-elevation from the GROWup dataset [@Girardin2015] to capture terrain
-advantageous for conducting an insurgency [@Fearon2003] as well as a
-measure of population density derived from population data from PWT
-and the area in square kilometers for each country from
-GROWup. Countries with a higher population density may require a more
-extensive and competent central administration and policing force in
-order to suppress violent dissent [@Fearon2003]. There's also the
-possibility that a high population density increases the competition
-for resources. If the state is identified as the source of a
-particular scarcity, the risk of civil conflict may increase. Finally,
-I include measures of ethnic fractionalization in the form of the
-number of political relevant ethnic groups and the percent of the
-population facing discrimination. Where there are significant ethnic
-cleavages and state sponsored discrimination, ethnic ties can
-facilitate collective action thereby lowering the mobilization costs
-of rebel groups [@Cederman2011].
+conflict, but rather roughly capture the opportunity structures for
+armed conflict.  This includes a single year lagged measure of GDP per
+capita growth from PWT in order to capture short term economic shocks,
+which may affect both the strength and legitimacy of the state
+[@Bazzi2014]. I also include a measure of mean elevation from the
+GROWup dataset [@Girardin2015] to capture terrain advantageous for
+conducting an insurgency [@Fearon2003] as well as a measure of
+population density derived from population data from PWT and the area
+in square kilometers for each country from GROWup. Countries with a
+higher population density may require a more extensive and competent
+central administration and policing force in order to suppress violent
+dissent [@Fearon2003]. There's also the possibility that a high
+population density increases the competition for resources. If the
+state is identified as the source of a particular scarcity, the risk
+of civil conflict may increase. Finally, I include measures of ethnic
+fractionalization in the form of the number of political relevant
+ethnic groups and the percent of the population facing
+discrimination. Where there are significant ethnic cleavages and state
+sponsored discrimination, ethnic ties can facilitate collective action
+thereby lowering the mobilization costs of rebel groups
+[@Cederman2011].
 
 To control for the time endogeneity of conflict --- past and current
 civil conflicts can impact the present risk of conflict onset as well
-as the level of executive constraints --- I include a dummy variable
-for ongoing conflict and the log of peace years [@Hegre2015a]. [^time]
-To account for spillover effects, I include a dummy variable for
-whether a neighbouring country is currently experiencing a civil
-conflict. One notable lack is a general measure of political
-instability, which I omit since it would be highly correlated with
-executive constraints and could potentially bias results, at least for
-years of crisis where the risk of civil conflict is highest. I do,
-however, include a dummy variable for independence year since newly
-sovereign states may be particularly weak.
+as the current level of executive constraints --- I include a dummy
+variable for ongoing conflict [^time] and the natural log of peace
+years [^peace_yrs] [@Hegre2015a]. To account for spillover effects, I
+include a dummy variable for whether a neighbouring country is
+currently experiencing a civil conflict. One notable lack is a general
+measure of political instability, which I omit since it could be
+highly correlated with executive constraints and would potentially
+bias results, at least for years of crisis where the risk of civil
+conflict is highest. I do, however, include a dummy variable for the
+independence year since newly sovereign states may be particularly
+weak.
 
 [^time]: To be more specific, civil conflicts can be highly
     destabilizing and severely affect the governing and military
@@ -837,7 +854,7 @@ sovereign states may be particularly weak.
     of the outcome as well as the executive constraints
     measure.
 
-    Regarding the peace years, the variable is calculated as
+[^peace_yrs]: Regarding the peace years, the variable is calculated as
     the number of years since the last conflict-year, including
     conflict-years from extrasystemic conflicts. For countries left
     censored due to the dataset starting date, I set the start of the
@@ -850,19 +867,316 @@ sovereign states may be particularly weak.
 
 ## Analysis
 
-### Latent Factor Model
+The analysis of the results is split into two sections. First, the
+parameter estimates from the executive constraints measurement model
+will be presented followed by the parameters pertaining to the
+logistic regression as well as a discussion on the overall model fit
+to the outcome variable, conflict onset.
 
-### Conflict Onset Regression
+### Measurement Model
+
+```{r  fig.cap = "\\label{fig:fpars} hello", warning = F}
+load("./posteriors/full_model/input.RData")
+fa <- read_post("./posteriors/full_model/fa_posteriors.csv.gz")
+
+lg <- colnames(lg_mm$obs)
+nonlg <- colnames(nonlg_mm$obs)
+
+lambda <- extract(fa, pars = "lambda")
+colnames(lambda) <- c(lg, nonlg)
+
+psi <- extract(fa, pars = "psi")
+colnames(psi) <- c(lg, nonlg)
+
+gamma <- extract(fa, pars = "gamma")
+colnames(gamma) <- c(lg, nonlg)
+
+delta_eta <- extract(fa, pars = c("delta", "eta"))
+
+p1 <- plot_pars(lambda)
+p2 <- plot_pars(psi)
+p3 <- plot_pars(gamma)
+p4 <- plot_pars(delta_eta)
+
+grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+
+Table \ref{tab:fa} and figure \ref{fig:fpars} summarise the posterior
+draws for the measurement model parameters according to $80$ percent
+quantile intervals. According to the results, the factor loadings,
+$\lambda$, for each manifest variable are fairly comparable, with the
+exception of the lower value for *v2lgfunds* ("legislature controls
+its own resources") and to a lesser extent *v2lgqstexp* ("legislature
+questions executive branch officials in practice"). Relative to the
+other manifest variables, both items are less informative in inferring
+the values of the latent factor --- a $\lambda$ of zero would indicate
+that the latent factor does not explain any of the variation in the
+manifest variable. As for the variable specific intercepts, $\gamma$,
+they are largely clustered around zero as to be expected given that
+the manifest variables were standardized prior to the model run. Where
+deviations do occur, most notably with several of the legislative
+variables, it is because of the measurement error component of the
+model shifting the mean for a specific variable away from zero. For
+example, after adjusting for measurement error, the mean for
+$v2lgfunds$ is on average slightly higher than the remaining manifest
+variables, hence the negative intercept.
+
+```{r fa, fig.height = 6, fig.width = 6, warning = F}
+fa_pars <- extract(fa, c("lambda", "gamma", "psi", "delta", "eta")) %>%
+    post_summarise(probs = c(0.10, 0.9)) %>%
+    mutate(parameter = sub("\\[\\d+\\]", "", parameter) %>% sprintf("$\\%s$", .),
+           interval = sprintf("[%.3f, %.3f]", signif(`10%`, 3), signif(`90%`, 3)),
+           manifest = c(rep(c(lg, nonlg), 3),
+                        rep("v2lgbicam", 2))) %>%
+    select(-`10%`, -`90%`) %>%
+    pivot_wider(id_cols = manifest, names_from = parameter, values_from = interval)
+
+rownames(fa_pars) <- sprintf("\\textit{%s}", fa_pars$manifest)
+fa_pars$manifest <- NULL
+
+kable(fa_pars, "latex", align = "c", booktabs = T, linesep = "", escape = F,
+      caption = "Posterior credible intervals for measurement model parameters") %>%
+    kable_styling(latex_options = c("striped", "scale_down"), full_width = F,
+                  protect_latex = F)
+```
+
+The $\delta$ and $\eta$ parameters correspond to the slope and
+intercept in the linear predictor for the presence of a legislature,
+*v2lgbicam*. The effect of their inclusion can be seen in figure
+\ref{fig:bicam}. The latent factor, $\theta$, follows the
+directionality of the manifest variables, greater values indicate a
+more constrained executive and lower values vice versa. The density
+plots indicate that on average, for country-years where there is no
+legislature, *i.e.* $v2lgbicam$ is zero, the latent factor is lower,
+although still conditional on the values for the remaining manifest
+variables. Where the legislature is present, $\theta$ is distributed
+according to the $Normal(0, 1)$ prior.
+
+```{r fig.width = 3, fig.height = 2, fig.cap = "\\label{fig:bicam} Posterior density plots for $\\theta$"}
+theta <- extract(fa, "theta")
+plot_dens(theta, groups = lgbicam)
+
+```
+
+The final portion of the measurement model is the measurement error
+adjustment. As described in the research design section, in order to
+incorporate the posterior uncertainty from the V-Dem IRT aggregation,
+the observed values for the manifest variables, $Z$, were assumed to
+be drawn from normal distributions where the means were the unobserved
+true values, $Z^{\ast}$, and the standard deviations the observed
+posterior standard deviations as reported by V-Dem. The practical
+effect is that where the reported error is larger, the uncertainty in
+$Z^{\ast}$ estimates increases and the mean is drawn towards the
+regression line in the factor analysis. In other words, the model is
+more skeptical of outliers in the manifest variables. This posterior
+shrinkage can be seen in figure \ref{fig:fa-line}. Figure
+\ref{fig:err} meanwhile plots the range of the upper and low bounds of
+the $80$ percent posterior quantile interval for an example manifest
+variable in $Z^{\ast}$ against the V-Dem standard deviations as well
+as the difference between the estimated posterior mean and the
+observed mean.
+
+```{r fig.cap = "\\label{fig:fa-line} Error"}
+err <- read_post("posteriors/full_model/err_posteriors.csv.gz")
+
+nonlg_est <- extract(err, "nonlg_est") %>%
+    post_summarise %>%
+    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
+    mutate(interval = codehigh - codelow,
+           se = nonlg_mm$se[, 1],
+           obs = nonlg_mm$obs[, 1],
+           diff = obs - median)
+
+idx <- sample(1:ncol(theta), 50)
+theta_medians <- theta[, idx] %>% apply(2, median)
+
+s <- seq(min(theta_medians) - 0.1, max(theta_medians) + 0.1, 0.01)
+
+x <- data.frame(point = c(nonlg_est$obs[idx], nonlg_est$median[idx]),
+                group = rep(1:length(idx), 2),
+                factor = c(rep(1, length(idx)), rep(2, length(idx))) %>% as.factor,
+                theta = rep(theta_medians, 2))
+
+y <- data.frame(yhat = median(gamma[, 6]) + median(lambda[, 6]) * s,
+                theta = s)
+
+ggplot(x, aes(theta, point, group = group, col = factor)) +
+    geom_line(alpha = 0.3) +
+    geom_point(alpha = 0.8) +
+    geom_line(data = y, aes(theta, yhat, group = NA, col = NA), alpha = 1)
+
+```
+
+```{r fig.cap = "\\label{fig:err} Errors"}
+p1 <- ggplot(nonlg_est, aes(se, interval)) + geom_point(col = "#56B4E9", alpha = 0.2, shape = 1)
+p2 <- ggplot(nonlg_est, aes(se, diff)) + geom_point(col = "#56B4E9", alpha = 0.2)
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
+
+#### Executive Constraints Estimates
+
+In total there are `r nrow(final.df)` country-year estimates of
+$\theta$, comprised of `r n_distinct(final.df$country_name)` unique
+countries and scaled from approximately $-2$ to $2$.  Since not every
+single country can be presented, figure \ref{fig:theta} provides a
+time series plot for China, Brazil, Nigeria, Norway, and Russia so as
+to provide an example of the actual $\theta$ estimates.  The countries
+were chosen to represent a diversity of geographic regions as well as
+political contexts. From the plot, China, being a single party
+authoritarian state, is consistently ranked the worst in executive
+constraints. The decline for Russia largely follows the ascent of
+Vladimir Putin at the end of 1999 and his gradual consolidation of
+power in the decades that followed. For both Nigeria and Brazil, the
+measure captures periods of military dictatorship such as the period
+following Johnson Aguiyi-Ironsi's seizure of power in Nigeria the 1966
+coup d'etat. The last country, Norway, represents a consolidated
+polyarchy for the time period under consideration with consistently
+strong constraints against the executive office.
+
+```{r fig.width = 7, fig.height = 6, fig.cap = "\\label{fig:theta} Theta"}
+theta_summarised <- post_summarise(theta, probs = c(0.10, 0.5, 0.90)) %>%
+    rename(codelow = `10%`, median = `50%`, codehigh = `90%`)
+
+theta_summarised <- theta_summarised[final.df$reduced_idx, ] %>%
+    mutate(country_name = final.df$country_name,
+           year = final.df$year)
+
+targets <- c("Brazil", "China", "Nigeria", "Russia", "Norway")
+
+filter(theta_summarised, country_name %in% targets) %>%
+    ggplot(aes(year, median, fill = country_name)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = codelow, ymax = codehigh), alpha = 0.2)
+
+```
+
+```{r fig.cap = "\\label{fig:tie} Tie Fighter"}
+targets <- c("Algeria", "Argentina", "Armenia", "Chile", "Colombia",
+             "Egypt", "Georgia", "Ghana", "Hungary", "Indonesia",
+             "Iran", "Israel", "Japan", "Kenya", "Mexico", "Poland",
+             "Portugal", "Romania", "Rwanda", "Turkey", "Tunisia",
+             "United States of America", "Zimbabwe")
+
+df <- filter(theta_summarised, year %in% c(2017, 2007),
+             country_name %in% targets) %>%
+    mutate(year = as.factor(year),
+           country_name = ifelse(country_name == "United States of America",
+                                 "USA", country_name) %>%
+               factor(levels = sort(c(targets, "USA"), T)))
+
+ggplot(df, aes(median, country_name, colour = year)) +
+    geom_point() +
+    geom_errorbarh(aes(xmax = codehigh, xmin = codelow))
+
+```
+
+```{r results = "hide"}
+romania_idx <- filter(final.df, country_name == "Romania", year %in% c(2007, 2017)) %$%
+    reduced_idx
+
+romania_p <- signif(mean(theta[, romania_idx[1]] > theta[, romania_idx[2]]) * 100, 2)
+
+chile_idx <- filter(final.df, country_name == "Chile", year %in% c(2007, 2017)) %$%
+    reduced_idx
+
+chile_p <- signif(mean(theta[, chile_idx[1]] < theta[, chile_idx[2]]) * 100, 2)
+```
+
+To provide a further snapshot of a greater number of countries, figure
+\ref{fig:tie} plots the $\theta$ estimates for 2017, the last year in
+the dataset, compared to 2007 by country. A full list of all countries
+is available in [Appendix C](#appendix-c). Note, the statistical
+significance of differences between years for a single country cannot
+strictly be judged by overlapping credible intervals (TODO: Schenker
+and Gentleman). For example, Romania, despite having overlapping
+credible intervals, still has a posterior probability of approximately
+$`r romania_p`\%$ that the estimate for 2017 is lower than 2007. In
+the case of Chile with even more visual overlap, there is a
+$`r chile_p`\%$ posterior probability that the estimate for 2017 is higher
+than 2007.
 
 
-```{r eval = F}
-beta <- readRDS("posteriors/summary/beta.rds")
+### Onset Regression
+
+Figure \ref{fig:reg} plots the slope coefficients on the log-odds
+scale from the logistic regression linking the latent construct for
+executive constraints to the outcome, civil conflict onset. Credible
+intervals are summarised the same as previous plots, 80 percent
+quantile intervals, and exact values are reported in table
+\ref{tab:reg}.
+
+- Log-odds scale
+- Standardized
+
+```{r reg, warning = F}
+reg <- read_post("posteriors/full_model/reg_posteriors.csv.gz")
+
+beta <- extract(reg, "beta")
+colnames(beta) <- c("exec_constraints", colnames(X),
+                    sprintf("exec * %s", colnames(X)[interaction_idx]))
+
+probs <- apply(beta, 2, function(x) list(below = mean(x < 0), above = mean(x > 0)))
+
+beta_s <- post_summarise(beta, probs = c(0.1, 0.9)) %>%
+    mutate(Estimate = sprintf("[%.3f, %.3f]", signif(`10%`, 3), signif(`90%`, 3))) %>%
+    select(-`10%`, -`90%`, -parameter)
+
+rownames(beta_s) <- colnames(beta)
+
+kable(beta_s, "latex", align = "c", booktabs = T, linesep = "", escape = T,
+      caption = "Posterior credible intervals for regression slopes") %>%
+    kable_styling(latex_options = c("striped", "scale_down"), full_width = F)
+```
+
+
+```{r fig.cap = "\\label{fig:reg} hello world"}
 plot_pars(beta)
 ```
 
+
 ```{r eval = F}
-input.df <- readRDS("posteriors/input_data.rds")
-p_hat <- readRDS("posteriors/summary/predicted_probs.rds")
+# Interaction plot
+alpha <- extract(reg, "alpha")
+theta_seq <- seq(-2.5, 2.5, .01)
+
+state <- quantile(final.df$rgdpepc, probs = c(0.1, .5, 0.9))
+
+f <- function(x, y) {
+    with(final.df, alpha +
+                   beta[, 1] * x +
+                   beta[, 2] * y +
+                   beta[, 3] * mean(rgdpepc_gro) +
+                   beta[, 4] * mean(pop_density) +
+                   beta[, 5] * mean(meanelev) +
+                   beta[, 6] * mean(rlvt_groups_count) +
+                   beta[, 7] * 1 +
+                   beta[, 8] * 1 +
+                   beta[, 9] * mean(peace_yrs) +
+                   beta[, 10] * 0 +
+                   beta[, 11] * x * y)
+}
+
+par(mfrow = c(1, 3))
+for (y in state) {
+    print(y)
+    p <- boot::inv.logit(sapply(theta_seq, f, y)) * 100
+
+    m <- apply(p, 2, median)
+    pi <- apply(p, 2, quantile, probs = c(0.2, 0.8)) %>% t
+
+    plot(theta_seq, m, type = "l", ylim = c(min(pi[, 1]), max(pi[, 2])),
+         xlab = "Executive Constraints", ylab = "Predicted Probability")
+    lines(theta_seq, pi[, 1], lty = 2)
+    lines(theta_seq, pi[, 2], lty = 2)
+}
+```
+
+
+```{r eval = F}
+input.df <- readRDS("posteriors/model/final.rds")
+p_hat <- readRDS("posteriors/model/summary/p_hat.rds")
 
 plot_dens(p_hat, groups = input.df$lepisode_onset)
 ```
@@ -871,38 +1185,9 @@ plot_dens(p_hat, groups = input.df$lepisode_onset)
 ```{r eval = F}
 p <- apply(p_hat, 2, median)
 x <- evalmod(scores = p, labels = input.df$lepisode_onset)
+
 plot(x, curvetype = c("ROC", "PRC"))
 ```
-
-```{r eval = F}
-# Interaction plot
-intercept <- readRDS("posteriors/summary/intercept.rds")
-theta <- readRDS("posteriors/summary/theta.rds") %>% apply(2, median) %>% sort
-
-state <- quantile(input.df$cgdppc, probs = c(0.2, .5, 0.8))
-
-f <- function(x, y) {
-    with(input.df, intercept + beta[, 1] * x + beta[, 2] * y +
-                   beta[, 3] * x * y + beta[, 4] * mean(peace_yrs) +
-                   beta[, 5] * mean(gdpgro) + beta[, 6] * mean(pop_density)  +
-                   beta[, 7] * mean(meanelev) + beta[, 8] * mean(rlvt_groups_count) +
-                   beta[, 9] * 1 + beta[, 10] * 0)
-}
-
-par(mfrow = c(1, 3))
-for (y in state) {
-    print(y)
-    p <- boot::inv.logit(sapply(theta, f, y)) * 100
-
-    m <- apply(p, 2, median)
-    pi <- apply(p, 2, quantile, probs = c(0.2, 0.8)) %>% t
-
-    plot(theta, m, type = "l", ylim = c(min(pi[, 1]), max(pi[, 2])),
-         xlab = "Executive Constraints", ylab = "Predicted Probability")
-    lines(theta, pi[, 1], lty = 2)
-    lines(theta, pi[, 2], lty = 2)
-}
-
 
 ```
 
@@ -921,7 +1206,7 @@ for (y in state) {
 
 In order
 
-```{r}
+```{r eval = F}
 prior_plot <- function(range, fn, title = NULL, ...) {
     data.frame(x = range) %>%
         ggplot(aes(x)) +
@@ -950,7 +1235,7 @@ grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2, nrow = 3)
 ```
 
 
-```{r warning = F}
+```{r eval = F, warning = F}
 load("posteriors/sim/simulated_summary.RData")
 
 ggplot(pars.df, aes(parameter, point, color = type)) +
@@ -961,7 +1246,7 @@ ggplot(pars.df, aes(parameter, point, color = type)) +
 
 ```
 
-```{r warning = F}
+```{r eval = F, warning = F}
 latent.df <- arrange(latent.df, true_value) %>%
     mutate(idx = 1:n())
 
@@ -972,10 +1257,12 @@ ggplot(latent.df, aes(idx, true_value)) +
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           axis.ticks.x = element_blank())
+
 ```
 
-```{r results = 'hide'}
+```{r eval = F, results = 'hide'}
 x <- with(latent.df, mean(true_value <= codehigh & true_value >= codelow))
+#x * 100
 
 #plot(df$lg_se[, 1], df$lg[, 1] - colMeans(lg_est))
 #plot(df$lg_se[, 1], lapply(lg_est, IQR) %>% unlist)
@@ -993,14 +1280,10 @@ x <- with(latent.df, mean(true_value <= codehigh & true_value >= codelow))
 
 ```
 
-`r x * 100`
-
 \newpage
 
-## C - Convergence Statistics {#appendix-c}
 
-\newpage
-
+## C - Country Comparison {#appendix-c}
 
 # References {-}
 
