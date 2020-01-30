@@ -190,3 +190,27 @@ partial <- function(fn, ...) {
 #'
 #' @export
 to_idx <- function(x, ...) factor(x, ...) %>% as.numeric
+
+#' @export
+summary_stats <- function(x, vars = NULL) UseMethod("summary_stats", x)
+
+#' @export
+summary_stats.data.frame <- function(x, vars = colnames(x)) {
+    if (is.null(vars))
+        stop("Missing target columns")
+
+    df <- x[, vars, drop = F]
+    # N, mean, std.dev, min, max
+    ll <- lapply(colnames(df), function(s) {
+        col <- df[, s, drop = T]
+        data.frame(Variable = s,
+                   N = sum(!is.na(col)),
+                   Mean = mean(col, na.rm = T) %>% signif(3),
+                   `Std. dev.` = sd(col, na.rm = T) %>% signif(3),
+                   `Min.` = min(col, na.rm = T) %>% signif(3),
+                   `Max.` = max(col, na.rm = T) %>% signif(3),
+                   stringsAsFactors = F)
+    })
+
+    dplyr::bind_rows(ll)
+}

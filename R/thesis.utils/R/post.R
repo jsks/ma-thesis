@@ -15,10 +15,9 @@ post_summarise <- function(x, ...)
     UseMethod("post_summarise", x)
 
 #' @export
-post_summarise.matrix <- function(x,
-                                  fn = partial(stats::quantile, probs = c(0.025, 0.5, 0.975)),
-                                  ...) {
-    df <- apply(x, 2, fn) %>% t %>% as.data.frame
+post_summarise.matrix <- function(x, probs = c(0.025, 0.5, 0.975)) {
+    df <- apply(x, 2, stats::quantile, probs = probs) %>% t %>% as.data.frame
+
     rownames(df) <- NULL
     df$parameter <- colnames(x)
 
@@ -28,7 +27,7 @@ post_summarise.matrix <- function(x,
 #' @export
 post_summarise.posterior <- function(x, pars = NULL, ...) {
     if (is.null(pars))
-        stop("Expected at least one parameter to extract from CmdStanMCMC")
+        stop("Expected at least one parameter to extract from posterior object")
 
     m <- extract(x, pars) %>% as.matrix
     post_summarise(m, ...)
@@ -61,5 +60,5 @@ extract.posterior <- function(x, pars = NULL) {
     if (length(idx) == 0)
         data.frame()
 
-    x[, idx, drop = F]
+    as.matrix(x[, idx, drop = F])
 }

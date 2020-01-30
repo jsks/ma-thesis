@@ -7,15 +7,19 @@
 #' @param labels Optional CharacterVector of x-axis labels.
 #'
 #' @export
-plot_pars <- function(m, labels = colnames(m)) {
-    df <- post_summarise(m, names = labels) %>%
-        dplyr::mutate(parameter = factor(parameter, levels = parameter))
-    colnames(df)[-ncol(df)] <- c("codelow95", "codelow68", "median",
-                                 "codehigh68", "codehigh95")
+plot_pars <- function(x, ...) UseMethod("plot_pars", x)
 
-    # TODO
+#' @export
+plot_pars.matrix <- function(x) {
+    df <- post_summarise(x, probs = c(0.05, 0.16, 0.5, 0.84, 0.95)) %>%
+        rename(codelow95 = `5%`,
+               codelow68 = `16%`,
+               median = `50%`,
+               codehigh68 = `84%`,
+               codehigh95 = `95%`)
+
     ggplot(df, aes_(x = ~parameter, y = ~median)) +
-        geom_hline(yintercept = 0, alpha = 0.5, color = "grey") +
+        #geom_hline(yintercept = 0, alpha = 0.5, color = "grey") +
         geom_errorbar(aes_(x = ~parameter, ymin = ~codelow95, ymax = ~codehigh95),
                       color = "#0072B2", linetype = "dotted", width = 0) +
         geom_errorbar(aes_(x = ~parameter, ymin = ~codelow68, ymax = ~codehigh68),
@@ -29,14 +33,26 @@ plot_pars <- function(m, labels = colnames(m)) {
 }
 
 #' @export
-plot_dens <- function(m, n = 50, groups = NULL) {
-    df <- t(p_hat[1:n, ]) %>%
-        as.data.frame %>%
-        dplyr::mutate(id = as.factor(groups)) %>%
-        tidyr::gather(iteration, value, -id) %>%
-        dplyr::mutate(z = paste(id, iteration))
+plot_pars.posterior <- function(x, pars = NULL) {
+    if (is.null(pars))
+        stop("Expected at least one parameter to extract from posterior object")
 
-    ggplot(df, aes_(~value, group = ~z, color = ~id)) +
+    extract(x, pars) %>%
+        plot_pars.matrix
+}
+
+
+#' @export
+plot_dens <- function(m, n = 50, groups = NULL) {
+    if (is.null(groups))
+        stop("Missing grouping variable")
+
+    df <- t(m[1:n, ]) %>% as.data.frame %>%
+        mutate(id = as.factor(groups)) %>%
+        tidyr::gather(iteration, value, -id)
+
+
+    ggplot(df, aes(value, group = interaction(iteration, id), colour = id)) +
         stat_density(position = "identity", geom = "line",
                      n = 1024, alpha = 0.2) +
         theme(panel.background = element_blank(),

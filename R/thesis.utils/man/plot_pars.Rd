@@ -4,7 +4,7 @@
 \alias{plot_pars}
 \title{Parameter plot}
 \usage{
-plot_pars(m, labels = colnames(m))
+plot_pars(x, ...)
 }
 \arguments{
 \item{m}{Posterior matrix where each column is a separate parameter}
