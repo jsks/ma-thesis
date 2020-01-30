@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
-suppressMessages(library(dplyr))
-suppressMessages(library(magrittr))
-suppressMessages(library(thesis.utils))
+library(dplyr)
+library(magrittr)
+library(thesis.utils)
 
 print("Prepping model data")
 merged.df <- readRDS("data/merged_data.rds")
@@ -34,9 +34,10 @@ for (v2 in lg_vars) {
 ###
 # Final dataset for model
 final.df <- merged.df %>%
-    select(country_name, year, lonset, lepisode_onset, peace_yrs,
-           one_of(constraint_vars), one_of(paste0(constraint_vars, "_sd")),
-           rgdpepc, rgdpepc_gro,  pop_density, meanelev, ongoing,
+    select(country_name, year, lonset, lmajor_onset, lepisode_onset,
+           lepisode_major_onset, peace_yrs, one_of(constraint_vars),
+           one_of(paste0(constraint_vars, "_sd")), rgdpepc,
+           rgdpepc_gro, pop_density, meanelev, ongoing, cinc, independence,
            rlvt_groups_count, neighbour_conflict, v2lgbicam) %>%
     filter_at(constraint_vars, all_vars(!is.na(.))) %>%
     mutate(rgdpepc = log(rgdpepc) %>% normalize,
@@ -44,9 +45,10 @@ final.df <- merged.df %>%
            pop_density = log(pop_density) %>% normalize,
            meanelev = log(meanelev) %>% normalize,
            peace_yrs = log(peace_yrs + 1) %>% normalize,
-           reduced_idx = do.call(paste,
-                                 lapply(c("country_name", constraint_vars), as.symbol)) %>%
-               collapse_changes)
+           cinc = normalize(cinc),
+           reduced_idx =
+               do.call(paste, lapply(c("country_name", constraint_vars), as.symbol)) %>%
+                   collapse_changes)
 
 dbg_info(final.df)
 

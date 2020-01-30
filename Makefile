@@ -23,6 +23,9 @@ data    := data
 raw     := $(data)/raw
 post    := posteriors
 
+ml      := $(wildcard models/*)
+results := $(ml:models/%.json=$(post)/%/combined_posteriors.csv.gz)
+
 all: paper.pdf ## Default rule: paper.pdf
 .PHONY: bash clean manuscript_dependencies help watch_sync watch_pdf wc
 .SECONDARY:
@@ -88,9 +91,13 @@ $(data)/prepped_data.RData: $(data)/merged_data.rds R/transform.R
 stan/model: stan/model.stan
 	cd $(cmdstan) && $(MAKE) $(ROOT)/stan/model
 
-$(post)/%/data.json: R/%_data.R $(data)/prepped_data.RData
+$(post)/%/data.json: R/model_data.R models/%.json $(data)/prepped_data.RData
 	@mkdir -p $(@D)
-	Rscript $<
+	Rscript R/model_data.R models/$*.json
+
+$(post)/sim/data.json: R/sim_data.R
+	@mkdir -p $(@D)
+	Rscript R/sim_data.R
 
 # Generate an implicit rules for each chain for sampling
 define cmdstan-rule
@@ -101,9 +108,11 @@ $(post)/%/samples-chain_$(1).csv: $(post)/%/data.json stan/model
 endef
 $(foreach x, $(id), $(eval $(call cmdstan-rule,$(x))))
 
-$(post)/%/combined_posteriors.csv.gz: $(samples)
+$(post)/%/fa_posteriors.csv.gz \
+	$(post)/%/reg_posteriors.csv.gz \
+	$(post)/%/err_posteriors.csv.gz: $(samples)
 	$(cmdstan)/bin/diagnose $^
-	sh scripts/concat.sh -o $@ $^
+	sh scripts/concat.sh -o $(@D) $^
 	@tar --remove-files --zstd -cf $(@D)/stan_output.tar.zst $^
 
 ###
@@ -111,12 +120,6 @@ $(post)/%/combined_posteriors.csv.gz: $(samples)
 $(post)/sim/simulated_summary.RData: R/summarise_sim.R \
 					$(post)/sim/combined_posteriors.csv.gz
 	Rscript R/summarise_sim.R
-
-###
-# Summarise posteriors from full model run
-$(post)/model/model_summary.RData: R/summarise_model.R \
-					$(post)/model/combined_posteriors.csv.gz
-	Rscript R/summarise_model.R
 
 ###
 # Build final manuscript

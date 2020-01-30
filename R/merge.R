@@ -4,18 +4,31 @@
 # statistics, GROWup geographic data, and UCDP conflict data.
 ####
 
-suppressMessages(library(data.table))
-suppressMessages(library(dplyr))
-suppressMessages(library(magrittr))
-suppressMessages(library(readxl))
-suppressMessages(library(tidyr))
-suppressMessages(library(thesis.utils))
+library(data.table)
+library(dplyr)
+library(magrittr)
+library(readxl)
+library(tidyr)
+library(thesis.utils)
 
 ###
 # V-Dem - Democracy data
 vdem <- readRDS("data/raw/V-Dem-CY-Full+Others-v9.rds") %>%
     select(-matches("_ord|_mean|_nr|_\\d*$"), -matches("^e_")) %>%
     filter(year >= 1945)
+
+# This isn't the independence date for most countries, but take
+# advantage of the fact that our dataset is censored from ~1950
+# onwards meaning that we'll get the right year for post-colonial,
+# post-soviet, etc etc
+independence <- select(vdem, country_name, year, v2svindep) %>%
+    arrange(country_name, year) %>%
+    group_by(country_name) %>%
+    summarise(independence = first(year[v2svindep == 1]))
+
+vdem %<>%
+    left_join(independence, by = "country_name") %>%
+    mutate(independence = ifelse(year == independence, 1, 0))
 
 sprintf("Started with %d countries and %d rows from V-Dem",
         n_distinct(vdem$country_id), nrow(vdem))
@@ -80,65 +93,6 @@ setdiff(vdem$country_name, pwt.df$country_name) %>%
 
 vdem %<>% left_join(pwt.df, by = c("country_name", "year"))
 
-
-###
-# Maddison - Population & GDP
-#
-# This is already merged into V-Dem; however, we want to use rgdpnapc
-# to calculate GDP growth rather than cgdppc. Plus, we'll also take
-# population statistics since V-Dem only has WB figures.
-#
-# Maddison includes Serbia Federation, Czech territory, and RFSR as
-# separate entites. V-Dem codes entire Yugoslavia and Czechoslovakia
-# so drop the constituent republics prior to independence, Russia
-# however is coded as only the socialist republic instead of the
-# entire USSR.
-maddison.df <- read_xlsx("data/raw/mpd2018.xlsx", sheet = 2) %>%
-    filter(year > 1940,
-           !(country == "Serbia" & year < 1992),
-           !(country == "Former Yugoslavia" & year >= 1992),
-           !(country == "Czech Republic" & year < 1992),
-           !(country == "Czechoslovakia" & year >= 1992)) %>%
-    mutate(country =
-               case_when(country == "Bolivia (Plurinational State of)" ~ "Bolivia",
-                         country == "Cabo Verde" ~ "Cape Verde",
-                         country == "China, Hong Kong SAR" ~ "Hong Kong",
-                         country == "Congo" ~ "Republic of the Congo",
-                         country == "Côte d'Ivoire" ~ "Ivory Coast",
-                         country == "Czechoslovakia" & year < 1992 ~ "Czech Republic",
-                         country == "D.P.R. of Korea" ~ "North Korea",
-                         country == "D.R. of the Congo" ~ "Democratic Republic of the Congo",
-                         country == "Former Yugoslavia"  & year < 1992 ~ "Serbia",
-                         country == "Gambia" ~ "The Gambia",
-                         country == "Iran (Islamic Republic of)" ~ "Iran",
-                         country == "Lao People's DR" ~ "Laos",
-                         country == "Myanmar" ~ "Burma/Myanmar",
-                         country == "Republic of Korea" ~ "South Korea",
-                         country == "Republic of Moldova" ~ "Moldova",
-                         country == "Russian Federation" ~ "Russia",
-                         country == "Sudan (Former)" ~ "Sudan",
-                         country == "Syrian Arab Republic" ~ "Syria",
-                         country == "Taiwan, Province of China" ~ "Taiwan",
-                         country == "TFYR of Macedonia" ~ "Macedonia",
-                         country == "U.R. of Tanzania: Mainland" ~ "Tanzania",
-                         country == "United States" ~ "United States of America",
-                         country == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
-                         country == "Viet Nam" ~ "Vietnam",
-                         T ~ country)) %>%
-    select(country_name = country, year, cgdppc, rgdpnapc) %>%
-    arrange(country_name, year) %>%
-    group_by(country_name, idx = consecutive(year)) %>%
-    mutate(gdpgro = rgdpnapc / lag(rgdpnapc) - 1) %>%
-    ungroup %>%
-    select(-idx)
-
-setdiff(vdem$country_name, maddison.df$country_name) %>%
-    unique %>%
-    paste(collapse = "; ") %>%
-    sprintf("V-Dem countries missing from Maddison: %s", .)
-
-vdem %<>% left_join(maddison.df, by = c("country_name", "year"))
-
 ###
 # Add GW codes to merged dataset. GW are modified COW codes, which are
 # already merged into V-Dem, and UCDP uses a slightly modified version
@@ -178,66 +132,79 @@ acd <- readRDS("data/raw/UcdpPrioConflict_v19_1.rds")
 # conflict_id = 418 is the United States vs Al Qaeda starting in 2001
 # --- why isn't extrasystemic??
 civil <- filter(acd, type_of_conflict %in% c(1, 3, 4), conflict_id != 418) %>%
-    mutate(gwno_loc = as.character(gwno_loc)) %>%
-    separate_rows(gwno_loc, sep = ",") %>%
-    mutate(gwno_loc = as.integer(gwno_loc))
+    mutate(gwno_a = as.character(gwno_a)) %>%
+    separate_rows(gwno_a, sep = ",") %>%
+    mutate(gwno_a = as.integer(gwno_a))
 
-filter(ctable, gwid %in% setdiff(civil$gwno_loc, vdem$gwid)) %$%
-    paste(country_name, collapse = "; ") %>%
-    sprintf("UCDP countries missing from merged: %s", .)
+missing <- filter(ctable, gwid %in% setdiff(civil$gwno_a, vdem$gwid))
+if (nrow(missing) > 0) {
+    missing %$%
+        paste(country_name, collapse = "; ") %>%
+        sprintf("UCDP countries missing from merged: %s", .)
+}
 
-counts.df <- group_by(civil, gwno_loc, year) %>%
+counts.df <- group_by(civil, gwno_a, year) %>%
     summarise(n_conflicts = n(),
               intensity = max(intensity_level),
-              type_of_conflict = max(type_of_conflict))
+              type_of_conflict = max(type_of_conflict)) %>%
+    ungroup
 
 neighbours.df <- readRDS("data/neighbours.rds") %>%
-    inner_join(counts.df, by = c("neighbour_gwid" = "gwno_loc", "year")) %>%
+    inner_join(counts.df, by = c("neighbour_gwid" = "gwno_a", "year")) %>%
     group_by(gwid, year) %>%
     summarise(n_neighbour_conflicts = sum(n_conflicts),
               neighbour_intensity = max(intensity),
-              neighbour_type_conflict = max(type_of_conflict))
+              neighbour_type_conflict = max(type_of_conflict)) %>%
+    ungroup
 
 full_counts.df <- full_join(counts.df, neighbours.df,
-                            by = c("gwno_loc" = "gwid", "year"))
+                            by = c("gwno_a" = "gwid", "year"))
 
-# Episode onsets
-episode_ucdp <- group_by(civil, gwno_loc, conflict_id, start_date2) %>%
-    summarise(episode_onset = 1,
-              year = min(year),
-              start_prec2 = ifelse(first(start_prec2) %in% 6:7, 1, 0),
-              episode_gwno_a = first(gwno_a),
-              episode_intensity = max(intensity_level),
-              episode_type = first(type_of_conflict),
-              episode_incompatibility = first(incompatibility)) %>%
-    ungroup %>%
-    arrange(desc(episode_intensity)) %>%
-    distinct(gwno_loc, year, .keep_all = T) %>%
-    select(-start_date2, -conflict_id)
+###
+# Find conflict onsets
+find_onset <- function(df, vars) {
+    group_by_at(df, c("gwno_a", vars)) %>%
+        summarise(onset = 1, year = min(year)) %>%
+        ungroup %>%
+        distinct(gwno_a, year, .keep_all = T) %>%
+        select(gwno_a, year, onset)
+}
 
-# Unique conflict onsets
-conflict_ucdp <- group_by(civil, gwno_loc, conflict_id) %>%
-    summarise(onset = 1,
-              year = min(year),
-              gwno_a = first(gwno_a),
-              onset_intensity = max(intensity_level),
-              onset_type = first(type_of_conflict),
-              onset_incompatibility = first(incompatibility)) %>%
-    ungroup %>%
-    arrange(desc(onset_intensity)) %>%
-    distinct(gwno_loc, year, .keep_all = T) %>%
-    select(-conflict_id)
+civil %<>% filter(type_of_conflict %in% 3:4)
 
-ucdp <- full_join(episode_ucdp, conflict_ucdp, by = c("gwno_loc", "year"))
+# Episode onsets - all conflicts
+episode_ucdp <- find_onset(civil, c("conflict_id", "start_date2")) %>%
+    rename(episode_onset = onset)
 
-merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_loc", "year")) %>%
-    left_join(full_counts.df, by = c("gwid" = "gwno_loc", "year")) %>%
-    mutate(ongoing = ifelse(is.na(n_conflicts), 0, 1),
+# Episode onsets - major conflicts only
+episode_major_ucdp <- filter(civil, intensity_level == 2) %>%
+    find_onset(c("conflict_id", "start_date2")) %>%
+    rename(episode_major_onset = onset)
+
+# Unique conflict onsets - all conflicts
+conflict_ucdp <- find_onset(civil, "conflict_id")
+
+# Unique conflict onsets - major conflicts only
+conflict_major_ucdp <- filter(civil, intensity_level == 2) %>%
+    find_onset("conflict_id") %>%
+    rename(major_onset = onset)
+
+ucdp <- list(episode_ucdp, episode_major_ucdp, conflict_ucdp, conflict_major_ucdp) %>%
+    Reduce(partial(full_join, by = c("gwno_a", "year")), .)
+
+merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_a", "year")) %>%
+    left_join(full_counts.df, by = c("gwid" = "gwno_a", "year")) %>%
+    mutate(ongoing = ifelse(is.na(intensity), 0, intensity),
            neighbour_conflict = ifelse(is.na(n_neighbour_conflicts), 0, 1),
            onset = ifelse(is.na(onset), 0, 1),
-           episode_onset = ifelse(is.na(episode_onset), 0, 1)) %>%
+           major_onset = ifelse(is.na(major_onset), 0, 1),
+           episode_onset = ifelse(is.na(episode_onset), 0, 1),
+           episode_major_onset = ifelse(is.na(episode_major_onset), 0, 1)) %>%
     group_by(country_name, idx = consecutive(year)) %>%
-    mutate(lepisode_onset = lead(episode_onset), lonset = lead(onset)) %>%
+    mutate(lonset = lead(onset),
+           lmajor_onset = lead(major_onset),
+           lepisode_onset = lead(episode_onset),
+           lepisode_major_onset = lead(episode_major_onset)) %>%
     ungroup %>%
     select(-idx)
 

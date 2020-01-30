@@ -104,7 +104,7 @@ model {
   lambda ~ lognormal(0, 0.5);
   psi ~ weibull(5, 1);
 
-  eta ~ normal(0, 5);
+  eta ~ normal(0, 2.5);
   delta ~ lognormal(0, 0.5);
 
   // Linear predictor for presence of legislature
@@ -112,9 +112,11 @@ model {
 
   for (i in 1:lg_D) {
     lg[, i] ~ normal(lg_est[, i], lg_se[, i]);
-    nonlg[, i] ~ normal(nonlg_est[, i], nonlg_se[, i]);
-
     lg_est[, i] ~ normal(gamma[i] + lambda[i] * theta[obs_idx], psi[i]);
+  }
+
+  for (i in 1:nonlg_D) {
+    nonlg[, i] ~ normal(nonlg_est[, i], nonlg_se[, i]);
     nonlg_est[, i] ~ normal(gamma[i + lg_D] + lambda[i + lg_D] * theta,
                             psi[i + lg_D]);
   }

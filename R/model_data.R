@@ -3,40 +3,50 @@
 # Model script
 ###
 
-suppressMessages(library(dplyr))
-suppressMessages(library(jsonlite))
-suppressMessages(library(thesis.utils))
+library(docopt)
+library(dplyr)
+library(jsonlite)
+library(thesis.utils)
 
+doc <- "usage: ./model_data.R <schema>"
+args <- docopt(doc)
+
+stopifnot(file.exists(args$schema))
 
 load("data/prepped_data.RData")
+schema <- read_json(args$schema, simplifyVector = T)
 
 final.df %<>%
-    select(country_name, year, lepisode_onset, peace_yrs, reduced_idx,
-           rgdpepc, rgdpepc_gro, pop_density, meanelev, rlvt_groups_count,
-           neighbour_conflict, peace_yrs, ongoing) %>%
+    select(schema$outcome, country_name, year, reduced_idx,
+           one_of(schema$predictors)) %>%
     na.omit
 dbg_info(final.df)
-
-saveRDS(final.df, "posteriors/model/final.rds")
 
 ###
 # Control variables
 X <- final.df %>%
-    select(-country_name, -year, -lepisode_onset, -reduced_idx) %>%
+    select(-country_name, -year, -matches("onset"), -reduced_idx) %>%
     data.matrix
 
-lg_present <- lgbicam == 1
-print(colnames(lg_mm$obs))
+if (schema$interaction != "") {
+    interaction_idx <- which(colnames(X) == schema$interaction)
+    stopifnot(length(interaction_idx) == 1)
+} else {
+    interaction_idx <- 0
+}
+
+file.path("posteriors", schema$name, "input.RData") %>%
+    save.image
 
 ###
 # Final stan input list
 data <- list(
     # Latent Factor Model
     J = nrow(nonlg_mm$obs),
-    J_missing = sum(!lg_present),
-    J_obs = sum(lg_present),
-    missing_idx = which(!lg_present),
-    obs_idx = which(lg_present),
+    J_missing = sum(!lgbicam == 1),
+    J_obs = sum(lgbicam == 1),
+    missing_idx = which(!lgbicam == 1),
+    obs_idx = which(lgbicam == 1),
     lg_D = ncol(lg_mm[[1]]),
     nonlg_D = ncol(nonlg_mm[[1]]),
     lg = lg_mm$obs,
@@ -50,16 +60,17 @@ data <- list(
     N = nrow(X),
     M = ncol(X),
     X = X,
-    interaction_idx = which(colnames(X) == "rgdpepc"),
+    interaction_idx = interaction_idx,
     exec_idx = final.df$reduced_idx,
     n_countries = n_distinct(final.df$country_name),
     n_years = n_distinct(final.df$year),
     country_id = to_idx(final.df$country_name),
     year_id = to_idx(final.df$year),
-    y = final.df$lepisode_onset
+    y = final.df[[schema$outcome]]
 )
 
 str(data)
 stopifnot(!sapply(data, anyNA))
 
-write_json(data, "posteriors/model/data.json", auto_unbox = T)
+file.path("posteriors", schema$name, "data.json") %>%
+    write_json(data, ., auto_unbox = T)
