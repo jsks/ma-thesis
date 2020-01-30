@@ -26,8 +26,7 @@ output:
         toc: true
         toc_depth: 2
         pandoc_args: ["--syntax-definition", "assets/stan.xml",
-                      "--highlight-style", "kate",
-                      "--filter", "pandoc-crossref"]
+                      "--highlight-style", "kate"]
     html_document:
         smart: true
         toc: true
@@ -36,6 +35,7 @@ abstract: Lorem ipsum
 
 [//]: # Setup R environment for entire doc
 ```{r include = F, results = "hide"}
+library(corrplot)
 library(dplyr)
 library(extraDistr)
 library(ggplot2)
@@ -43,6 +43,8 @@ library(gridExtra)
 library(magrittr)
 library(kableExtra)
 library(knitr)
+library(parallel)
+library(precrec)
 library(tidyr)
 
 # Load last to ensure nothing overwrites our namespace
@@ -480,11 +482,20 @@ measurement model for executive constraints.[^model]
     run with the `CmdStan` interface [@Team2019a] using four parallel
     chains at 2000 iterations each with a warmup of 1000. Convergence
     was assessed according to the potential scale reduction factor
-    $\hat{R}$ and effective sample size (ESS) [@Vehtari2019] as well as
-    standard Stan diagnostics. The full code is available in
+    $\hat{R}$ and effective sample size (ESS) [@Vehtari2019] as well
+    as standard Stan diagnostics. The full code is available in
     [Appendix A](#appendix-a) and a fully reproducible pipeline
     compromised of replication scripts is available at
-    [https://github.com/jsks/ma-thesis](https://github.com/jsks/ma-thesis).
+    [https://github.com/jsks/ma-thesis](https://github.com/jsks/ma-thesis). A
+    simulation analysis assessing the model and it's ability to
+    recover simulated true values is available in [Appendix B](#appendix-b).
+
+
+[//]: # Load merged dataset for descriptive stats in following sections
+
+```{r results = "hide"}
+merged.df <- readRDS("data/merged_data.rds")
+```
 
 ### Regression Model
 
@@ -578,11 +589,37 @@ conflating briefs lulls involving the same rebel groups and leaders
 versus the re-emergence of previously long dormant
 conflicts. Furthermore, in both scenarios, the theory linking
 executive constraints to the incentives for political violence should
-still hold (TODO: possible expand here).
+still hold.[^robust]
 
-That said, because of the potential sensitivity of results to changing
-conflict definitions [@Sambanis2004b], all analyses were also run using
-only unique onsets.
+[^robust]: Due to the potential sensitivity of results to changing
+    conflict definitions [@Sambanis2004b], all analyses were also run
+    using only unique onsets as well as major episodic onsets with a
+    threshold of 1000 battle deaths. The results are available in
+    [Appendix C](#appendix-c).
+
+In total there are `r sum(merged.df$episode_onset)` onsets in the
+dataset according to the episodic definition affecting
+`r filter(merged.df, episode_onset == 1) %$% n_distinct(country_name)`
+unique countries out of a total of
+`r n_distinct(merged.df$country_name)`. Figure \ref{fig:onsets} plots
+the proportion of countries experiencing an ongoing civil conflict and
+the proportion of countries experiencing new onsets of conflict over
+time.
+
+```{r fig.cap = "\\label{fig:onsets} Proportion of countries with ongoing civil conflicts and new onsets"}
+
+df <- group_by(merged.df, year) %>%
+    summarise(`New Onsets` = sum(episode_onset) / n(),
+              `Ongoing Conflict` = sum(ongoing) / n()) %>%
+    gather(variable, value, -year)
+
+ggplot(df, aes(year, value, colour = variable)) +
+    geom_line() +
+    theme(legend.title = element_blank()) +
+    ylab("Percentage of Countries") +
+    xlab("Year")
+
+```
 
 ### Measuring Executive Constraints
 
@@ -656,8 +693,49 @@ the judicial component: *v2juhcind*, high court independence;
 which the government complies with high court decisions; *v2jucomp*,
 the degree to which the government complies with lower court
 decisions. And for the final dimension, independent investigative
-bodies, I include the variable *v2lgovost*, executive oversight by
+bodies, I include the variable *v2lgotovst*, executive oversight by
 bodies other than the legislature.
+
+```{r fa-sum}
+manifest <- merged.df %>%
+    select(v2lgoppart, v2lgfunds, v2lginvstp, v2lgqstexp, v2juhcind,
+           v2juncind, v2juhccomp, v2jucomp, v2lgotovst)
+
+q <- summary_stats(manifest) %>%
+    mutate(Variable = paste0("\\textit{", Variable, "}"))
+
+kable(q, "latex", align = "c", booktabs = T, linesep = "", escape = F,
+      caption = "Descriptive statistics for manifest variables") %>%
+    kable_styling(latex_options = "striped")
+
+```
+
+Table \ref{tab:fa-sum} provides summary statistics for the manifest
+variables. All of the variables are drawn from expert coded surveys
+and have been aggregated by V-Dem using IRT models. Thus, they are all
+on an unbounded scale with observations roughly falling between -3
+and 3. Furthermore, the scale directions are identical and follow the
+general direction of the survey answer categories for lower level
+V-Dem indicators --- namely, low to high, *i.e.*, 0 is the "worst" and
+the highest value the "best." For example, for $v2lginvstp$,
+legislature investigates in practice, the answer category 0 denotes
+that it is extremely unlikely that the legislature conducts an
+investigation where the outcome would be unfavorable for the sitting
+executive and the highest category, 4, denotes that it is certain or
+nearly certain. As such, on the aggregated, unbounded scale, higher
+values in the point estimates denote country-years where the
+legislature is more likely to investigate. Finally, figure
+\ref{fig:cor} also provides a correlation matrix demonstrating a
+fairly high level of correlation across all variables indicating some
+commonality in the covariation.
+
+```{r fig.height = 5, fig.width = 7, fig.cap = "\\label{fig:cor} Correlation Heatmap"}
+m <- cor(manifest, use = "pairwise.complete.obs") %>%
+    signif(3)
+
+corrplot(m, "number", "upper", diag = F, tl.col = "black")
+
+```
 
 Given the listed manifest variables, the estimation technique is then
 as follows: for $m$ country-years indexed by $i = 1 \dotsc m$ and $n$
@@ -692,24 +770,16 @@ Novick). Furthermore, for the purposes of identifying the likelihood,
 the scale of the latent factor, $\theta$, is fixed to mean $0$ and
 standard deviation $1$ while the factor loadings, $(\lambda_1, \dotsc,
 \lambda_n)$, are constrained to be positive [@Jackman2009]. The
-positive constraints follow theory since all of the manifest variables
-exhibit the same scale direction and should be positively correlated
-with the latent factor.[^corr] Finally, similar to the regression
-coefficients, I select the following weakly informative priors:
+positive constraints follow theory since, as stated previously, all of
+the manifest variables exhibit the same scale direction and should be
+positively correlated with the latent factor. Finally, similar to the
+regression coefficients, I select the following weakly informative
+priors:
 \begin{align*}
     \gamma & \sim \mathsf{Normal}(0, 5) \\
     \lambda & \sim \mathsf{LogNormal}(0, 1) \\
     \psi & \sim \mathsf{Weibull}(2, 1)
 \end{align*}
-
-[^corr]: In general, the direction of the ordinal answer categories
-    for the lower level V-Dem indicators is from low to high, *i.e.*
-    $0$ is the "worst" and the highest value the "best." For example,
-    for *v2lginvstp*, legislature investigates in practice, $0$
-    denotes that it is extremely unlikely that the legislature
-    conducts an investigation where the outcome would be unfavorable
-    for the sitting executive and the highest category, $4$, denotes
-    that it is certain or nearly certain (CITE V-Dem codebook).
 
 Finally, in the case of the legislative variables there is the added
 issue of missing observations for country-years lacking a
@@ -822,13 +892,14 @@ central administration and policing force in order to suppress violent
 dissent [@Fearon2003]. There's also the possibility that a high
 population density increases the competition for resources. If the
 state is identified as the source of a particular scarcity, the risk
-of civil conflict may increase. Finally, I include measures of ethnic
-fractionalization in the form of the number of political relevant
-ethnic groups and the percent of the population facing
-discrimination. Where there are significant ethnic cleavages and state
-sponsored discrimination, ethnic ties can facilitate collective action
-thereby lowering the mobilization costs of rebel groups
-[@Cederman2011].
+of civil conflict may increase. Similarly to GDP per capita, I also
+transform mean elevation and population by the natural log. Finally, I
+include measures of ethnic fractionalization in the form of the number
+of political relevant ethnic groups and the percent of the population
+facing discrimination. Where there are significant ethnic cleavages
+and state sponsored discrimination, ethnic ties can facilitate
+collective action thereby lowering the mobilization costs of rebel
+groups [@Cederman2011].
 
 To control for the time endogeneity of conflict --- past and current
 civil conflicts can impact the present risk of conflict onset as well
@@ -854,24 +925,41 @@ weak.
     of the outcome as well as the executive constraints
     measure.
 
-[^peace_yrs]: Regarding the peace years, the variable is calculated as
-    the number of years since the last conflict-year, including
-    conflict-years from extrasystemic conflicts. For countries left
-    censored due to the dataset starting date, I set the start of the
-    peace year calculation to 1946, the end of World War II. The
-    rationale is that World War II was a significant international
-    event that reshaped the world order and even had domestic
-    consequences for countries not directly involved. For newly
-    independent countries, I use the independence date as the start
-    year.
+[^peace_yrs]: The peace years variable is calculated as the number of
+    years since the last conflict-year, including conflict-years from
+    extrasystemic conflicts. For countries left censored due to the
+    dataset starting date, I set the start of the peace year
+    calculation to 1946, the end of World War II. The rationale is
+    that World War II was a significant international event that
+    reshaped the world order and even had domestic consequences for
+    countries not directly involved. For newly independent countries,
+    I use the independence date as the start year.
+
+Table \ref{tab:reg-stats} lists the full descriptive statistics for
+all regression covariates.
+
+```{r reg-stats}
+df <- merged.df %>%
+    select(rgdpepc, rgdpepc_gro, pop_density, meanelev,
+           rlvt_groups_count, neighbour_conflict, ongoing, peace_yrs,
+           independence)
+
+q <- summary_stats(df)
+
+kable(q, "latex", align = "c", booktabs = T, linesep = "", escape = T,
+      caption = "Descriptive statistics for regression covariates") %>%
+    kable_styling(latex_options = "striped")
+
+```
 
 ## Analysis
 
-The analysis of the results is split into two sections. First, the
+The analysis of the results is split into several sections. First, the
 parameter estimates from the executive constraints measurement model
 will be presented followed by the parameters pertaining to the
-logistic regression as well as a discussion on the overall model fit
-to the outcome variable, conflict onset.
+logistic regression and an assessment of model fit. The final section
+will be a discussion linking the results back to the outlined theories
+as well as an overview of the limitations of the presented model.
 
 ### Measurement Model
 
@@ -1008,8 +1096,11 @@ ggplot(x, aes(theta, point, group = group, col = factor)) +
 ```
 
 ```{r fig.cap = "\\label{fig:err} Errors"}
-p1 <- ggplot(nonlg_est, aes(se, interval)) + geom_point(col = "#56B4E9", alpha = 0.2, shape = 1)
-p2 <- ggplot(nonlg_est, aes(se, diff)) + geom_point(col = "#56B4E9", alpha = 0.2)
+p1 <- ggplot(nonlg_est, aes(se, interval)) +
+    geom_point(col = "#56B4E9", alpha = 0.2, shape = 1)
+
+p2 <- ggplot(nonlg_est, aes(se, diff)) +
+    geom_point(col = "#56B4E9", alpha = 0.2)
 
 grid.arrange(p1, p2, ncol = 2)
 
@@ -1035,7 +1126,7 @@ coup d'etat. The last country, Norway, represents a consolidated
 polyarchy for the time period under consideration with consistently
 strong constraints against the executive office.
 
-```{r fig.width = 7, fig.height = 6, fig.cap = "\\label{fig:theta} Theta"}
+```{r fig.width = 7, fig.height = 5, fig.cap = "\\label{fig:theta} Theta"}
 theta_summarised <- post_summarise(theta, probs = c(0.10, 0.5, 0.90)) %>%
     rename(codelow = `10%`, median = `50%`, codehigh = `90%`)
 
@@ -1089,13 +1180,13 @@ To provide a further snapshot of a greater number of countries, figure
 the dataset, compared to 2007 by country. A full list of all countries
 is available in [Appendix C](#appendix-c). Note, the statistical
 significance of differences between years for a single country cannot
-strictly be judged by overlapping credible intervals (TODO: Schenker
-and Gentleman). For example, Romania, despite having overlapping
+strictly be judged by overlapping credible intervals
+[@Schenker2001]. For example, Romania, despite having overlapping
 credible intervals, still has a posterior probability of approximately
 $`r romania_p`\%$ that the estimate for 2017 is lower than 2007. In
 the case of Chile with even more visual overlap, there is a
-$`r chile_p`\%$ posterior probability that the estimate for 2017 is higher
-than 2007.
+$`r chile_p`\%$ posterior probability that the estimate for 2017 is
+higher than 2007.
 
 
 ### Onset Regression
@@ -1105,29 +1196,39 @@ scale from the logistic regression linking the latent construct for
 executive constraints to the outcome, civil conflict onset. Credible
 intervals are summarised the same as previous plots, 80 percent
 quantile intervals, and exact values are reported in table
-\ref{tab:reg}.
+\ref{tab:reg}  together with the posterior probabilities that each
+$\beta$ estimate is greater than zero and less than zero. Recall that
+the dependent variables are standardized to have mean $0$ and standard
+deviation $1$, with the exception of the ordinal/binary variables
+Relevant Group Count, Neighbouring Conflict, Ongoing Conflict, and
+Independence.
 
-- Log-odds scale
-- Standardized
-
-```{r reg, warning = F}
+```{r reg, fig.height = 3, warning = F}
 reg <- read_post("posteriors/full_model/reg_posteriors.csv.gz")
 
 beta <- extract(reg, "beta")
 colnames(beta) <- c("exec_constraints", colnames(X),
                     sprintf("exec * %s", colnames(X)[interaction_idx]))
 
-probs <- apply(beta, 2, function(x) list(below = mean(x < 0), above = mean(x > 0)))
+# Probabilities that Beta < 0 and Beta > 0
+probs <- apply(beta, 2, function(x) {
+    list(below = mean(x < 0) %>% round(3) %>% sprintf("%.3f", .),
+         above = mean(x > 0) %>% round(3) %>% sprintf("%.3f", .))
+})
 
 beta_s <- post_summarise(beta, probs = c(0.1, 0.9)) %>%
-    mutate(Estimate = sprintf("[%.3f, %.3f]", signif(`10%`, 3), signif(`90%`, 3))) %>%
+    mutate(`Interval Estimate` = sprintf("[%.3f, %.3f]",
+                                         signif(`10%`, 3), signif(`90%`, 3)),
+           `$Pr(\\beta < 0)$` = lapply(probs, `[[`, "below") %>% unlist,
+           `$Pr(\\beta > 0)$` = lapply(probs, `[[`, "above") %>% unlist) %>%
     select(-`10%`, -`90%`, -parameter)
 
-rownames(beta_s) <- colnames(beta)
+rownames(beta_s) <- colnames(beta) %>% gsub("_", "\\\\_", .)
 
-kable(beta_s, "latex", align = "c", booktabs = T, linesep = "", escape = T,
+kable(beta_s, "latex", align = c("c", "r", "r"), booktabs = T,
+      linesep = "", escape = F,
       caption = "Posterior credible intervals for regression slopes") %>%
-    kable_styling(latex_options = c("striped", "scale_down"), full_width = F)
+    kable_styling(latex_options = "striped", "scale_down")
 ```
 
 
@@ -1135,8 +1236,115 @@ kable(beta_s, "latex", align = "c", booktabs = T, linesep = "", escape = T,
 plot_pars(beta)
 ```
 
+For the $\beta$ parameter for executive constraints, this means that
+there is an $80\%$ posterior probability that an increase of one
+standard deviation decreases the log-odds of conflict onset between
+$`r beta_s[1, 1]`$. A one standard deviation increase in this context
+corresponds roughly to the difference between the level of executive
+constraints for Zambia in 1967 under the administration of Kenneth
+Kaunda right before the banning of opposition parties following the
+1968 election with a score of approximately $0$ and Greece in 1976
+shortly after the end of military rule and establishment of a
+democratic republic and with a score of approximately $1$. The
+probability that the $\beta$ estimate for executive constraints is
+below $0$ is $0.984$.
 
-```{r eval = F}
+```{r results = "hide"}
+merged.df <- readRDS("data/merged_data.rds")
+
+gdp_nigeria <- filter(merged.df, country_name == "Nigeria", year == 2014) %$%
+    rgdpepc %>%
+    prettyNum(big.mark = ",")
+
+gdp_czech <- filter(merged.df, country_name == "Czech Republic", year == 1992) %$%
+    rgdpepc %>%
+    prettyNum(big.mark = ",")
+
+gdpgro_korea <- filter(merged.df, country_name == "South Korea", year == 1990) %$%
+    rgdpepc_gro %>%
+    multiply_by(100) %>%
+    signif(3)
+
+gdpgro_usa <- filter(merged.df, country_name == "United States of America", year == 1992) %$%
+    rgdpepc_gro %>%
+    multiply_by(100) %>%
+    signif(3)
+
+lth <- filter(merged.df, country_name == "Lithuania", year == 2012) %>%
+    select(pop, area_sqkm) %>%
+    mutate(area_sqlm = signif(area_sqkm, 3))
+
+india <- filter(merged.df, country_name == "India", year == 1978) %>%
+    select(pop, area_sqkm, meanelev) %>%
+    mutate(area_sqkm = signif(area_sqkm, 3),
+           meanelev = signif(area_sqkm, 3))
+
+afghan <- filter(merged.df, country_name == "Afghanistan", year == 2004) %>%
+    select(meanelev) %>%
+    mutate(meanelev = signif(meanelev, 3))
+
+```
+
+The slopes for the remaining covariates generally following the
+intuitive expectation of their relationship to civil conflict onset
+with high probabilities of being either greater than or less than
+zero. For example, GDP per capita is negative to which a one unit
+increase corresponds approximately to Nigeria in 2014 with a value of
+$`r gdp_nigeria`$ and Czech Republic in 1992 after the fall of
+communism with a value of $`r gdp_czech`$. In other words, an increase
+in GDP per capita on the logarithmic scale decreases the log-odds of
+conflict onset. Similarly, GDP per capita growth is negatively
+associated with conflict onset with an increase from 0 to 1 on the
+standardized scale matching the level of United States in 1992,
+$`r gdpgro_usa`$ percent, and South Korea in 1990, $`r gdpgro_korea`$ percent.
+Population density, mean elevation, number of politically relevant
+ethnic groups, presence of neighbouring conflict, and the dummy
+variable for independence year all increase the risk of civil conflict
+onset. A one unit increase in population density is similar to going
+from Lithuania in 2012 with a population of $`r lth$pop`$ million and
+an area of $`r lth$area_sqkm`$ square kilometers to India in 1978 with
+a population of $`r india$pop`$ million and an area of
+$`r india$area_sqkm`$ square kilometers. A one unit increase for mean
+elevation roughly matches the difference between India,
+$`r india$meanelev`$ meters, and Afghanistan, $`r afghan$meanelev`$
+meters. Finally, the number of peace years since the last civil
+conflict and the dummy variable for ongoing civil conflict decrease
+the risk of conflict onset. This latter result, though surprising, is
+a result of conditioning on the other covariates.
+
+```{r results = "hide"}
+gdp_eth <- filter(merged.df, country_name == "Ethiopia", year == 2012) %$%
+    rgdpepc %>%
+    prettyNum(big.mark = ",")
+
+gdp_india <- filter(merged.df, country_name == "India", year == 2014) %$%
+    rgdpepc %>%
+    prettyNum(big.mark = ",")
+
+gdp_nz <- filter(merged.df, country_name == "New Zealand", year == 2002) %$%
+    rgdpepc %>%
+    prettyNum(big.mark = ",")
+```
+
+To interpret the results for the interaction term between the slopes
+for executive constraints and GDP per Capita I calculate the marginal
+effect of $\theta$, executive constraints, on the predicted
+probability of civil conflict onset for different levels of GDP per
+capita while holding constant the other covariates.  In this case, I
+took the mean of GDP per capita growth, population density, mean
+elevation, politically relevant ethnic group count, and peace years
+while setting the dummy indicators for independence, ongoing conflict,
+and neighbouring conflict and the random intercepts for year and
+country to 0. The levels of GDP per capita were selected based on the
+10\%, 50\%, and 90\% quantiles of the standardized log transformed
+values. These levels roughly correspond to the GDP per capita of
+Ethiopia in 2012 at $`r gdp_eth`$, India in 2014 at $`r gdp_india`$,
+and New Zealand in 2002 at $`r gdp_nz`$. In the dataset there are $75$
+conflict episode onsets below the first level, $198$ between the first
+and second, $73$ between the second and third, and $6$ above the
+third.
+
+```{r fig.cap = "\\label{fig:int} Interaction between executive constraints and GDP per capita with 80\\% CIs"}
 # Interaction plot
 alpha <- extract(reg, "alpha")
 theta_seq <- seq(-2.5, 2.5, .01)
@@ -1151,45 +1359,172 @@ f <- function(x, y) {
                    beta[, 4] * mean(pop_density) +
                    beta[, 5] * mean(meanelev) +
                    beta[, 6] * mean(rlvt_groups_count) +
-                   beta[, 7] * 1 +
-                   beta[, 8] * 1 +
+                   beta[, 7] * 0 +
+                   beta[, 8] * 0 +
                    beta[, 9] * mean(peace_yrs) +
                    beta[, 10] * 0 +
                    beta[, 11] * x * y)
 }
 
-par(mfrow = c(1, 3))
-for (y in state) {
-    print(y)
-    p <- boot::inv.logit(sapply(theta_seq, f, y)) * 100
 
-    m <- apply(p, 2, median)
-    pi <- apply(p, 2, quantile, probs = c(0.2, 0.8)) %>% t
+df <- lapply(state, function(y) {
+    mclapply(theta_seq, function(theta) {
+        p_hat <- boot::inv.logit(f(theta, y)) * 100
+        post_summarise(p_hat, probs = c(0.1, 0.5, 0.9)) %>%
+            mutate(theta = theta,
+                   y = y)
+    }, mc.cores = 4) %>% bind_rows
+}) %>% bind_rows
 
-    plot(theta_seq, m, type = "l", ylim = c(min(pi[, 1]), max(pi[, 2])),
-         xlab = "Executive Constraints", ylab = "Predicted Probability")
-    lines(theta_seq, pi[, 1], lty = 2)
-    lines(theta_seq, pi[, 2], lty = 2)
-}
+df %<>%
+    rename(codelow = `10%`,
+           median = `50%`,
+           codehigh = `90%`) %>%
+    mutate(y = case_when(y == state[1] ~ "Low GDP per Capita",
+                         y == state[2] ~ "Median GDP per Capita",
+                         y == state[3] ~ "High GDP per Capita") %>%
+               factor(levels = c("Low GDP per Capita",
+                                 "Median GDP per Capita",
+                                 "High GDP per Capita")))
+
+ggplot(df, aes(theta, median)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = codelow, ymax = codehigh), alpha = 0.2) +
+    facet_grid(. ~ y) +
+    xlab("Executive Constraints") +
+    ylab("Predicted Probability")
+```
+
+From the results in figure \ref{fig:int} it is clear that the overall
+effect of executive constraints when interacted with GDP per capita on
+the predicted probability of conflict onset is negative. For countries
+with a relatively high level of GDP per capita, going from the worst
+to best in executive constraints decreases the predicted probability
+of conflict onset from [1.5, 4.5] down to below 0.5. This effect
+diminishes, however, for lower values of GDP per capita to the point
+that executive constraints are practically indeterminate to the risk
+of conflict onset for low-income country-years.
+
+### Assessing Model Fit
+
+Figure \ref{fig:phat} plots the densities of the first 50 posterior
+draws for the predicted probabilities of conflict onset for two
+groups, country-years that actually experienced an onset of a civil
+conflict and country-years that did not. On average, the predicted
+probabilities for the actual onset country-years are higher albeit
+still extremely low. This can be seen in the summary statistics
+reported in table \ref{tab:psum} for the posterior means of the
+predicted probabilities. For onset country-years the interquartile
+interval is only 0.0485 to 0.209 with a max of 0.556. To better
+compare the predicted probabilities to the actual data, table
+\ref{tab:confusion} presents a confusion matrix with a 0.2 cutoff,
+which corresponds to the third quartile in the summary table.
+`r signif((93 / (259 + 93)) * 100, 3)` percent of onsets and
+`r signif((7902 / (7902 + 172)) * 100, 3)` percent of non-onsets are
+correctly predicted. The false positive rate is
+`r signif((172 / (7902 + 172)) * 100, 3)` percent and the false
+negative rate is `r signif((259 / (93 + 259)) * 100, 3)` percent.
+
+```{r fig.height = 2, fig.cap = "\\label{fig:phat} Density plot for predicted probabilities"}
+p_hat <- extract(reg, "p_hat")
+
+plot_dens(p_hat, groups = final.df$lepisode_onset) + xlim(c(0, 0.4))
+```
+
+```{r psum, warning = F}
+p_mean <- colMeans(p_hat)
+
+df <- bind_rows(summary(p_mean[final.df$lepisode_onset == 1]),
+                summary(p_mean[final.df$lepisode_onset == 0])) %>%
+    mutate_all(~signif(., 3))
+
+rownames(df) <- c("Conflict Onset", "No Onset")
+
+kable(df, "latex", align = "c", booktabs = T, linesep = "", escape = F,
+      caption = "Summarized posterior predicted probabilities")
+```
+
+```{r confusion}
+m <- table(p_mean > .2, final.df$lepisode_onset)
+
+rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
+colnames(m) <- c("Actual: No Onset", "Actual: Onset")
+
+kable(m, "latex", align = "c", booktabs = T, linesep = "", escape = F,
+      caption = "Confusion matrix with a 0.2 cutoff")
 ```
 
 
-```{r eval = F}
-input.df <- readRDS("posteriors/model/final.rds")
-p_hat <- readRDS("posteriors/model/summary/p_hat.rds")
+```{r results = "hide"}
+x <- evalmod(scores = p_mean, labels = final.df$lepisode_onset)
 
-plot_dens(p_hat, groups = input.df$lepisode_onset)
+auc <- attr(x$roc[[1]], "auc") %>% signif(3)
+auc_pr <- attr(x$prcs[[1]], "auc") %>% signif(3)
 ```
 
+Figure \ref{fig:roc} plots a receiver operating characteristic (ROC)
+curve depicting the tradeoff between the true positive rate
+(*sensitivity*) and the false positive rate --- $1 -
+\mbox{specificity}$ where *specificity* refers to the true negative
+rate --- for varying probability thresholds according to the posterior
+means of the predicted probabilities. For example, for a threshold of
+approximately 0.1, the model will correctly predict 50 percent of
+onsets while misclassifying only 8 percent of non-onsets. The total
+performance of the model can be summarized by the area under the curve
+(AUC), which in this case is `r auc`.[^auc] However, for the present
+analysis the results from the ROC curve are misleading since there is
+a significant class imbalance in the dataset. Onsets comprise only 4
+percent of all observations meaning that the false positive rate is
+less sensitive to changing thresholds. Figure \ref{fig:roc} therefore
+also plots a precision-recall (PRC) curve, which depicts the tradeoff
+between *precision* --- the number of true positives divided by the
+sum of the true positives and false positives --- and recall --- the
+number of true positives divided by the sum of the true positives and
+false negatives --- for varying thresholds. The advantage is that
+*precision* is invariant to the number of non-onset years in the
+dataset. From this plot it is clear that the precision of the model,
+the ability to discriminate between onset country-years and false
+predicted non-set country-years, drops drastically as the *recall* of
+the model increases. The *AUC-PR* for this plot is only `r auc_pr`.
+[^auc_pr]
 
-```{r eval = F}
-p <- apply(p_hat, 2, median)
-x <- evalmod(scores = p, labels = input.df$lepisode_onset)
+[^auc]: An AUC of 1 for a ROC curve indicates that the model is able
+    to perfectly predict the outcome while an AUC of 0.5 denotes the
+    performance of a purely random classifier.
 
-plot(x, curvetype = c("ROC", "PRC"))
+[^auc_pr]: Similar to the ROC curve, an ACU of 1 for a PRC curve
+    denotes a perfect model. The AUC for the null model, or random
+    classifier, is the proportion of actual positive outcomes to negative
+    outcomes in the dataset. In this case this means approximately
+    .042.
+
+
+```{r fig.width = 7, fig.cap = "\\label{fig:roc} hello"}
+
+autoplot(x, curvetype = c("ROC", "PRC"))
 ```
 
-```
+Taken together, the evidence suggests a fairly poor fit to the
+underlying data. The confusion matrix demonstrates that even with a
+relatively low cutoff, the model is still only able to accurately
+predict 25 percent of conflict onsets. According to the ROC curve,
+decreasing this threshold improves the true positive rate with a
+relatively decent tradeoff in terms of the false positive rate, but as
+stated, this is largely due to the imbalance in the outcome
+variable. In terms of *precision*, the performance of the model
+quickly degrades as the threshold decreases.
+
+### Discussion
+
+- Link back to original theory, confirmatory
+
+- Small effect size
+- Poor fit
+- Noisy Data
+- Robustness?
+- Compared to democracy?
+
+Further analyses?
 
 # Conclusion {-}
 
