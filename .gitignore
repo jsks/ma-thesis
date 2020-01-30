@@ -3,6 +3,9 @@ paper.log
 R/scratch.R
 refs/iisystem.dat
 refs/microstatessystem.dat
+stan/model
+stan/model.hpp
+stan/model.o
 
 **/*.html
 **/*.pdf
@@ -12,6 +15,7 @@ refs/microstatessystem.dat
 **/*.Rhistory
 **/*.tar.gz
 **/\#*\#
+**/.\#*
 
 **/*.Rcheck/
 
