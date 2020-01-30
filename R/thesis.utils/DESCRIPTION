@@ -1,6 +1,6 @@
 Package: thesis.utils
 Title: Utility Functions
-Version: 0.2.1
+Version: 0.3.0
 Authors@R:
     person("Joshua", "Krusell",
            role = c("aut", "cre"),
