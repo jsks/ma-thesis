@@ -9,12 +9,12 @@ The following raw data sources are required. For copyright reasons
 they are not distributed in this repository and need to be downloaded
 manually and placed in the following locations:
 
-- [CShapes 0.6]() (`./data/raw/cshapes_0.6/cshapes.*`)
-- [GROWup]() (`./data/raw/growup/data.csv`)
-- [Maddison 2018]() (`./data/raw/mpd2018.xlsx`)
-- [NMC 5.0]() (`./data/raw/NMC_5_0/NMC_5_0.csv`)
-- [UCDP v19.1]() (`./data/raw/UcdpPrioConflict_v19_1.rds`)
-- [V-Dem CY-Full v9]() (`./data/raw/V-Dem-CY-Full+Others-v9.rds`)
+- [CShapes 0.6](http://nils.weidmann.ws/projects/cshapes.html) - `./data/raw/cshapes_0.6/cshapes.*`
+- [GROWup](https://growup.ethz.ch/) - `./data/raw/growup/data.csv`
+- [NMC 5.0](https://correlatesofwar.org/data-sets/national-material-capabilities)  - `./data/raw/NMC_5_0/NMC_5_0.csv`
+- [PWT 9.1](https://www.rug.nl/ggdc/productivity/pwt/) - `./data/raw/pwt91.xlsx`
+- [UCDP v19.1](https://ucdp.uu.se/downloads/) - `./data/raw/UcdpPrioConflict_v19_1.rds`
+- [V-Dem CY-Full v9](https://v-dem.net) - `./data/raw/V-Dem-CY-Full+Others-v9.rds`
 
 The full replication pipeline is designed to be run from a `docker`
 container.  A pre-built image as used in the latest version of the
@@ -26,7 +26,7 @@ Alternatively, the image can be built from scratch using the following
 script:
 
 ```sh
-# Creates an image tagged as jsks/conflict_onset:<git tag>
+# Creates an image tagged as jsks/conflict_onset:latest
 $ scripts/build.sh
 ```
 
@@ -47,8 +47,8 @@ the underlying pipeline (example: dry-run with make, `scripts/run.sh
 however, there are several convenience rules defined for development
 workflows that can be listed with `make help`.
 
-By default, `make` will invoke recipes serially and all `stan` models
-are run with **4 chains** in parallel.
+The `run.sh` script assumes **4** available CPU cores and will invoke
+`make` with 4 parallel jobs and run each `stan` model using 4 chains.
 
 In addition to the pdf manuscript, the full posteriors will be saved
 as `./posteriors/fit.rds`.
