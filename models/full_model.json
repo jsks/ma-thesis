@@ -1,8 +1,9 @@
 {
     "name": "full_model",
     "outcome": "lepisode_onset",
-    "predictors": ["rgdpepc", "rgdpepc_gro",  "pop_density", "meanelev",
-                   "rlvt_groups_count", "neighbour_conflict", "ongoing",
-                   "peace_yrs", "independence"],
+    "predictors": ["rgdpepc", "rgdpepc_gro", "cinc", "discrimpop",
+                   "pop_density", "meanelev", "rlvt_groups_count",
+                   "neighbour_conflict", "ongoing", "peace_yrs",
+                   "independence"],
     "interaction": "rgdpepc"
 }
