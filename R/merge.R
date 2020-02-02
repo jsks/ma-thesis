@@ -236,7 +236,7 @@ stopifnot(!is.na(merged.df$country_name))
 growup <- fread("./data/raw/growup/data.csv", data.table = F) %>%
     select(gwid = countries_gwid, country_name = countryname, year,
            onset_ko_flag, area_sqkm, meanelev, rlvt_groups_count,
-           incidence_flag, peaceyears)
+           discrimpop, incidence_flag, peaceyears)
 
 filter(growup, !gwid %in% merged.df$gwid) %$%
     unique(country_name) %>%
