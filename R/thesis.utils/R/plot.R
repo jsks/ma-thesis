@@ -10,26 +10,27 @@
 plot_pars <- function(x, ...) UseMethod("plot_pars", x)
 
 #' @export
-plot_pars.matrix <- function(x) {
-    df <- post_summarise(x, probs = c(0.05, 0.16, 0.5, 0.84, 0.95)) %>%
-        rename(codelow95 = `5%`,
-               codelow68 = `16%`,
+plot_pars.matrix <- function(x, ylab = "Parameter Estimates", hline = F) {
+    df <- post_summarise(x, probs = c(0.10, 0.5, 0.9)) %>%
+        rename(codelow = `10%`,
                median = `50%`,
-               codehigh68 = `84%`,
-               codehigh95 = `95%`)
+               codehigh = `90%`)
 
-    ggplot(df, aes_(x = ~parameter, y = ~median)) +
-        #geom_hline(yintercept = 0, alpha = 0.5, color = "grey") +
-        geom_errorbar(aes_(x = ~parameter, ymin = ~codelow95, ymax = ~codehigh95),
-                      color = "#0072B2", linetype = "dotted", width = 0) +
-        geom_errorbar(aes_(x = ~parameter, ymin = ~codelow68, ymax = ~codehigh68),
+    p <- ggplot(df, aes_(x = ~parameter, y = ~median)) +
+        geom_errorbar(aes_(x = ~parameter, ymin = ~codelow, ymax = ~codehigh),
                       color = "#0072B2", width = 0, size = 1) +
-        geom_point(fill = "#56B4E9", color = "#0072B2", size = 2.5, shape = 21) +
+        geom_point(fill = "#56B4E9", color = "#0072B2", size = 1.5, shape = 21) +
+        theme_tufte() +
         theme(panel.background = element_blank(),
               axis.line = element_line(color = "black"),
               axis.text.x = element_text(angle = 45, hjust = 1),
               axis.title.x = element_blank()) +
-        ylab("Parameter Estimates")
+        ylab(ylab)
+
+    if (isTRUE(hline))
+        p + geom_hline(yintercept = 0, alpha = 0.5, color = "grey")
+
+    p
 }
 
 #' @export
@@ -55,6 +56,8 @@ plot_dens <- function(m, n = 50, groups = NULL) {
     ggplot(df, aes(value, group = interaction(iteration, id), colour = id)) +
         stat_density(position = "identity", geom = "line",
                      n = 1024, alpha = 0.2) +
+        theme_tufte() +
+        scale_color_colorblind() +
         theme(panel.background = element_blank(),
               legend.position = c(0.9, 0.5),
               legend.title = element_blank(),

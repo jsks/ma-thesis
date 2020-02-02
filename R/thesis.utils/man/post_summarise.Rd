@@ -14,9 +14,9 @@ post_summarise(x, ...)
 \description{
 Calculates quantile intervals from a posterior distribution
 represented either by a NumericMatrix where rows are posterior
-draws or extracted directly from a \code{stanfit} object.
+draws or extracted directly from a \code{posterior} object.
 }
 \details{
-By default, \code{post_summarise} will calculate 68\% and 95\%
+By default, \code{post_summarise} will calculate 2.5\% and 97.5\%
 quantile intervals in addition to the posterior median.
 }

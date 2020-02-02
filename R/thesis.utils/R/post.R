@@ -2,12 +2,12 @@
 #'
 #' Calculates quantile intervals from a posterior distribution
 #' represented either by a NumericMatrix where rows are posterior
-#' draws or extracted directly from a `stanfit` object.
+#' draws or extracted directly from a `posterior` object.
 #'
 #' @param x NumericMatrix or `stanfit` object
 #' @param ... Arguments passed to methods
 #'
-#' @details By default, `post_summarise` will calculate 68% and 95%
+#' @details By default, `post_summarise` will calculate 2.5% and 97.5%
 #'     quantile intervals in addition to the posterior median.
 #'
 #' @export
@@ -33,6 +33,14 @@ post_summarise.posterior <- function(x, pars = NULL, ...) {
     post_summarise(m, ...)
 }
 
+#' Load posterior object
+#'
+#' Reads a posterior file and creates a `posterior` object.
+#'
+#' @param file Target file. Can be a compress csv (`csv.gz`).
+#'
+#' @return DataFrame with the additional class, `posterior`.
+#'
 #' @export
 read_post <- function(file) {
     fit <- data.table::fread(file, data.table = F)
@@ -47,8 +55,18 @@ read_post <- function(file) {
     structure(fit, class = c(class(fit), "posterior"))
 }
 
+#' Extract parameters
+#'
+#' Extracts posteriors from a `posterior` object created using
+#' `read_post`.
+#'
+#' @param x DataFrame with the class `posterior`.
+#' @param pars CharacterVector of target parameters. If the parameter
+#'     is a vector or matrix, the function will extract all matching
+#'     values.
+#'
 #' @export
-extract <- function(x, ...) UseMethod("extract", x)
+extract <- function(x, pars = NULL) UseMethod("extract", x)
 
 #' @export
 extract.posterior <- function(x, pars = NULL) {

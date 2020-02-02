@@ -23,7 +23,7 @@ RUN wget 'https://github.com/jgm/pandoc/releases/download/2.9.1.1/pandoc-2.9.1.1
 RUN mkdir -p /root/.R
 COPY .R /root/.R
 
-RUN install2.r -n -1 -e corrplot data.table dplyr extraDistr ggplot2 gridExtra jsonlite \
+RUN install2.r -n -1 -e corrplot data.table dplyr extraDistr ggplot2 gridExtra ggthemes jsonlite \
         kableExtra loo precrec readxl rmarkdown R.utils sf testthat tidyr \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 

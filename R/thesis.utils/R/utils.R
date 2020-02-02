@@ -130,6 +130,37 @@ explode <- function(df, from = NULL, to = NULL) {
     dplyr::bind_rows(ll)
 }
 
+#' Ordinal Values
+#'
+#' Checks a numeric vector if all the values can be considered
+#' ordinal. This is equivalent to saying that the function checks if a
+#' given numeric vector can be coerced to an integer vector without
+#' loss.
+#'
+#' @param x NumericVector
+#'
+#' @details This is only intended for NumericVectors. For all other
+#'     object types, the function will return `FALSE`.
+#'
+#' @examples
+#' x <- 1:3
+#' is.ordinal(x)
+#'
+#' y <- c(1:3, 0.5)
+#' is.ordinal(y)
+#'
+#' @export
+is.ordinal <- function(x) UseMethod("is.ordinal", x)
+
+#' @export
+is.ordinal.integer <- function(x) TRUE
+
+#' @export
+is.ordinal.double <- function(x) all(x %% 1 == 0)
+
+#' @export
+is.ordinal.default <- function(x) FALSE
+
 #' Normalize vector
 #'
 #' Simple wrapper around the default arguments to [scale()] which
@@ -162,6 +193,50 @@ partial <- function(fn, ...) {
     function(...) do.call(fn, c(dots, list(...)))
 }
 
+#' Calculate Summary Statistics
+#'
+#' Calculates summary statistics for all numeric columns in a data
+#' frame.
+#'
+#' @param x DataFrame
+#' @param vars CharacterVector. Calculate statistics for only a subset
+#'     of columns.
+#'
+#' @return A data frame with the following descriptive statistics: N,
+#'     mean, standard deviation, min, and max.
+#'
+#' @examples
+#' df <- data.frame(x = letters[1:3], y = 1:3, z = rnorm(3))
+#' summary_stats(df)
+#'
+#' @export
+summary_stats <- function(x, vars = colnames(x)) UseMethod("summary_stats", x)
+
+#' @export
+summary_stats.data.frame <- function(x, vars = colnames(x)) {
+    if (is.null(vars))
+        stop("Missing target columns")
+
+    df <- x[, vars, drop = F]
+    # N, mean, std.dev, min, max
+    ll <- lapply(colnames(df), function(s) {
+        col <- df[, s, drop = T]
+
+        if (!is.numeric(col))
+            return(NULL)
+
+        data.frame(Variable = s,
+                   N = sum(!is.na(col)),
+                   Mean = mean(col, na.rm = T) %>% signif(3),
+                   `Std. dev.` = sd(col, na.rm = T) %>% signif(3),
+                   `Min.` = min(col, na.rm = T) %>% signif(3),
+                   `Max.` = max(col, na.rm = T) %>% signif(3),
+                   stringsAsFactors = F)
+    })
+
+    dplyr::bind_rows(ll)
+}
+
 #' Create index
 #'
 #' Create a NumericVector of index positions from the unique
@@ -190,27 +265,3 @@ partial <- function(fn, ...) {
 #'
 #' @export
 to_idx <- function(x, ...) factor(x, ...) %>% as.numeric
-
-#' @export
-summary_stats <- function(x, vars = NULL) UseMethod("summary_stats", x)
-
-#' @export
-summary_stats.data.frame <- function(x, vars = colnames(x)) {
-    if (is.null(vars))
-        stop("Missing target columns")
-
-    df <- x[, vars, drop = F]
-    # N, mean, std.dev, min, max
-    ll <- lapply(colnames(df), function(s) {
-        col <- df[, s, drop = T]
-        data.frame(Variable = s,
-                   N = sum(!is.na(col)),
-                   Mean = mean(col, na.rm = T) %>% signif(3),
-                   `Std. dev.` = sd(col, na.rm = T) %>% signif(3),
-                   `Min.` = min(col, na.rm = T) %>% signif(3),
-                   `Max.` = max(col, na.rm = T) %>% signif(3),
-                   stringsAsFactors = F)
-    })
-
-    dplyr::bind_rows(ll)
-}
