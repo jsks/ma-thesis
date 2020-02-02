@@ -26,6 +26,7 @@ dbg_info(final.df)
 # Control variables
 X <- final.df %>%
     select(-country_name, -year, -matches("onset"), -reduced_idx) %>%
+    mutate_if(Negate(is.ordinal), normalize) %>%
     data.matrix
 
 if (schema$interaction != "") {
