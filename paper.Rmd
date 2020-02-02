@@ -39,6 +39,7 @@ library(corrplot)
 library(dplyr)
 library(extraDistr)
 library(ggplot2)
+library(ggthemes)
 library(gridExtra)
 library(magrittr)
 library(kableExtra)
@@ -53,10 +54,78 @@ library(thesis.utils)
 options(knitr.kable.NA = ".")
 opts_chunk$set(echo = F, eval = T, warning = F, fig.width = 5,
                fig.height = 3)
-
 ```
 
 # Introduction {-}
+
+Since the end of World War II, civil conflict has been the deadliest
+and most prevalent form of conflict. In that time period, upwards to
+two-thirds of all countries have experienced at least one minor
+insurgency and approximately one-third of all countries have
+experienced a major civil war with at least 1,000 battle deaths
+[@Pettersson2019]. Given the impact of civil conflict and the
+increasing availability of conflict related data, the last several
+decades has witnessed a veritable explosion in the number of
+quantitative studies investigating the causes of civil conflict
+[@Blattman2017]. Scholars have proposed numerous theories ranging
+from motivation-based arguments --- such as, for example, the role of
+horizontal inequalities [@Cederman2011] --- to opportunity-based
+explanations centered on economic factors [@Collier2012; @Collier2009]
+as well as the political and structural conditions underlying state
+weakness [@Hegre2001; @Fearon2003]. This latter strain of research in
+particular has spurred extensive work into examining the
+distinguishing features of weak states and whether political
+institutions play a significant role in the risk of civil conflict.
+Several studies in this vein have argued in favor of institutions
+utilizing disaggregated measures to also investigate the specific
+types of institutions relevant to the study of civil conflict
+[@Taydas2010; @Hegre2015a; @Bartusevic2018].
+
+This paper extends that work by taking a disaggregated approach to
+studying the effect of executive constraints on the risk of civil
+conflict onset. The motivation to specifically focus on executive
+constraints is two-fold: first, the executive is often times one of
+the key decision-makers in a state's regime. Institutions that provide
+a check against the types of actions which may exacerbate the risk of
+rebellion should be relevant to the study of civil conflict. In doing
+we can further our understanding of how political institutions shape
+the incentives for violence, especially through the influence of
+institutions on state behaviour.  Second, the link between executive
+constraints and civil conflict is relatively understudied. The
+previous literature that exists is fairly limited and contradictory in
+terms of results [@Getmansky2013; @Fjelde2009].
+
+The principle finding is that there is tentative evidence that
+executive constraints do matter and that there is a negative
+relationship between the latent level of constraints on the executive
+and the risk of civil conflict onset. However, this relationship
+largely disappears for low-income country-years when an interaction
+term with GDP per capita is included. If the primary theoretical
+mechanism involves the impact of executive constraints on rebel
+mobilization --- an unchecked executive may be more likely to engage
+in indiscriminate violence which could lead to a loss of legitimacy as
+well as the ability of rebel groups to offer local security guarantees
+to attract recruits --- then the incentives for violence in low-income
+country-years may be so great that it does not matter how constrained
+the executive may or may not be.
+
+We should not be overconfident with these results, however. Similar to
+most other studies examining conflict onset, the model is a poor fit
+to the underlying data. Modeling civil conflict is a difficult task,
+especially when trying to capture the dynamics of conflict with a
+standard time series cross-country regression. The results will
+require verification by additional studies using alternative
+methodological approaches.
+
+In what follows, a deeper justification for why political institutions
+are relevant to the study of civil conflict together with an overview
+of related empirical literature will be presented. The theoretical
+mechanisms linking executive constraints to conflict onset will then
+be discussed followed by an empirical analysis for which a latent
+estimate for executive constraints will be estimated and used in a
+cross-country time series logistic regression predicting conflict
+onset.
+
 
 # Theoretical Overview {-}
 
@@ -318,7 +387,7 @@ theoretical mechanisms and analyses using other datasets.
 ## Executive Constraints
 
 There are three general pathways which can theoretically link the
-concept of executive constraints to the onset of civil conflict:
+level of executive constraints to the onset of civil conflict:
 executive looting and state weakness, credible commitments to
 bargained solutions, and the impact of violent repression by the state
 on rebel mobilization. In the case of the first, the absence of
@@ -369,9 +438,9 @@ conflicts are protracted events against an often times much stronger
 opponent the short-term utility from participation is relatively
 low. Thus, rebel leaders must be able to offer proportionate selective
 benefits to offset the associated costs of fighting
-[@Mason1996]. [^rational] These benefits can include not only economic
-payoffs, but also protection from government violence. When the
-government engages in violent repression, especially in the form of
+[@Mason1996]. These benefits can include not only economic payoffs,
+but also protection from government violence. When the government
+engages in violent repression, especially in the form of
 indiscriminate violence, the cost of non-participation is
 raised. Rebel groups can provide local security guarantees against
 government reprisals such that the opportunity cost of fighting is
@@ -379,8 +448,6 @@ lowered, thereby incentivizing participation [@Regan2005]. However,
 this is predicated on the government lacking the capacity to fully
 eradicate any rebel group. Where that capacity exists the state is
 free to engage in reprisals.
-
-[^rational]: TODO: Assuming rational actors...
 
 It is at this point where the concept of executive constraints then
 enters into the calculus. Leaders in nondemocratic states are more
@@ -404,25 +471,25 @@ exclusive, and it is beyond the scope of the present paper to properly
 adjudicate between them; however, they do converge on a single
 testable proposition. Namely that higher levels of executive
 constraints should be associated with a lowered risk of civil conflict
-onset.  As discussed, this may be conditional though on the relative
-capacity of the state --- if executive constraints affect the
-mobilization potential for rebel groups, then in situations where the
-government is willing to engage in repression and has the strength to
-fully suppress the opposition, the impact of executive constraints on
-civil conflict onset should be diminished. Furthermore, even if the
-mobilization mechanism is not valid, the relationship could still be
-confounded by the overall opportunity for rebellion --- the degree of
-executive constraints may not be particularly relevant in relatively
-stable countries with, for example, high levels of economic
-development, little to no ethnic fractionalisation, and no easily
-lootable resources to finance a rebellion. Regardless of
-conditionalities, contrary results would indicate either that
-executive constraints are indeterminate to the risk of civil conflict
-or possibly that there is even a positive relationship since
-constrained executives may be less able to effectively deal with
-violent challenges due to risk aversion to violence and/or from the
-slowdown of having to seek approval from a plurality of stakeholders
-before committing to decisive action.
+onset. This proposition can be further extended if state weakness is a
+primary driver of civil conflict and the relative capacity of the
+state is effected by the levels of executive constraints, as depicted
+in the first theoretical pathway regarding executive looting, then
+state capacity could have a mediating affect on the relationship
+between executive constraints and conflict onset. Another extension
+would be if executive constraints affect the mobilization potential
+for rebel groups, then there could also be a confounding effect from
+the relative threshold for mobilization. Finally, the relationship
+could still be confounded by the overall opportunity for rebellion ---
+the degree of executive constraints may not be particularly relevant
+in relatively stable countries lacking the conditions conducive to
+carrying out a rebellion. Regardless of conditionalities, contrary
+results would indicate either that executive constraints are
+indeterminate to the risk of civil conflict or possibly that there is
+even a positive relationship since constrained executives may be less
+able to effectively deal with violent challenges due to risk aversion
+to violence and/or from the slowdown of having to seek approval from a
+plurality of stakeholders before committing to decisive action.
 
 One final caveat, hitherto the relationship of executive constraints
 to the notion of vertical accountability --- constraints on leaders by
@@ -615,6 +682,8 @@ df <- group_by(merged.df, year) %>%
 
 ggplot(df, aes(year, value, colour = variable)) +
     geom_line() +
+    theme_tufte() +
+    scale_color_colorblind() +
     theme(legend.title = element_blank()) +
     ylab("Percentage of Countries") +
     xlab("Year")
@@ -846,40 +915,51 @@ priors, is as follows:
 As mentioned during the theoretical discussion of possible mechanisms,
 executive constraints alone are insufficient in determining the
 outbreak of conflict. One possible mediator is the relative capacity
-of the state. For the present analysis I follow @Fearon2003 in using
-GDP per capita as a proxy for the state's administrative and military
-capacity by roughly capturing the revenue potential available to the
-state. This is far from being an ideal proxy for state capacity; GDP
-per capita could also capture economic grievances as well as the
-relative ease of financing a rebellion given low wages
-[@Hendrix2010]. Data on GDP per capita, however, is significantly more
-complete than other common competing measures such as bureaucratic
-quality or tax revenue as a percent of GDP.[^wbgi] Furthermore, it is
-more correlated with the administrative aspects of state capacity than
-measures focused solely on military strength, such as military
-expenditures [@Hendrix2010]. Thus, I use the natural log of the
-*RGDP^o* variable, constant price real GDP, from Penn World Tables
+of the state. For the present analysis I follow @Bartusevic2018 in
+using the Composite Indicator of National Capability (CINC) from the
+National Material Capabilities v5.0 dataset (1816-2012) [@Singer1972;
+@Singer1987]. The CINC index is aggregated from several demographic,
+industrial, and military indicators in order to capture the available
+resources a country can bring to bear in the event of a conflict. This
+is an imperfect measure that largely misses the state's bureaucratic
+and administrative capacity [@Hendrix2010]. [^wbgi] However, given
+that the dimension of interest for this analysis is the repressive
+capacity of the state, material capabilities, especially military
+resources, should still provide an adequate proxy.
+
+
+[^wbgi]: Furthermore, a common issue with many measures of
+    bureaucratic quality is missingness.  For example, the World Bank
+    governance indicator on government effectiveness extends back only
+    until 1996 (TODO: cite). Given that measures of institutional
+    quality often change fairly slowly, punctuated only by abrupt
+    events such as coups or revolutions, an extended time series is
+    desirable. Furthermore, in the specific case of bureaucratic
+    quality, there is the added issue of endogeneity. An unconstrained
+    executive may seek to promote government corruption and undermine
+    both meritocratic recruitment into the bureaucracy as well as its
+    impartiality.
+
+To capture the relative ease of mobilizing fighters, especially in
+terms of being able to offer economic selective benefits, I include
+GDP per capita. Specifically, I use the natural log of the $RGDP^o$
+variable, constant price real GDP per capita, from Penn World Tables
 (PWT) v9.1 (1950-2017) to allow for both cross-country and
-cross-temporal comparisons of GDP per capita [@Feenstra2015] and
-include an interaction term between GDP per capita and the latent
-measure for executive constraints to capture the conditional
+cross-temporal comparisons of GDP per capita [@Feenstra2015]. The
+justification for taking the natural log is that the marginal effect
+of the variable should decrease with higher values. In other words,
+the difference between the effects of relatively high levels of GDP
+per capita should be significantly smaller than the difference between
+the effects of low levels of GDP per capita. Finally, I also include
+an interaction term between GDP per capita and the latent measure for
+executive constraints to capture the potential conditional
 relationship.
 
-[^wbgi]: For example, the World Bank governance indicator on
-    government effectiveness extends back only until 1996 (TODO:
-    cite). Given that measures of institutional quality often change
-    fairly slowly, punctuated only by abrupt events such as coups or
-    revolutions, an extended time series is desirable. Furthermore, in
-    the specific case of bureaucratic quality, there is the added
-    issue of endogeneity. An unconstrained executive may seek to
-    promote government corruption and undermine both meritocratic
-    recruitment into the bureaucracy as well as its impartiality.
-
-In addition to state capacity, I also include a number of standard
-variables drawn largely from previous literature. The list of
-variables are not meant to provide an all encompassing theory of civil
-conflict, but rather roughly capture the opportunity structures for
-armed conflict.  This includes a single year lagged measure of GDP per
+In addition to the previous indicators, I also include a number of
+standard covariates drawn largely from previous literature. The list
+of indicators are not meant to provide an all encompassing theory of
+civil conflict, but rather roughly capture the opportunity structures
+for rebellion.  This includes a single year lagged measure of GDP per
 capita growth from PWT in order to capture short term economic shocks,
 which may affect both the strength and legitimacy of the state
 [@Bazzi2014]. I also include a measure of mean elevation from the
@@ -888,18 +968,19 @@ conducting an insurgency [@Fearon2003] as well as a measure of
 population density derived from population data from PWT and the area
 in square kilometers for each country from GROWup. Countries with a
 higher population density may require a more extensive and competent
-central administration and policing force in order to suppress violent
+central administration and police force in order to suppress violent
 dissent [@Fearon2003]. There's also the possibility that a high
 population density increases the competition for resources. If the
 state is identified as the source of a particular scarcity, the risk
-of civil conflict may increase. Similarly to GDP per capita, I also
-transform mean elevation and population by the natural log. Finally, I
-include measures of ethnic fractionalization in the form of the number
-of political relevant ethnic groups and the percent of the population
-facing discrimination. Where there are significant ethnic cleavages
-and state sponsored discrimination, ethnic ties can facilitate
-collective action thereby lowering the mobilization costs of rebel
-groups [@Cederman2011].
+of civil conflict may increase. Similar to GDP per capita, I also
+transform mean elevation and population by the natural log with the
+expectation that the scale increase should diminish as values get
+larger. Finally, I include measures of ethnic fractionalization in the
+form of the number of political relevant ethnic groups and the percent
+of the population facing discrimination. Where there are significant
+ethnic cleavages and state sponsored discrimination, ethnic ties can
+facilitate collective action thereby lowering the mobilization costs
+of rebel groups [@Cederman2011].
 
 To control for the time endogeneity of conflict --- past and current
 civil conflicts can impact the present risk of conflict onset as well
@@ -956,14 +1037,13 @@ kable(q, "latex", align = "c", booktabs = T, linesep = "", escape = T,
 
 The analysis of the results is split into several sections. First, the
 parameter estimates from the executive constraints measurement model
-will be presented followed by the parameters pertaining to the
-logistic regression and an assessment of model fit. The final section
-will be a discussion linking the results back to the outlined theories
-as well as an overview of the limitations of the presented model.
+will be presented. This will then be followed by the parameters
+pertaining to the logistic regression before concluding with an
+assessment of model fit.
 
 ### Measurement Model
 
-```{r  fig.cap = "\\label{fig:fpars} hello", warning = F}
+```{r  fig.cap = "\\label{fig:fpars} Measurement Model Parameter Estimates"}
 load("./posteriors/full_model/input.RData")
 fa <- read_post("./posteriors/full_model/fa_posteriors.csv.gz")
 
@@ -981,10 +1061,10 @@ colnames(gamma) <- c(lg, nonlg)
 
 delta_eta <- extract(fa, pars = c("delta", "eta"))
 
-p1 <- plot_pars(lambda)
-p2 <- plot_pars(psi)
-p3 <- plot_pars(gamma)
-p4 <- plot_pars(delta_eta)
+p1 <- plot_pars(lambda, "Lambda")
+p2 <- plot_pars(psi, "Psi")
+p3 <- plot_pars(gamma, "Gamma")
+p4 <- plot_pars(delta_eta, "")
 
 grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
 ```
@@ -1009,7 +1089,7 @@ example, after adjusting for measurement error, the mean for
 $v2lgfunds$ is on average slightly higher than the remaining manifest
 variables, hence the negative intercept.
 
-```{r fa, fig.height = 6, fig.width = 6, warning = F}
+```{r fa, fig.height = 6, fig.width = 6}
 fa_pars <- extract(fa, c("lambda", "gamma", "psi", "delta", "eta")) %>%
     post_summarise(probs = c(0.10, 0.9)) %>%
     mutate(parameter = sub("\\[\\d+\\]", "", parameter) %>% sprintf("$\\%s$", .),
@@ -1040,9 +1120,11 @@ although still conditional on the values for the remaining manifest
 variables. Where the legislature is present, $\theta$ is distributed
 according to the $Normal(0, 1)$ prior.
 
-```{r fig.width = 3, fig.height = 2, fig.cap = "\\label{fig:bicam} Posterior density plots for $\\theta$"}
+```{r fig.width = 6, fig.height = 2, fig.cap = "\\label{fig:bicam} Posterior density plots for executive constraints"}
 theta <- extract(fa, "theta")
-plot_dens(theta, groups = lgbicam)
+
+groups <- ifelse(lgbicam == 1, "Legislature Present", "No Legislature")
+plot_dens(theta, groups = groups)
 
 ```
 
@@ -1064,9 +1146,10 @@ variable in $Z^{\ast}$ against the V-Dem standard deviations as well
 as the difference between the estimated posterior mean and the
 observed mean.
 
-```{r fig.cap = "\\label{fig:fa-line} Error"}
+```{r fig.cap = "\\label{fig:fa-line} Posterior shrinkage for \\textit{v2juncind}"}
 err <- read_post("posteriors/full_model/err_posteriors.csv.gz")
 
+target <- colnames(nonlg_mm$obs)[1]
 nonlg_est <- extract(err, "nonlg_est") %>%
     post_summarise %>%
     rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
@@ -1082,7 +1165,8 @@ s <- seq(min(theta_medians) - 0.1, max(theta_medians) + 0.1, 0.01)
 
 x <- data.frame(point = c(nonlg_est$obs[idx], nonlg_est$median[idx]),
                 group = rep(1:length(idx), 2),
-                factor = c(rep(1, length(idx)), rep(2, length(idx))) %>% as.factor,
+                factor = c(rep("Observed Point Estimate", length(idx)),
+                           rep("Estimated Posterior Median", length(idx))) %>% as.factor,
                 theta = rep(theta_medians, 2))
 
 y <- data.frame(yhat = median(gamma[, 6]) + median(lambda[, 6]) * s,
@@ -1091,16 +1175,27 @@ y <- data.frame(yhat = median(gamma[, 6]) + median(lambda[, 6]) * s,
 ggplot(x, aes(theta, point, group = group, col = factor)) +
     geom_line(alpha = 0.3) +
     geom_point(alpha = 0.8) +
-    geom_line(data = y, aes(theta, yhat, group = NA, col = NA), alpha = 1)
+    geom_line(data = y, aes(theta, yhat, group = NA), colour = "black", alpha = 1) +
+    theme_tufte() +
+    scale_color_colorblind() +
+    theme(legend.title = element_blank()) +
+    ylab(target) +
+    xlab("Theta")
 
 ```
 
-```{r fig.cap = "\\label{fig:err} Errors"}
+```{r fig.cap = "\\label{fig:err} Error plots"}
 p1 <- ggplot(nonlg_est, aes(se, interval)) +
-    geom_point(col = "#56B4E9", alpha = 0.2, shape = 1)
+    geom_point(col = "#56B4E9", alpha = 0.2, shape = 1) +
+    theme_tufte() +
+    ylab("Posterior CI Range") +
+    xlab("Observed Error")
 
 p2 <- ggplot(nonlg_est, aes(se, diff)) +
-    geom_point(col = "#56B4E9", alpha = 0.2)
+    geom_point(col = "#56B4E9", alpha = 0.2) +
+    theme_tufte() +
+    ylab("Pointwise difference") +
+    xlab("Observed Error")
 
 grid.arrange(p1, p2, ncol = 2)
 
@@ -1110,10 +1205,10 @@ grid.arrange(p1, p2, ncol = 2)
 
 In total there are `r nrow(final.df)` country-year estimates of
 $\theta$, comprised of `r n_distinct(final.df$country_name)` unique
-countries and scaled from approximately $-2$ to $2$.  Since not every
+countries and scaled from approximately $-2$ to $2$. Since not every
 single country can be presented, figure \ref{fig:theta} provides a
 time series plot for China, Brazil, Nigeria, Norway, and Russia so as
-to provide an example of the actual $\theta$ estimates.  The countries
+to provide an example of the actual $\theta$ estimates. The countries
 were chosen to represent a diversity of geographic regions as well as
 political contexts. From the plot, China, being a single party
 authoritarian state, is consistently ranked the worst in executive
@@ -1126,7 +1221,7 @@ coup d'etat. The last country, Norway, represents a consolidated
 polyarchy for the time period under consideration with consistently
 strong constraints against the executive office.
 
-```{r fig.width = 7, fig.height = 5, fig.cap = "\\label{fig:theta} Theta"}
+```{r fig.width = 7, fig.height = 5, fig.cap = "\\label{fig:theta} Executive Constraints Over Time"}
 theta_summarised <- post_summarise(theta, probs = c(0.10, 0.5, 0.90)) %>%
     rename(codelow = `10%`, median = `50%`, codehigh = `90%`)
 
@@ -1138,56 +1233,66 @@ targets <- c("Brazil", "China", "Nigeria", "Russia", "Norway")
 
 filter(theta_summarised, country_name %in% targets) %>%
     ggplot(aes(year, median, fill = country_name)) +
+    theme_tufte() +
+    scale_fill_colorblind() +
     geom_line() +
-    geom_ribbon(aes(ymin = codelow, ymax = codehigh), alpha = 0.2)
+    geom_ribbon(aes(ymin = codelow, ymax = codehigh), alpha = 0.2) +
+    theme(legend.title = element_blank())
+
 
 ```
 
-```{r fig.cap = "\\label{fig:tie} Tie Fighter"}
+```{r fig.cap = "\\label{fig:tie} Executive Constraints 2000 vs 2010"}
 targets <- c("Algeria", "Argentina", "Armenia", "Chile", "Colombia",
              "Egypt", "Georgia", "Ghana", "Hungary", "Indonesia",
              "Iran", "Israel", "Japan", "Kenya", "Mexico", "Poland",
              "Portugal", "Romania", "Rwanda", "Turkey", "Tunisia",
              "United States of America", "Zimbabwe")
 
-df <- filter(theta_summarised, year %in% c(2017, 2007),
+df <- filter(theta_summarised, year %in% c(2010, 2000),
              country_name %in% targets) %>%
     mutate(year = as.factor(year),
            country_name = ifelse(country_name == "United States of America",
                                  "USA", country_name) %>%
                factor(levels = sort(c(targets, "USA"), T)))
 
-ggplot(df, aes(median, country_name, colour = year)) +
-    geom_point() +
-    geom_errorbarh(aes(xmax = codehigh, xmin = codelow))
+ggplot(df, aes(country_name, median, colour = year)) +
+    geom_errorbar(aes(ymax = codehigh, ymin = codelow),
+                  position = position_dodge(width = 0.5)) +
+    theme_tufte() +
+    scale_color_colorblind() +
+    theme(axis.title.y = element_blank(),
+          legend.title = element_blank()) +
+    ylab("Theta") +
+    coord_flip()
+
 
 ```
 
 ```{r results = "hide"}
-romania_idx <- filter(final.df, country_name == "Romania", year %in% c(2007, 2017)) %$%
-    reduced_idx
-
-romania_p <- signif(mean(theta[, romania_idx[1]] > theta[, romania_idx[2]]) * 100, 2)
-
-chile_idx <- filter(final.df, country_name == "Chile", year %in% c(2007, 2017)) %$%
+chile_idx <- filter(final.df, country_name == "Chile", year %in% c(2000, 2010)) %$%
     reduced_idx
 
 chile_p <- signif(mean(theta[, chile_idx[1]] < theta[, chile_idx[2]]) * 100, 2)
+
+tunisia_idx <- filter(final.df, country_name == "Tunisia", year %in% c(2000, 2010)) %$%
+    reduced_idx
+
+tunisia_p <- signif(mean(theta[, tunisia_idx[1]] < theta[, tunisia_idx[2]]) * 100, 2)
 ```
 
 To provide a further snapshot of a greater number of countries, figure
-\ref{fig:tie} plots the $\theta$ estimates for 2017, the last year in
-the dataset, compared to 2007 by country. A full list of all countries
+\ref{fig:tie} plots the $\theta$ estimates for 2010, the last year in
+the dataset, compared to 2000 by country. A full list of all countries
 is available in [Appendix C](#appendix-c). Note, the statistical
 significance of differences between years for a single country cannot
 strictly be judged by overlapping credible intervals
-[@Schenker2001]. For example, Romania, despite having overlapping
+[@Schenker2001]. For example, Chile, despite having overlapping
 credible intervals, still has a posterior probability of approximately
-$`r romania_p`\%$ that the estimate for 2017 is lower than 2007. In
-the case of Chile with even more visual overlap, there is a
-$`r chile_p`\%$ posterior probability that the estimate for 2017 is
-higher than 2007.
-
+$`r chile_p`\%$ that the estimate for 2010 is lower than 2000. In the
+case of Tunisia with even more visual overlap, there is a
+$`r tunisia_p`\%$ posterior probability that the estimate for 2010 is
+higher than 2000.
 
 ### Onset Regression
 
@@ -1203,7 +1308,7 @@ deviation $1$, with the exception of the ordinal/binary variables
 Relevant Group Count, Neighbouring Conflict, Ongoing Conflict, and
 Independence.
 
-```{r reg, fig.height = 3, warning = F}
+```{r reg, fig.height = 3}
 reg <- read_post("posteriors/full_model/reg_posteriors.csv.gz")
 
 beta <- extract(reg, "beta")
@@ -1232,8 +1337,8 @@ kable(beta_s, "latex", align = c("c", "r", "r"), booktabs = T,
 ```
 
 
-```{r fig.cap = "\\label{fig:reg} hello world"}
-plot_pars(beta)
+```{r fig.cap = "\\label{fig:reg} Regression parameters"}
+plot_pars(beta, hline = T)
 ```
 
 For the $\beta$ parameter for executive constraints, this means that
@@ -1250,8 +1355,6 @@ probability that the $\beta$ estimate for executive constraints is
 below $0$ is $0.984$.
 
 ```{r results = "hide"}
-merged.df <- readRDS("data/merged_data.rds")
-
 gdp_nigeria <- filter(merged.df, country_name == "Nigeria", year == 2014) %$%
     rgdpepc %>%
     prettyNum(big.mark = ",")
@@ -1313,15 +1416,15 @@ the risk of conflict onset. This latter result, though surprising, is
 a result of conditioning on the other covariates.
 
 ```{r results = "hide"}
-gdp_eth <- filter(merged.df, country_name == "Ethiopia", year == 2012) %$%
+gdp_rwa <- filter(merged.df, country_name == "Rwanda", year == 2007) %$%
     rgdpepc %>%
     prettyNum(big.mark = ",")
 
-gdp_india <- filter(merged.df, country_name == "India", year == 2014) %$%
+gdp_phl <- filter(merged.df, country_name == "Philippines", year == 2008) %$%
     rgdpepc %>%
     prettyNum(big.mark = ",")
 
-gdp_nz <- filter(merged.df, country_name == "New Zealand", year == 2002) %$%
+gdp_po <- filter(merged.df, country_name == "Portugal", year == 2009) %$%
     rgdpepc %>%
     prettyNum(big.mark = ",")
 ```
@@ -1338,10 +1441,10 @@ and neighbouring conflict and the random intercepts for year and
 country to 0. The levels of GDP per capita were selected based on the
 10\%, 50\%, and 90\% quantiles of the standardized log transformed
 values. These levels roughly correspond to the GDP per capita of
-Ethiopia in 2012 at $`r gdp_eth`$, India in 2014 at $`r gdp_india`$,
-and New Zealand in 2002 at $`r gdp_nz`$. In the dataset there are $75$
-conflict episode onsets below the first level, $198$ between the first
-and second, $73$ between the second and third, and $6$ above the
+Rwanda in 2007 at $`r gdp_rwa`$, the Philippines in 2008 at $`r gdp_phl`$,
+and Portugal in 2009 at $`r gdp_po`$. In the dataset there are 60
+conflict episode onsets below the first level, $152$ between the first
+and second, $55$ between the second and third, and $4$ above the
 third.
 
 ```{r fig.cap = "\\label{fig:int} Interaction between executive constraints and GDP per capita with 80\\% CIs"}
@@ -1349,29 +1452,32 @@ third.
 alpha <- extract(reg, "alpha")
 theta_seq <- seq(-2.5, 2.5, .01)
 
-state <- quantile(final.df$rgdpepc, probs = c(0.1, .5, 0.9))
+state <- quantile(X[, "rgdpepc"], probs = c(0.1, .5, 0.9))
 
 f <- function(x, y) {
-    with(final.df, alpha +
-                   beta[, 1] * x +
-                   beta[, 2] * y +
-                   beta[, 3] * mean(rgdpepc_gro) +
-                   beta[, 4] * mean(pop_density) +
-                   beta[, 5] * mean(meanelev) +
-                   beta[, 6] * mean(rlvt_groups_count) +
-                   beta[, 7] * 0 +
-                   beta[, 8] * 0 +
-                   beta[, 9] * mean(peace_yrs) +
-                   beta[, 10] * 0 +
-                   beta[, 11] * x * y)
+    with(as.data.frame(X),
+         alpha +
+         beta[, 1] * x +
+         beta[, 2] * y +
+         beta[, 3] * mean(rgdpepc_gro) +
+         beta[, 4] * mean(cinc) +
+         beta[, 5] * mean(discrimpop) +
+         beta[, 6] * mean(pop_density) +
+         beta[, 7] * mean(meanelev) +
+         beta[, 8] * mean(rlvt_groups_count) +
+         beta[, 9] * 0 +
+         beta[, 10] * 0 +
+         beta[, 11] * mean(peace_yrs) +
+         beta[, 12] * 0 +
+         beta[, 13] * x * y)
 }
 
 
 df <- lapply(state, function(y) {
-    mclapply(theta_seq, function(theta) {
-        p_hat <- boot::inv.logit(f(theta, y)) * 100
+    mclapply(theta_seq, function(point) {
+        p_hat <- boot::inv.logit(f(point, y)) * 100
         post_summarise(p_hat, probs = c(0.1, 0.5, 0.9)) %>%
-            mutate(theta = theta,
+            mutate(theta = point,
                    y = y)
     }, mc.cores = 4) %>% bind_rows
 }) %>% bind_rows
@@ -1391,8 +1497,10 @@ ggplot(df, aes(theta, median)) +
     geom_line() +
     geom_ribbon(aes(ymin = codelow, ymax = codehigh), alpha = 0.2) +
     facet_grid(. ~ y) +
+    theme_tufte() +
     xlab("Executive Constraints") +
     ylab("Predicted Probability")
+
 ```
 
 From the results in figure \ref{fig:int} it is clear that the overall
@@ -1428,10 +1536,14 @@ negative rate is `r signif((259 / (93 + 259)) * 100, 3)` percent.
 ```{r fig.height = 2, fig.cap = "\\label{fig:phat} Density plot for predicted probabilities"}
 p_hat <- extract(reg, "p_hat")
 
-plot_dens(p_hat, groups = final.df$lepisode_onset) + xlim(c(0, 0.4))
+groups <- ifelse(final.df$lepisode_onset == 1,
+                 "Actual Onset",
+                 "No Onset")
+plot_dens(p_hat, groups = groups) +
+    xlim(c(0, 0.4))
 ```
 
-```{r psum, warning = F}
+```{r psum}
 p_mean <- colMeans(p_hat)
 
 df <- bind_rows(summary(p_mean[final.df$lepisode_onset == 1]),
@@ -1499,7 +1611,7 @@ the model increases. The *AUC-PR* for this plot is only `r auc_pr`.
     .042.
 
 
-```{r fig.width = 7, fig.cap = "\\label{fig:roc} hello"}
+```{r fig.width = 7, fig.cap = "\\label{fig:roc} ROC & Precision-Recall Plots"}
 
 autoplot(x, curvetype = c("ROC", "PRC"))
 ```
@@ -1514,19 +1626,78 @@ stated, this is largely due to the imbalance in the outcome
 variable. In terms of *precision*, the performance of the model
 quickly degrades as the threshold decreases.
 
-### Discussion
+# Discussion {-}
 
-- Link back to original theory, confirmatory
+How do the results from the presented model relate back to the
+theories potentially linking executive constraints to civil conflict?
+According to the model there is support for the general proposition
+that the risk of civil conflict onset decreases the more constrained
+the executive is by other government branches when controlling for the
+selected covariates. As stated previously, however, which theoretical
+mechanism(s) might be responsible for this relationship lies outside
+the scope of this paper in large part because the mechanisms that were
+discussed are not mutually exclusive. Furthermore, quantitative
+country-year regressions such as this one can only detect general
+patterns and provide evidence towards the associations of particular
+indicators. What they cannot do is examine the microfoundations
+underpinning a particular theory.
 
-- Small effect size
-- Poor fit
-- Noisy Data
-- Robustness?
-- Compared to democracy?
+That being said, on the basis of the mobilization theory I did argue
+that there may be a potential confounder in the relative threshold for
+mobilization. I operationalized this in the model as GDP per capita
+and included an interaction term with the latent construct for
+executive constraints. Accordingly, the negative relationship between
+executive constraints and conflict onset does not hold for low-income
+country-years. In these cases, the effect is practically
+non-existent. According to theory this would mean that where labor
+costs are low and the provisioning of economic selective benefits
+presents less of an obstacle for rebel leaders to mobilize fighters,
+the effect of executive constraints on the risk of civil conflict is
+largely indeterminate. This may be because mobilization in these
+situations is independent of the government's decision to engage in
+repression, assuming that the state does not have the capacity to
+completely eradicate the opposition immediately. More specifically,
+low-income countries may be vulnerable to the types of predatory
+insurgent groups which require significantly less fighters than rebel
+groups seeking regional independence or to topple the central
+regime. This interpretation could also hold even if GDP per capita was
+instead understood as proxying the state's administrative and military
+capacity by roughly capturing the revenue potential available to the
+state [@Fearon2003]. Where the state is particularly weak it simply
+might not matter how constrained the executive is.
 
-Further analyses?
+Despite these results, there is one significant caveat to the
+presented model. Namely, the model and the estimated predicted
+probabilities were a poor fit to the underlying data. The tradeoff
+between precision and recall was far from satisfactory; the model
+could easily predict non-onset country-years in large part because of
+the class imbalance in the dataset between onsets and non-onsets, but
+had difficultly predicting actual onsets with accuracy. This is
+unsurprising given that civil conflict onsets are relatively rare
+events and studies attempting to examine the impact of structural
+factors, such as political institutions, on onset risk are dealing
+with small effect sizes, noisy data, and relatively few variables of
+actual exogenous change. This is an issue that has plagued much of the
+conflict literature [@Ward2010] so the model presented here is far
+from being an outlier. But it does mean that any results should be
+considered tentative at best, at least until confirmed by additional
+studies.
 
-# Conclusion {-}
+Finally, in terms of future research, if we want to better understand
+the impact of political institutions on the risk of civil conflict we
+need to directly model the behaviour of rebel groups and state
+actors. For executive constraints, and specifically the theoretical
+mechanism focused on rebel mobilization, one possible avenue that was
+unexplored in this paper would be to model the effects of
+repression. A future study could examine the temporal sequence of
+executive constraints on the likelihood of government repression and
+its effect in turn on the risk of civil conflict onset. Such an
+analysis would move beyond the standard country-year logistic
+regression, which is a poor model for the dynamics of civil conflict,
+and attempt to model country-date data, possibly even at the
+subnational level depending on data availability.
+
+
 
 # Appendices {-}
 
@@ -1619,6 +1790,12 @@ x <- with(latent.df, mean(true_value <= codehigh & true_value >= codelow))
 
 
 ## C - Country Comparison {#appendix-c}
+
+\newpage
+
+## D - Additional Descriptive Statistics {#appendix-d}
+
+## E - Robustness Checks {#appendix-e}
 
 # References {-}
 
