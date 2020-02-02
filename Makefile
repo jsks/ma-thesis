@@ -43,7 +43,8 @@ help:
 
 clean: ## Remove all generated files, excluding model output
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
-		$(data)/*.rds $(data)/*.RData *.html *.pdf
+		$(data)/*.rds $(data)/*.RData *.html *.pdf *.tex *.log \
+		stan/model stan/model.o
 
 watch_sync: ## Autosync project files to host 'gce'
 	@fswatch --event Updated --event Removed -roe .git . | \
