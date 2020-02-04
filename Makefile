@@ -24,10 +24,13 @@ raw     := $(data)/raw
 post    := posteriors
 
 ml      := $(wildcard models/*)
-results := $(ml:models/%.json=$(post)/%/combined_posteriors.csv.gz)
+results := $(ml:models/%.json=$(post)/%/reg_posteriors.csv.gz) \
+		$(ml:models/%.json=$(post)/%/fa_posteriors.csv.gz) \
+		$(ml:models/%.json=$(post)/%/err_posteriors.csv.gz)
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: bash clean manuscript_dependencies help watch_sync watch_pdf wc
+.PHONY: bash clean manuscript_dependencies help watch_sync watch_pdf \
+	wc Rdependencies.csv
 .SECONDARY:
 
 ###
@@ -44,7 +47,7 @@ help:
 clean: ## Remove all generated files, excluding model output
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
 		$(data)/*.rds $(data)/*.RData *.html *.pdf *.tex *.log \
-		stan/model stan/model.o
+		Rdependencies.csv stan/model stan/model.o
 
 watch_sync: ## Autosync project files to host 'gce'
 	@fswatch --event Updated --event Removed -roe .git . | \
@@ -75,7 +78,6 @@ $(data)/neighbours.rds: $(raw)/cshapes_0.6/cshapes.* R/geo.R
 $(data)/merged_data.rds: $(raw)/V-Dem-CY-Full+Others-v9.rds \
 				$(raw)/NMC_5_0/NMC_5_0.csv \
 				$(raw)/pwt91.xlsx \
-				$(raw)/mpd2018.xlsx \
 				$(raw)/UcdpPrioConflict_v19_1.rds \
 				$(raw)/growup/data.csv \
 				$(data)/neighbours.rds \
@@ -103,32 +105,29 @@ $(post)/sim/data.json: R/sim_data.R
 # Generate an implicit rules for each chain for sampling
 define cmdstan-rule
 $(post)/%/samples-chain_$(1).csv: $(post)/%/data.json stan/model
-	stan/model sample id=$$(call get_id,$$@) \
+	stan/model id=$$(call get_id,$$@) \
+		data file=$$< output file=$$@ \
 		random seed=$$$$(( $$(seed) + $$(call get_id,$$@) - 1)) \
-		data file=$$< output file=$$@
+		method=sample algorithm=hmc engine=nuts max_depth=12 | \
+			tee -a $(post)/$$*/log
 endef
 $(foreach x, $(id), $(eval $(call cmdstan-rule,$(x))))
 
 $(post)/%/fa_posteriors.csv.gz \
 	$(post)/%/reg_posteriors.csv.gz \
 	$(post)/%/err_posteriors.csv.gz: $(samples)
-	$(cmdstan)/bin/diagnose $^
+	$(cmdstan)/bin/diagnose $^ | tee -a $(post)/$*/log
 	sh scripts/concat.sh -o $(@D) $^
 	@tar --remove-files --zstd -cf $(@D)/stan_output.tar.zst $^
-
-###
-# Summarised posteriors from simulated data run
-$(post)/sim/simulated_summary.RData: R/summarise_sim.R \
-					$(post)/sim/combined_posteriors.csv.gz
-	Rscript R/summarise_sim.R
 
 ###
 # Build final manuscript
 manuscript_dependencies: $(manuscript) \
 	library.bib \
 	assets/stan.xml \
+	assets/american-political-science-association.csl \
 	Rdependencies.csv \
-	$(post)/sim/simulated_summary.RData
+	$(results)
 
 %.pdf: manuscript_dependencies
 	Rscript -e "rmarkdown::render('$(manuscript)', output_file = '$@')"

@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# Simple script that extract batches of parameters and saves them to
+# separate compressed posterior files. Splitting up the posteriors
+# make them easier to manage and load into R.
+###
 
 set -e
 
@@ -22,8 +27,8 @@ help() {
 cat <<EOF
 $(usage)
 
-Concatenates posterior csv files from Stan into a single compressed
-file.
+Concatenates posterior csv files from Stan into several compressed
+posterior files.
 
 Options:
         -h Useless help message
