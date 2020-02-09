@@ -27,11 +27,12 @@ RUN install2.r -n -1 -e corrplot data.table dplyr extraDistr ggplot2 gridExtra g
         kableExtra loo precrec readxl rmarkdown R.utils sf testthat tidyr \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-RUN wget 'https://github.com/stan-dev/cmdstan/releases/download/v2.21.0/cmdstan-2.21.0.tar.gz' \
+RUN wget 'https://github.com/stan-dev/cmdstan/releases/download/v2.22.1/cmdstan-2.22.1.tar.gz' \
     && mkdir -p cmdstan \
-    && tar -xvzf cmdstan-2.21.0.tar.gz --strip 1 -C cmdstan \
+    && tar -xvzf cmdstan-2.22.1.tar.gz --strip 1 -C cmdstan \
     && cd cmdstan && make build -j4 && cd ../ \
-    && rm cmdstan-2.21.0.tar.gz
+    && rm cmdstan-2.22.1.tar.gz
+
 
 RUN mkdir -p /proj/thesis.utils/
 COPY R/thesis.utils /proj/thesis.utils/

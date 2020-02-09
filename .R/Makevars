@@ -1,9 +1,9 @@
-CFLAGS += -march=x86-64 -mtune=generic -O3 -pipe
-CXXFLAGS += -march=x86-64 -mtune=generic -O3 -pipe
-CXX98FLAGS += -march=x86-64 -mtune=generic -O3 -pipe
-CXX11FLAGS += -march=x86-64 -mtune=generic -O3 -pipe
-CXX14FLAGS += -march=x86-64 -mtune=generic -O3 -pipe
-CXX17FLAGS += -march=x86-64 -mtune=generic -O3 -pipe
+CFLAGS += -march=x86-64 -O3 -pipe
+CXXFLAGS += -march=x86-64 -O3 -pipe
+CXX98FLAGS += -march=x86-64 -O3 -pipe
+CXX11FLAGS += -march=x86-64 -O3 -pipe
+CXX14FLAGS += -march=x86-64 -O3 -pipe
+CXX17FLAGS += -march=x86-64 -O3 -pipe
 
 SHLIB_CXXLDFLAGS = -Wl,-S -shared
 SHLIB_CXX11LDFLAGS = -Wl,-S -shared
