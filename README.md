@@ -41,17 +41,34 @@ following script can be used:
 $ scripts/run.sh
 ```
 
+The `run.sh` script assumes **4** available CPU cores, meaning that
+each Stan model will be invoked with a corresponding number of chains.
+
+Note, on a Google Cloud c2-standard-4 (4 vCPUs, 16GB memory) this
+takes approximately 6 hours to run.
+
 Any arguments to `run.sh` will be passed to `make`, the taskrunner for
 the underlying pipeline (example: dry-run with make, `scripts/run.sh
--n`). For replication purposes `make` should not be accessed directly;
-however, there are several convenience rules defined for development
-workflows that can be listed with `make help`.
+-n`). For replication purposes `make` should not be accessed directly
+outside of docker; however, there are several convenience rules
+defined for development workflows that can be listed with `make help`.
 
-The `run.sh` script assumes **4** available CPU cores and will invoke
-`make` with 4 parallel jobs and run each `stan` model using 4 chains.
+Individual models, listed as json profiles in `./models/`, can also be
+run separately. For example:
 
-In addition to the pdf manuscript, the full posteriors will be saved
-as `./posteriors/fit.rds`.
+```sh
+$ scripts/run.sh full_model
+```
+
+Finally, for any model run the full posteriors will be saved under
+`./posteriors/<model_name>`. Since the final posterior object is far
+too large for most workstations, the following extracts are available
+which can easily be read into R:
+
+- `reg_posteriors.csv`: regression parameters (intercepts and betas)
+- `fa_posteriors.csv`: measurement model parameters (lambda, gamma, psi, etc, etc)
+- `err_posteriors.csv`: example estimated latent values from error model
+- `extra_posteriors.csv`: predicted probabilities from regression and log likelihood
 
 ## License
 
