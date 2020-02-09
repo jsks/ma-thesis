@@ -6,6 +6,7 @@ refs/microstatessystem.dat
 stan/model
 stan/model.hpp
 stan/model.o
+utils/select
 
 **/*.html
 **/*.pdf
