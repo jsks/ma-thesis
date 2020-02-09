@@ -4,29 +4,37 @@ ROOT  = $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 manuscript := paper.Rmd
 
 cmdstan    ?= cmdstan
+select     ?= utils/select
 seed       ?= 101010
 
 num_chains := 4
 id         := $(shell seq $(num_chains))
 
-samples = $(foreach x, $(id), $(post)/%/samples-chain_$(x).csv)
+samples    = $(foreach x, $(id), $(post)/%/samples-chain_$(x).csv)
+posteriors = $(post)/%/reg_posteriors.csv \
+		$(post)/%/fa_posteriors.csv \
+		$(post)/%/err_posteriors.csv \
+		$(post)/%/extra_posteriors.csv
 
 define get_id
 $(shell grep -Po '\d+[.]csv' <<< $(1) | sed 's/.csv//')
+endef
+
+define extract
+$$(select) -n 500 -s $(1) $$< > $$@
 endef
 
 blue  := \033[01;34m
 grey  := \033[00;37m
 reset := \033[0m
 
-data    := data
-raw     := $(data)/raw
-post    := posteriors
+data := data
+raw  := $(data)/raw
+post := posteriors
 
-ml      := $(wildcard models/*)
-results := $(ml:models/%.json=$(post)/%/reg_posteriors.csv.gz) \
-		$(ml:models/%.json=$(post)/%/fa_posteriors.csv.gz) \
-		$(ml:models/%.json=$(post)/%/err_posteriors.csv.gz)
+ml       := $(wildcard models/*)
+ml_names := $(ml:models/%.json=%)
+results  := $(ml:models/%.json=$(post)/%/stan_output.tar.zst)
 
 all: paper.pdf ## Default rule: paper.pdf
 .PHONY: bash clean manuscript_dependencies help watch_sync watch_pdf \
@@ -113,12 +121,27 @@ $(post)/%/samples-chain_$(1).csv: $(post)/%/data.json stan/model
 endef
 $(foreach x, $(id), $(eval $(call cmdstan-rule,$(x))))
 
-$(post)/%/fa_posteriors.csv.gz \
-	$(post)/%/reg_posteriors.csv.gz \
-	$(post)/%/err_posteriors.csv.gz: $(samples)
-	$(cmdstan)/bin/diagnose $^ | tee -a $(post)/$*/log
-	sh scripts/concat.sh -o $(@D) $^
+$(post)/%/err_posteriors.csv: $(samples)
+	$(call extract,'^lg_est[.][[:digit:]]*[.]1$|^nonlg_est[.][[:digit:]]*[.]1$')
+
+$(post)/%/fa_posteriors.csv: $(samples)
+	$(call extract,'^lambda|^gamma|^psi|^delta|^kappa|^theta')
+
+$(post)/%/reg_posteriors.csv: $(samples)
+	$(call extract,'^f[.]|^alpha|^rho|^eta|^beta|^sigma|^Z_')
+
+$(post)/%/extra_posteriors.csv: $(samples)
+	$(call extract,'^p_hat|^log_lik')
+
+$(post)/%/stan_output.tar.zst: $(samples) | $(posteriors)
+	$(cmdstan)/bin/diagnose $(samples) | tee -a $(post)/$*/log
 	@tar --remove-files --zstd -cf $(@D)/stan_output.tar.zst $^
+
+define model-rules
+.PHONY: $(1)
+$(1): $(post)/$(1)/stan_output.tar.zst
+endef
+$(foreach x, $(ml_names), $(eval $(call model-rules,$(x))))
 
 ###
 # Build final manuscript

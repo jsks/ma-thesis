@@ -7,9 +7,12 @@ stan/*.hpp
 stan/*.d
 *.html
 *.pdf
+*.log
+*.tex
 \#*
 .Rhistory
 .DS_Store
+Rdependencies.csv
 
 .git
 cmdstan

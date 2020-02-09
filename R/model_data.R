@@ -7,6 +7,7 @@ library(docopt)
 library(dplyr)
 library(jsonlite)
 library(thesis.utils)
+library(tools)
 
 doc <- "usage: ./model_data.R <schema>"
 args <- docopt(doc)
@@ -15,6 +16,10 @@ stopifnot(file.exists(args$schema))
 
 load("data/prepped_data.RData")
 schema <- read_json(args$schema, simplifyVector = T)
+
+output_dir <- basename(args$schema) %>%
+    file_path_sans_ext %>%
+    file.path("posteriors", .)
 
 final.df %<>%
     select(schema$outcome, country_name, year, reduced_idx,
@@ -36,7 +41,7 @@ if (schema$interaction != "") {
     interaction_idx <- 0
 }
 
-file.path("posteriors", schema$name, "input.RData") %>%
+file.path(output_dir, "input.RData") %>%
     save.image
 
 ###
@@ -73,5 +78,5 @@ data <- list(
 str(data)
 stopifnot(!sapply(data, anyNA))
 
-file.path("posteriors", schema$name, "data.json") %>%
+file.path(output_dir, "data.json") %>%
     write_json(data, ., auto_unbox = T)
