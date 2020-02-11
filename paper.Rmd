@@ -67,8 +67,8 @@ experienced a major civil war with at least 1,000 battle deaths
 increasing availability of conflict related data, the last several
 decades has witnessed a veritable explosion in the number of
 quantitative studies investigating the causes of civil conflict
-[@Blattman2017]. Scholars have proposed numerous theories ranging
-from motivation-based arguments --- such as, for example, the role of
+[@Blattman2017]. Scholars have proposed numerous theories ranging from
+motivation-based arguments --- such as, for example, the role of
 horizontal inequalities [@Cederman2011] --- to opportunity-based
 explanations centered on economic factors [@Collier2012; @Collier2009]
 as well as the political and structural conditions underlying state
@@ -76,7 +76,7 @@ weakness [@Hegre2001; @Fearon2003]. This latter strain of research in
 particular has spurred extensive work into examining the
 distinguishing features of weak states and whether political
 institutions play a significant role in the risk of civil conflict.
-Several studies in this vein have argued in favor of institutions
+Several studies in this vein have argued in favor of institutions by
 utilizing disaggregated measures to also investigate the specific
 types of institutions relevant to the study of civil conflict
 [@Taydas2010; @Hegre2015a; @Bartusevic2018].
@@ -917,8 +917,8 @@ executive constraints alone are insufficient in determining the
 outbreak of conflict. One possible mediator is the relative capacity
 of the state. For the present analysis I follow @Bartusevic2018 in
 using the Composite Indicator of National Capability (CINC) from the
-National Material Capabilities v5.0 dataset (1816-2012) [@Singer1972;
-@Singer1987]. The CINC index is aggregated from several demographic,
+National Material Capabilities v5.0 dataset (1816-2012)
+[@Singer1987]. The CINC index is aggregated from several demographic,
 industrial, and military indicators in order to capture the available
 resources a country can bring to bear in the event of a conflict. This
 is an imperfect measure that largely misses the state's bureaucratic
@@ -1021,7 +1021,7 @@ all regression covariates.
 
 ```{r reg-stats}
 df <- merged.df %>%
-    select(rgdpepc, rgdpepc_gro, pop_density, meanelev,
+    select(rgdpepc, rgdpepc_gro, pop_density, meanelev, discrimpop,
            rlvt_groups_count, neighbour_conflict, ongoing, peace_yrs,
            independence)
 
@@ -1184,7 +1184,7 @@ ggplot(x, aes(theta, point, group = group, col = factor)) +
 
 ```
 
-```{r fig.cap = "\\label{fig:err} Error plots"}
+```{r fig.cap = "\\label{fig:err} Posterior CI and point estimates vs. observed error"}
 p1 <- ggplot(nonlg_est, aes(se, interval)) +
     geom_point(col = "#56B4E9", alpha = 0.2, shape = 1) +
     theme_tufte() +
@@ -1375,11 +1375,13 @@ gdpgro_usa <- filter(merged.df, country_name == "United States of America", year
 
 lth <- filter(merged.df, country_name == "Lithuania", year == 2012) %>%
     select(pop, area_sqkm) %>%
-    mutate(area_sqlm = signif(area_sqkm, 3))
+    mutate(area_sqkm = signif(area_sqkm, 3),
+           pop = signif(pop, 3))
 
 india <- filter(merged.df, country_name == "India", year == 1978) %>%
     select(pop, area_sqkm, meanelev) %>%
-    mutate(area_sqkm = signif(area_sqkm, 3),
+    mutate(pop = signif(pop, 3),
+           area_sqkm = signif(area_sqkm, 3),
            meanelev = signif(area_sqkm, 3))
 
 afghan <- filter(merged.df, country_name == "Afghanistan", year == 2004) %>%
@@ -1523,7 +1525,7 @@ probabilities for the actual onset country-years are higher albeit
 still extremely low. This can be seen in the summary statistics
 reported in table \ref{tab:psum} for the posterior means of the
 predicted probabilities. For onset country-years the interquartile
-interval is only 0.0485 to 0.209 with a max of 0.556. To better
+interval is only 0.0475 to 0.2 with a max of 0.516. To better
 compare the predicted probabilities to the actual data, table
 \ref{tab:confusion} presents a confusion matrix with a 0.2 cutoff,
 which corresponds to the third quartile in the summary table.
@@ -1611,7 +1613,7 @@ the model increases. The *AUC-PR* for this plot is only `r auc_pr`.
     .042.
 
 
-```{r fig.width = 7, fig.cap = "\\label{fig:roc} ROC & Precision-Recall Plots"}
+```{r fig.width = 8, fig.cap = "\\label{fig:roc} ROC & Precision-Recall Plots"}
 
 autoplot(x, curvetype = c("ROC", "PRC"))
 ```
@@ -1795,7 +1797,70 @@ x <- with(latent.df, mean(true_value <= codehigh & true_value >= codelow))
 
 ## D - Additional Descriptive Statistics {#appendix-d}
 
+\newpage
+
 ## E - Robustness Checks {#appendix-e}
+
+```{r}
+models <- setdiff(list.files("./posteriors/"), c("full_model_new", "sim"))
+
+# TODO: this is killing our compile times
+all_betas <- mclapply(models, function(f) {
+    load(file.path("posteriors", f, "input.RData"))
+    beta <- file.path("posteriors", f, "reg_posteriors.csv.gz") %>%
+        read_post %>%
+        extract("beta")
+
+    colnames(beta)[1:(1 + ncol(X))] <- c("exec_constraints", colnames(X))
+    if (interaction_idx > 0)
+        colnames(beta)[ncol(beta)] <- paste("exec *", colnames(X)[interaction_idx])
+
+    post_summarise(beta, probs = c(0.1, 0.5, 0.9)) %>%
+        mutate(model = f)
+}, mc.cores = 4) %>% bind_rows
+
+all_betas %<>%
+    rename(codelow = `10%`,
+           median = `50%`,
+           codehigh = `90%`) %>%
+    mutate(model = to_idx(model) %>% as.factor)
+
+desc <- case_when(models == "full_model" ~ "Full Model",
+                  models == "full_no_cinc" ~ "Full Model Excl. CINC",
+                  models == "full_no_interaction" ~ "Full Model Without Interaction",
+                  models == "major_episodes" ~ "Major Conflict Episodes Only",
+                  models == "major_no_interaction" ~ "Major Conflict Episodes Without Interaction",
+                  models == "unique_no_interaction" ~ "Unique Onsets Without Interaction",
+                  models == "unique_onset" ~ "Unique Onsets Only")
+
+df <- data.frame(Model = 1:length(models),
+                 Description = desc,
+                 stringsAsFactors = F)
+
+kable(df, "latex", align = c("l", "l"), booktabs = T, linesep = "",
+      caption = "Model Descriptions") %>%
+    kable_styling(latex_options = c("hold_position", "striped"))
+
+```
+
+```{r fig.width = 7, fig.height = 6}
+ggplot(all_betas, aes(x = parameter, y = median, color = model)) +
+    geom_point(position = position_dodge(width = 0.8)) +
+    geom_errorbar(aes(x = parameter, ymin = codelow, ymax = codehigh),
+                  width = 0, size = 1, position = position_dodge(width = 0.8)) +
+    geom_hline(yintercept = 0, alpha = 0.5, color = "grey") +
+    theme_tufte() +
+    scale_color_colorblind() +
+    theme(panel.background = element_blank(),
+          legend.title = element_blank(),
+          axis.line = element_line(color = "black"),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.title.x = element_blank()) +
+    ylab("Parameter Estimate")
+
+```
+
+\newpage
 
 # References {-}
 
