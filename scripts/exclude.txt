@@ -5,6 +5,7 @@ stan/model
 stan/*.o
 stan/*.hpp
 stan/*.d
+utils/extract
 *.html
 *.pdf
 *.log

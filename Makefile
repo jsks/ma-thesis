@@ -4,7 +4,7 @@ ROOT  = $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 manuscript := paper.Rmd
 
 cmdstan    ?= cmdstan
-select     ?= utils/select
+extract    ?= utils/extract
 seed       ?= 101010
 
 num_chains := 4
@@ -20,9 +20,6 @@ define get_id
 $(shell grep -Po '\d+[.]csv' <<< $(1) | sed 's/.csv//')
 endef
 
-define extract
-$$(select) -n 500 -s $(1) $$< > $$@
-endef
 
 blue  := \033[01;34m
 grey  := \033[00;37m
@@ -35,6 +32,11 @@ post := posteriors
 ml       := $(wildcard models/*)
 ml_names := $(ml:models/%.json=%)
 results  := $(ml:models/%.json=$(post)/%/stan_output.tar.zst)
+# Macro that reads in the sample files, extracts parameters based on
+# given regex, and concats results into single file.
+define concat
+$(extract) -n $(draws) -s $(1) $^ > $@
+endef
 
 all: paper.pdf ## Default rule: paper.pdf
 .PHONY: bash clean manuscript_dependencies help watch_sync watch_pdf \
@@ -122,16 +124,16 @@ endef
 $(foreach x, $(id), $(eval $(call cmdstan-rule,$(x))))
 
 $(post)/%/err_posteriors.csv: $(samples)
-	$(call extract,'^lg_est[.][[:digit:]]*[.]1$|^nonlg_est[.][[:digit:]]*[.]1$')
+	$(call concat,'^lg_est[.][[:digit:]]*[.]1$$|^nonlg_est[.][[:digit:]]*[.]1$$')
 
 $(post)/%/fa_posteriors.csv: $(samples)
-	$(call extract,'^lambda|^gamma|^psi|^delta|^kappa|^theta')
+	$(call concat,'^lambda|^gamma|^psi|^delta|^kappa|^theta')
 
 $(post)/%/reg_posteriors.csv: $(samples)
-	$(call extract,'^f[.]|^alpha|^rho|^eta|^beta|^sigma|^Z_')
+	$(call concat,'^f[.]|^alpha|^rho|^eta|^beta|^intercept|^sigma|^Z_')
 
 $(post)/%/extra_posteriors.csv: $(samples)
-	$(call extract,'^p_hat|^log_lik')
+	$(call concat,'^p_hat|^log_lik')
 
 $(post)/%/stan_output.tar.zst: $(samples) | $(posteriors)
 	$(cmdstan)/bin/diagnose $(samples) | tee -a $(post)/$*/log

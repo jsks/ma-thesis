@@ -3,10 +3,10 @@ paper.log
 R/scratch.R
 refs/iisystem.dat
 refs/microstatessystem.dat
-stan/model
-stan/model.hpp
-stan/model.o
-utils/select
+stan/*
+utils/extract
+
+!stan/*.stan
 
 **/*.html
 **/*.pdf

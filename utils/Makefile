@@ -1,14 +1,14 @@
 CFLAGS = -Wall -Wextra -march=x86-64 -O2 -pipe
 
-all: select
+all: extract
 .PHONY: clean debug
 
 debug: clean
 debug: CFLAGS += -DDEBUG -g -fsanitize=address -fno-omit-frame-pointer
-debug: select
+debug: extract
 
-select: select.c
+extract: extract.c
 	gcc $(CFLAGS) $< -o $@
 
 clean:
-	rm -rf select
+	rm -rf extract

@@ -1,19 +1,21 @@
-// select.c
+// extract.c
 //
-// ./select [-h] [-n <nlines>] -s <parameter>... <FILE>...
+// ./extract [-h] [-n <nlines>] -s <regex> <FILE>...
 //
 // Simple program that extracts specified parameters from a Stan posterior
-// output file(s) and prints the result to stdout. 
+// output file(s) and concatenates the result to stdout.
 //
-// example: ./select -s '^alpha|^beta' -n 10 samples-chain_*.csv
+// example: ./extract -s '^alpha|^beta' -n 10 samples-chain_*.csv
 //
 // Fair warning: there's a lot of shortcuts in this program. Memory is not
 // freed and file descriptors are not closed with the assumption that the OS
-// will take of it when we exit. 
+// will take of it when we exit.
 
 #define _GNU_SOURCE
 
+#include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -22,45 +24,40 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUF_SIZE 1024 * 1024
-#define die(msg)                       \
-    do {                               \
-        fprintf(stderr, "%s\n", msg);  \
-        exit(EXIT_FAILURE);            \
-    } while (0);
+#define BUF_SIZE 1024 * 1024 * 8
 
 typedef struct bitarray {
-    size_t capacity;
-    uint64_t *data;
+size_t capacity;
+uint64_t *data;
 } bitarray;
 
 static char buf[BUF_SIZE];
-static size_t bufsize = BUF_SIZE;
-static int offset = 0;
+static size_t bufsize = BUF_SIZE,
+              offset = 0;
 
 void usage(void) {
-    printf("Usage: %s [-h] [-n nlines] -s <parameter>... <file>...\n",
+    printf("Usage: %s [-h] [-n nlines] -s <regex> <file>...\n",
             program_invocation_short_name);
 }
 
 void help(void) {
     usage();
     printf("\n");
-    printf("Extracts given parameters from stan posterior csv file(s) based on strict matching.\n");
+    printf("Extracts given parameters from stan posterior csv file(s) based on regex expression.\n");
     printf("\n");
     printf("Options:\n");
     printf("\t-h Useless help message\n");
-    printf("\t-n Optional number of lines to read per file [Default: 1000]\n");
-    printf("\t-s Target parameters. Can be specified multiple times.\n");
+    printf("\t-n Maximum number of lines to read per file [Default: 1000]\n");
+    printf("\t-s Target parameter regex\n");
 }
 
 bitarray *create_bitarray(size_t len) {
     bitarray *x;
     if (!(x = malloc(sizeof(bitarray))))
-        die(strerror(errno));
+        err(EXIT_FAILURE, NULL);
 
     if (!(x->data = calloc(len, sizeof(uint64_t))))
-        die(strerror(errno));
+        err(EXIT_FAILURE, NULL);
 
     x->capacity = len;
     return x;
@@ -70,9 +67,8 @@ void resize_bitarray(bitarray *x) {
     size_t old_size = x->capacity * sizeof(uint64_t);
     x->capacity *= 2;
 
-    x->data = reallocarray(x->data, x->capacity, sizeof(uint64_t));
-    if (!x->data)
-        die(strerror(errno));
+    if (!(x->data = reallocarray(x->data, x->capacity, sizeof(uint64_t))))
+        err(EXIT_FAILURE, NULL);
 
     memset(x->data, 0, (x->capacity * sizeof(uint64_t)) - old_size);
 }
@@ -100,38 +96,50 @@ void destroy_bitarray (bitarray **x) {
     *x = NULL;
 }
 
-// To avoid the overhead of calling fwrite for every field, buffer output into
-// 1MB chunks using the global variable 'buf'. Since we're already buffering
-// here, turn off stdio buffering for stdout.
+void write2(int fd, void *buf, size_t count) {
+    ssize_t rv;
+    for (size_t w_offset = 0; w_offset < count; w_offset += rv) {
+        if ((rv = write(fd, buf + w_offset, count - w_offset)) < 1)
+            err(EXIT_FAILURE, "stdout write");
+    }
+}
+
+// To avoid the overhead of calling write for every field, buffer output into
+// chunks using the global variable 'buf'.
 void output(char *s, size_t len, bool add_comma) {
-    size_t total_len = len + add_comma;
-
     // Sanity check
-    if (total_len > bufsize)
-        die("Token size too large for buffer");
+    if (len + add_comma > bufsize)
+        errx(EXIT_FAILURE, "Token size too large for buffer");
 
-    if (offset + total_len > bufsize) {
-        fwrite(buf, 1, offset, stdout);
+    if (offset == bufsize) {
+        write2(STDOUT_FILENO, buf, bufsize);
         offset = 0;
     }
 
-    char *p = &buf[offset];
-    size_t i;
-
     if (add_comma)
-        p[0] = ',';
+        buf[offset++] = ',';
 
-    for (i = 0; i < total_len; i++)
-        p[(add_comma) ? i + 1 : i] = s[i];
+    if (offset + len >  bufsize) {
+        size_t partial_len = bufsize - offset;
 
-    offset += i;
+        // Fill up the buffer as much as possible and drain
+        memcpy(&buf[offset], s, partial_len);
+        write2(STDOUT_FILENO, buf, bufsize);
+
+        // Copy remaining bytes from field
+        offset = len - partial_len;
+        memcpy(buf, &s[partial_len], offset);
+    } else {
+        memcpy(&buf[offset], s, len);
+        offset += len;
+    }
 }
 
 void flush(void) {
-    fwrite(buf, 1, offset, stdout);
+    write2(STDOUT_FILENO, buf, offset);
 }
 
-size_t next_line(char **line, size_t *n, FILE *fp) {
+ssize_t next_line(char **line, size_t *n, FILE *fp) {
     ssize_t nr;
     while ((nr = getline(line, n, fp)) > 0) {
         // Stan output files have a bunch of info/diagnostic lines beginning
@@ -145,16 +153,16 @@ size_t next_line(char **line, size_t *n, FILE *fp) {
     }
 
     if (nr == -1 && !feof(fp))
-        die(strerror(errno));
+        err(EXIT_FAILURE, NULL);
 
     return nr;
 }
 
 int main(int argc, char *argv[]) {
-    setvbuf(stdout, NULL, _IONBF, 0);
-
     regex_t re;
+    bool compiled = false;
     int max_lines = 1000, opt, ret;
+
     while ((opt = getopt(argc, argv, "hn:s:")) != -1) {
         switch (opt) {
             case 'h':
@@ -164,11 +172,12 @@ int main(int argc, char *argv[]) {
                 errno = 0;
                 max_lines = (int) strtol(optarg, NULL, 10);
                 if (errno == ERANGE)
-                    die(strerror(errno));
+                    err(EXIT_FAILURE, NULL);
                 break;
-            case 's': 
+            case 's':
                 if ((ret = regcomp(&re, optarg, REG_EXTENDED)) != 0)
-                    die("Unable to compile parameter regex.");
+                    errx(EXIT_FAILURE, "Unable to compile regex argument");
+                compiled = true;
                 break;
             default:
                 usage();
@@ -178,14 +187,22 @@ int main(int argc, char *argv[]) {
 
     if (!argv[optind]) {
         usage();
-        die("Missing file argument(s)");
+        errx(EXIT_FAILURE, "Missing file argument");
+    }
+
+    if (!compiled) {
+        usage();
+        errx(EXIT_FAILURE, "Missing parameter argument");
     }
 
     int num_files = argc - optind;
     FILE *files[num_files];
     for (int i = optind; i < argc; i++) {
         if (!(files[i - optind] = fopen(argv[i], "r")))
-            die(strerror(errno));
+            err(EXIT_FAILURE, "%s", argv[i]);
+
+        if ((posix_fadvise(fileno(files[i - optind]), 0, 0, POSIX_FADV_SEQUENTIAL)) != 0)
+            err(EXIT_FAILURE, "posix_fadvise");
     }
 
     bitarray *columns = create_bitarray(2048);  // Array tracking matching columns
@@ -198,8 +215,8 @@ int main(int argc, char *argv[]) {
     bool first = true;                          // Handle output of commas
     regmatch_t pmatch;                          // Regex match struct
 
-    // Find matching columns
-    while ((nr = next_line(&line, &n, files[0])) > 0) { 
+    // Find matching columns based on the header for the first file
+    while ((nr = next_line(&line, &n, files[0])) > 0) {
         // Don't lose track of pointer to start of line since we re-use the
         // buffer for every next_line call, so use p to iterate past each token
         p = line;
@@ -207,8 +224,8 @@ int main(int argc, char *argv[]) {
         // Search for tokens using strchrnul. Unlike strsep, we don't replace
         // each occurence of ',' with '\0', so instead keep track of the length
         // of a token with len.
-        for (int i = 0;; i++) { 
-            delim = strchrnul(p, ','); 
+        for (int i = 0;; i++) {
+            delim = strchrnul(p, ',');
             len = delim - p;
 
             // Match regex pattern based on length rather than '\0'
@@ -232,8 +249,7 @@ int main(int argc, char *argv[]) {
         break;
     }
 
-
-    // Filter remaining rows based on matched columns for each input file
+    // Filter remaining rows for each input file based on matched columns
     for (int i = 0; i < num_files; i++) {
         // Remove header for remaining files
         if (i > 0) {
@@ -267,8 +283,8 @@ int main(int argc, char *argv[]) {
     }
 
 #ifdef DEBUG
-    regfree(&re);
     destroy_bitarray(&columns);
+    regfree(&re);
     free(line);
 
     for (int i = 0; i < num_files; i++)
