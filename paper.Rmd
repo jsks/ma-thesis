@@ -1045,7 +1045,7 @@ assessment of model fit.
 
 ```{r  fig.cap = "\\label{fig:fpars} Measurement Model Parameter Estimates"}
 load("./posteriors/full_model/input.RData")
-fa <- read_post("./posteriors/full_model/fa_posteriors.csv.gz")
+fa <- read_post("./posteriors/full_model/fa_posteriors.csv")
 
 lg <- colnames(lg_mm$obs)
 nonlg <- colnames(nonlg_mm$obs)
@@ -1147,7 +1147,7 @@ as the difference between the estimated posterior mean and the
 observed mean.
 
 ```{r fig.cap = "\\label{fig:fa-line} Posterior shrinkage for \\textit{v2juncind}"}
-err <- read_post("posteriors/full_model/err_posteriors.csv.gz")
+err <- read_post("posteriors/full_model/err_posteriors.csv")
 
 target <- colnames(nonlg_mm$obs)[1]
 nonlg_est <- extract(err, "nonlg_est") %>%
@@ -1309,7 +1309,7 @@ Relevant Group Count, Neighbouring Conflict, Ongoing Conflict, and
 Independence.
 
 ```{r reg, fig.height = 3}
-reg <- read_post("posteriors/full_model/reg_posteriors.csv.gz")
+reg <- read_post("posteriors/full_model/reg_posteriors.csv")
 
 beta <- extract(reg, "beta")
 colnames(beta) <- c("exec_constraints", colnames(X),
@@ -1536,7 +1536,8 @@ correctly predicted. The false positive rate is
 negative rate is `r signif((259 / (93 + 259)) * 100, 3)` percent.
 
 ```{r fig.height = 2, fig.cap = "\\label{fig:phat} Density plot for predicted probabilities"}
-p_hat <- extract(reg, "p_hat")
+extra <- read_post("posteriors/full_model/extra_posteriors.csv")
+p_hat <- extract(extra, "p_hat")
 
 groups <- ifelse(final.df$lepisode_onset == 1,
                  "Actual Onset",
@@ -1807,7 +1808,7 @@ models <- setdiff(list.files("./posteriors/"), c("full_model_new", "sim"))
 # TODO: this is killing our compile times
 all_betas <- mclapply(models, function(f) {
     load(file.path("posteriors", f, "input.RData"))
-    beta <- file.path("posteriors", f, "reg_posteriors.csv.gz") %>%
+    beta <- file.path("posteriors", f, "reg_posteriors.csv") %>%
         read_post %>%
         extract("beta")
 
