@@ -1,5 +1,6 @@
 {
     "name": "unique_onset",
+    "stan": "sem",
     "outcome": "lonset",
     "predictors": ["rgdpepc", "rgdpepc_gro", "cinc", "discrimpop",
                    "pop_density", "meanelev", "rlvt_groups_count",

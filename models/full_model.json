@@ -1,5 +1,6 @@
 {
     "name": "full_model",
+    "stan": "sem",
     "outcome": "lepisode_onset",
     "predictors": ["rgdpepc", "rgdpepc_gro", "cinc", "discrimpop",
                    "pop_density", "meanelev", "rlvt_groups_count",

@@ -1,5 +1,6 @@
 {
     "name": "major_no_interaction",
+    "stan": "sem",
     "outcome": "lepisode_major_onset",
     "predictors": ["rgdpepc", "rgdpepc_gro", "cinc", "pop_density", "meanelev",
                    "rlvt_groups_count", "neighbour_conflict", "ongoing",
