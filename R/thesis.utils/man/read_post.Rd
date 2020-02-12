@@ -7,7 +7,7 @@
 read_post(file)
 }
 \arguments{
-\item{file}{Target file. Can be a compress csv (\code{csv.gz}).}
+\item{file}{Target file. Can be a compressed csv (\code{csv.gz}).}
 }
 \value{
 DataFrame with the additional class, \code{posterior}.

@@ -37,7 +37,7 @@ post_summarise.posterior <- function(x, pars = NULL, ...) {
 #'
 #' Reads a posterior file and creates a `posterior` object.
 #'
-#' @param file Target file. Can be a compress csv (`csv.gz`).
+#' @param file Target file. Can be a compressed csv (`csv.gz`).
 #'
 #' @return DataFrame with the additional class, `posterior`.
 #'
@@ -51,6 +51,9 @@ read_post <- function(file) {
             sub("[.]", ",", .) %>%
             paste0("]")
     }
+
+    if (any(sapply(fit, Negate(is.numeric))))
+        warning("Some columns were not numeric")
 
     structure(fit, class = c(class(fit), "posterior"))
 }
