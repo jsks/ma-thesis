@@ -19,8 +19,8 @@ manually and placed in the following locations:
 The full replication pipeline is designed to be run from a `docker`
 container.  A pre-built image as used in the latest version of the
 manuscript is available at
-[dockerhub](https://hub.docker.com/repository/docker/jsks/conflict_onset)
-and will be downloaded automatically when running the pipeline.
+[dockerhub](https://hub.docker.com/r/jsks/conflict_onset) and will be
+downloaded automatically when running the pipeline.
 
 Alternatively, the image can be built from scratch using the following
 script:
