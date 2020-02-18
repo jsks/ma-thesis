@@ -3,8 +3,10 @@ data {
   int J;
   int J_missing;
   int J_obs;
+
   int<lower=1, upper=J> missing_idx[J_missing];
   int<lower=1, upper=J> obs_idx[J_obs];
+
   int lg_D;
   int nonlg_D;
 
@@ -13,7 +15,6 @@ data {
   matrix[J, nonlg_D] nonlg;
   matrix[J, nonlg_D] nonlg_se;
 
-  int<lower=0, upper=lg_D> lgotovst_idx;
   int<lower=0, upper=1> lgbicam[J];
 
   // Conflict onset regression
@@ -26,8 +27,13 @@ data {
 
   int<lower=1> n_countries;
   int<lower=1> n_years;
+  int<lower=1> n_peace_yrs;
+
   int<lower=1, upper=n_countries> country_id[N];
   int<lower=1, upper=n_years> year_id[N];
+  int<lower=1, upper=n_peace_yrs> peace_yrs_id[N];
+
+  real<lower=0> peace_yrs[n_peace_yrs];
 
   int<lower=0, upper=1> y[N];
 }
@@ -35,6 +41,8 @@ data {
 transformed data {
   // Total number of manifest variables in FA
   int D = lg_D + nonlg_D;
+
+  real constant = 1e-9;
 
   // Number of regression coefficients. Increase by one if we include
   // an interaction term with the latent factor.
@@ -51,10 +59,14 @@ parameters {
   vector<lower=0>[D] lambda;
   vector<lower=0>[D] psi;
 
-  real eta;
+  real kappa;
   real<lower=0> delta;
 
   // Onset regression
+  real<lower=0> eta;
+  real<lower=0> rho;
+  vector[n_peace_yrs] raw_gp;
+
   real alpha;
 
   // Size = Control vars + theta
@@ -66,11 +78,25 @@ parameters {
 }
 
 transformed parameters {
+  vector[n_peace_yrs] f;
+
   vector[n_countries] Z_country;
   vector[n_years] Z_year;
   real<lower=0> sigma[2];
 
   vector[N] nu;
+
+  // f ~ MVN(0, K)
+  {
+    matrix[n_peace_yrs, n_peace_yrs] K;
+    matrix[n_peace_yrs, n_peace_yrs] L_K;
+
+    K = gp_exp_quad_cov(peace_yrs, eta, rho);
+    K = add_diag(K, constant);
+    L_K = cholesky_decompose(K);
+
+    f = L_K * raw_gp;
+  }
 
   // sigma ~ HalfCauchy(0, 1)
   sigma = tan(sigma_unif);
@@ -85,6 +111,7 @@ transformed parameters {
   nu = X * beta[2:(M + 1)] +
     beta[1] * theta[exec_idx] +
     alpha +
+    f[peace_yrs_id] +
     Z_country[country_id] +
     Z_year[year_id];
 
@@ -104,11 +131,11 @@ model {
   lambda ~ lognormal(0, 0.5);
   psi ~ weibull(5, 1);
 
-  eta ~ normal(0, 2.5);
+  kappa ~ normal(0, 2.5);
   delta ~ lognormal(0, 0.5);
 
   // Linear predictor for presence of legislature
-  lgbicam ~ bernoulli_logit(eta + delta * theta);
+  lgbicam ~ bernoulli_logit(kappa + delta * theta);
 
   for (i in 1:lg_D) {
     lg[, i] ~ normal(lg_est[, i], lg_se[, i]);
@@ -122,6 +149,10 @@ model {
   }
 
   // Onset regression
+  rho ~ inv_gamma(8.91924, 34.5805);
+  eta ~ std_normal();
+  raw_gp ~ std_normal();
+
   alpha ~ normal(0, 5);
   beta ~ normal(0, 2.5);
 

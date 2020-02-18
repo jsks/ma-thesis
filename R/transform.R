@@ -44,7 +44,6 @@ final.df <- merged.df %>%
     mutate(rgdpepc = log(rgdpepc),
            pop_density = log(pop_density),
            meanelev = log(meanelev),
-           peace_yrs = log(peace_yrs + 1),
            reduced_idx =
                do.call(paste, lapply(c("country_name", constraint_vars), as.symbol)) %>%
                    collapse_changes)

@@ -1,4 +1,4 @@
-SHELL = /bin/bash
+SHELL = /bin/bash -o pipefail
 ROOT  = $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
 manuscript := paper.Rmd
@@ -125,10 +125,11 @@ $(post)/sim/data.json: R/sim_data.R
 # Generate implicit rules for sampling each model
 define cmdstan-rule
 $(post)/$(1)/samples-chain_%.csv: $(post)/$(1)/data.json stan/$(2)
+	echo "[$$$$(date +'%a %d %b %y %T %z')] Started $$@" >> $$(@D)/log
 	stan/$(2) id=$$* \
 		data file=$$< output file=$$@ \
 		random seed=$$$$(( $$(seed) + $$* - 1 )) \
-		method=sample adapt delta=0.9 algorithm=hmc engine=nuts max_depth=12 | \
+		method=sample algorithm=hmc engine=nuts max_depth=12 |& \
 			tee -a $$(@D)/log
 endef
 
@@ -145,7 +146,7 @@ $(post)/%/fa_posteriors.csv: $(samples)
 	$(call concat,'^lambda|^gamma|^psi|^delta|^kappa|^theta')
 
 $(post)/%/reg_posteriors.csv: $(samples)
-	$(call concat,'^f[.]|^alpha|^rho|^eta|^beta|^intercept|^sigma|^Z_')
+	$(call concat,'^f[.]|^eta|^rho|^tau|^beta|^alpha|^sigma|^Z_')
 
 $(post)/%/extra_posteriors.csv: $(samples)
 	$(call concat,'^p_hat|^log_lik')
@@ -153,7 +154,7 @@ $(post)/%/extra_posteriors.csv: $(samples)
 # Save the original output files as a compressed archive since we
 # don't need them anymore
 $(post)/%/stan_output.tar.zst: $(samples) | $(output:%=$(post)/\%/%)
-	$(cmdstan)/bin/diagnose $^ | tee -a $(post)/$*/log
+	$(cmdstan)/bin/diagnose $^ |& tee -a $(post)/$*/log
 	@tar --remove-files --zstd -cf $(@D)/stan_output.tar.zst $^
 
 # Generate phony targets for each model so that they can be called

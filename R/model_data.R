@@ -30,7 +30,7 @@ dbg_info(final.df)
 ###
 # Control variables
 X <- final.df %>%
-    select(-country_name, -year, -matches("onset"), -reduced_idx) %>%
+    select(-country_name, -year, -matches("onset"), -reduced_idx, -peace_yrs) %>%
     mutate_if(Negate(is.ordinal), normalize) %>%
     data.matrix
 
@@ -55,23 +55,32 @@ data <- list(
     obs_idx = which(lgbicam == 1),
     lg_D = ncol(lg_mm[[1]]),
     nonlg_D = ncol(nonlg_mm[[1]]),
+
     lg = lg_mm$obs,
     lg_se = lg_mm$se,
     nonlg = nonlg_mm$obs,
     nonlg_se = nonlg_mm$se,
-    lgotovst_idx = which(colnames(lg_mm$obs) == "v2lgotovst"),
+
     lgbicam = lgbicam,
 
     # Onset regression
     N = nrow(X),
     M = ncol(X),
     X = X,
+
     interaction_idx = interaction_idx,
     exec_idx = final.df$reduced_idx,
+
+    n_peace_yrs = n_distinct(final.df$peace_yrs),
     n_countries = n_distinct(final.df$country_name),
     n_years = n_distinct(final.df$year),
+
     country_id = to_idx(final.df$country_name),
     year_id = to_idx(final.df$year),
+    peace_yrs_id = to_idx(final.df$peace_yrs),
+
+    peace_yrs = unique(final.df$peace_yrs) %>% sort,
+
     y = final.df[[schema$outcome]]
 )
 
