@@ -3,37 +3,15 @@
 # Convenience script to launch project image. Note: CLI args besides
 # the listed options are passed directly to Make, so no usage
 # function.
+#
+# By default, the latest tag will be used unless the IMG_TAG env variable is
+# set.
+#
+# If the env variable CLEANUP is defined and set to 1, then the container will
+# be automatically cleaned up after exit.
 ###
 
 set -e
-
-help() {
-    cat <<EOF
-$(usage)
-
-Launches an attached instance of 'jsks/conflict_onset'. Any
-commandline arguments beside the listed options are passed directly to
-'make -j4' in the container.
-
-If the env variable CLEANUP is defined and set to 1, then the
-container will be automatically removed following completion.
-
-Options:
-        -t Specify container tag [Default: latest;]
-EOF
-}
-
-while getopts 'ht:' opt; do
-    case $opt in
-        h)
-            help;;
-        t)
-            TAG="$OPTARG";;
-    esac
-done
-
-shift $(( $OPTIND - 1 ))
-: ${TAG:="latest"}
 
 which podman 2>&1 >/dev/null && CMD=podman || CMD=docker
 
@@ -50,4 +28,4 @@ fi
 
 $CMD run -it $mount_opts $rm_opts \
      -e cmdstan=/cmdstan -e extract=/root/bin/extract \
-     "jsks/conflict_onset:$TAG" make -j4 $@
+     "jsks/conflict_onset:${IMG_TAG:-latest}" make -j4 $@
