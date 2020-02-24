@@ -70,7 +70,7 @@ quantitative studies investigating the causes of civil conflict
 [@Blattman2017]. Scholars have proposed numerous theories ranging from
 motivation-based arguments --- such as, for example, the role of
 horizontal inequalities [@Cederman2011] --- to opportunity-based
-explanations centered on economic factors [@Collier2012; @Collier2009]
+explanations centered on economic factors [@Collier2004; @Collier2009]
 as well as the political and structural conditions underlying state
 weakness [@Hegre2001; @Fearon2003]. This latter strain of research in
 particular has spurred extensive work into examining the
@@ -272,7 +272,7 @@ opposition violence by restricting the opportunities for political
 participation and increasing political discontent. For example,
 @Carey2007 examines the executive selection process of Sub-Saharan
 Africa and argues that executive elections, even when they are of poor
-quality, reduce the risk of large-scale violent dissent. @Fjelde2010a
+quality, reduce the risk of large-scale violent dissent. @Fjelde2010
 breaks down authoritarian regime types in Africa attributing the
 significant variation in conflict risk to the differing institutional
 configurations affecting a regime's ability to coerce or co-opt the
@@ -546,16 +546,19 @@ including the operationalizations and data sources as well as the
 measurement model for executive constraints.[^model]
 
 [^model]: The model code is written in Stan [@Carpenter2017] and was
-    run with the `CmdStan` interface [@Team2019a] using four parallel
-    chains at 2000 iterations each with a warmup of 1000. Convergence
-    was assessed according to the potential scale reduction factor
-    $\hat{R}$ and effective sample size (ESS) [@Vehtari2019] as well
-    as standard Stan diagnostics. The full code is available in
-    [Appendix A](#appendix-a) and a fully reproducible pipeline
-    compromised of replication scripts is available at
-    [https://github.com/jsks/ma-thesis](https://github.com/jsks/ma-thesis). A
-    simulation analysis assessing the model and it's ability to
-    recover simulated true values is available in [Appendix B](#appendix-b).
+    run using the `CmdStan` interface version 2.22.1 [@Stan2020] with
+    four parallel chains at 2000 iterations each with a warmup
+    of 1000. Convergence was assessed according to the potential scale
+    reduction factor $\widehat{R}$ and effective sample size (ESS)
+    [@Vehtari2019] in addition to standard Stan diagnostics. All
+    pre/post-processing was done using R 3.6.2 [@Core2019]. The Stan
+    model code is available in [Appendix A](#appendix-a) and the full
+    project in the form of a reproducible pipeline, including the
+    Rmarkdown source for this manuscript, is available at
+    [https://github.com/jsks/ma-thesis](https://github.com/jsks/ma-thesis).
+    Finally, a simulation analysis assessing the model and it's
+    ability to recover simulated true values is available in [Appendix
+    B](#appendix-b).
 
 
 [//]: # Load merged dataset for descriptive stats in following sections
@@ -568,18 +571,18 @@ merged.df <- readRDS("data/merged_data.rds")
 
 I model civil conflict onset as a multilevel regression where onset is
 a function of a set of predictors, including executive constraints and
-an array of control variables, together with several grouping factors
-included as partially pooled varying intercepts. The units of analysis
-are all independent country-years from 1951 until 2017, as determined
-by data availability, with *I* countries indexed by $i = 1 \dotsc I$
-and *T* years indexed by $t = 1 \dotsc T$. The dependent variable,
-conflict onset, is a Bernoulli distributed binary variable where 1
-denotes the onset of at least one new civil conflict in a given
-country-year. The chosen link function transforming the linear
-regression output into the probability of conflict onset, $\nu_{it}$,
-is the inverse logistic such that $\nu_{it} \in [0, 1]$. [^invlogit]
+an array of control variables, together with several random
+effects. The units of analysis are all independent country-years from
+1951 until 2017, as determined by data availability, with *I*
+countries indexed by $i = 1 \dotsc I$ and *T* years indexed by $t = 1
+\dotsc T$. The dependent variable, conflict onset, is a Bernoulli
+distributed binary variable where 1 denotes the onset of at least one
+new civil conflict in a given country-year. The chosen link function
+transforming the linear regression output into the probability of
+conflict onset, $\nu_{it}$, is the inverse logit such that $\nu_{it}
+\in [0, 1]$. [^invlogit]
 
-[^invlogit]: Technically, the inverse logistic transforms values to
+[^invlogit]: Technically, the inverse logit transforms values to
     the open interval, $(0, 1)$, but due to overflow/underflow in
     floating point calculations by computers the endpoints can be
     observed.
@@ -591,33 +594,82 @@ The full regression specification is then as follows:
                  \sum_{k=1}^K \zeta^k_{j_{it}})
 \end{align*}
 
-where **X** is a vector of predictors, $\beta$ the vector of
-regression slopes, and $\zeta^k$ the set of varying intercepts for *K*
-grouping factors indexed by $j_k$. For the present analysis there are
-only two grouping factors, year and country, to account for
-cross-sectional unmodeled heterogeneity between countries and over
-time [@Shor2007]. All predictors are also lagged by one year to
-control for time endogeneity and standardized by substracting the mean
-and dividing by the standard deviation for each variable to aid in
-computation as well as comparison of the final $\beta$ estimates.
+where **X** is the predictors, $\beta$ the vector of regression
+slopes, and $\zeta^k$ the *K* sets of varying intercepts indexed by
+$j_k$. All predictors are lagged by one year to control for time
+endogeneity and standardized by subtracting the mean and dividing by
+the standard deviation for each variable to aid in computation as well
+as comparison of the posterior $\beta$ estimates.
 
-I place weakly informative priors on all parameters to allow the
-posterior estimates to be largely determined by the observed data
-while avoiding the more pathological values and hard constraints that
-can arise from uninformative priors. For the slopes and population
-intercept, given that the input data has been standardized, this
+For the present analysis there are three sets of varying intercepts,
+or random effects, included in the model. This includes two partially
+pooled grouping factors, year and country, to account for
+cross-sectional unmodeled heterogeneity between countries and over
+time [@Shor2007], and the number of peace years since the last
+civil conflict incidence per country to control for the lingering
+endogenous effects of violence on the likelihood that additional
+conflict breaks
+out.
+
+I place weakly informative priors on the population intercept and
+slope parameters to allow the posterior estimates to be largely
+determined by the observed data while avoiding the more pathological
+values and hard constraints that can arise from uninformative
+priors. Given that the input data has been standardized, this
 translates to:
 \begin{align*}
     \alpha & \sim \mathsf{Normal}(0, 5) \\
     \beta & \sim \mathsf{Normal}(0, 2.5)
 \end{align*}
 
-For the varying intercepts modeling group-specific variability, I use
-hierarchical priors to provide a regularizing effect against
-overfitting [@Gelman2007].
+For the varying intercepts modeling year and country specific
+variability, I use hierarchical priors to provide a regularizing
+effect against overfitting [@Gelman2007].
 \begin{align*}
-    \zeta^k_j & \sim \mathsf{Normal}(0, \sigma^k) \\
-    \sigma^k & \sim \mathsf{HalfCauchy}(0, 1)
+    \zeta^{year}_t & \sim \mathsf{Normal}(0, \sigma^{year}) \\
+    \zeta^{country}_i & \sim \mathsf{Normal}(0, \sigma^{country}) \\
+    \sigma^{year}, \sigma^{country} & \sim \mathsf{Half-Cauchy}(0, 1)
+\end{align*}
+
+Finally, for peace years I take a non-parametric approach and use
+gaussian process priors with an exponentiated quadratic kernel. This
+treats the number of peace years as an infinitely continuous dimension
+along which the covariance between any two given points is a function
+of their euclidean distance. Where that distance is smaller there is a
+higher correlation. Compared to other approaches to modeling time
+dependence this avoids the parametric assumption of a proportional
+rate in exponential decay functions, the difficulty in selecting
+interaction terms to account for non-proportionality for cubic
+polynomial approximation, and the somewhat arbitrary selection of
+knots for splines [*c.f.* @Raknerud1997; @Carter2010;
+@Beck1998]. Given the finite set of observed peace years in the
+dataset, the specification is as follows:
+\begin{align*}
+    \zeta^{peace\_years} & \sim \mathsf{MultiNormal}(0, K) \\
+    K_{ij} & = \eta^2 \mathsf{exp}(\minus \frac{1}{2 \rho^2} D_{ij}^2)
+\end{align*}
+
+where for $P$ unique peace years, $K \in \mathbb{R}^{P \times P}$ is
+the covariance matrix, $D \in \mathbb{R}^{P \times P}$ the distance
+matrix, and $i$ and $j$ the column and row indexes.[^positive] The
+hyperparameter, $\rho$, is the *length-scale* and corresponds roughly
+to the number of years before two peace years become uncorrelated. The
+hyperparameter, $\eta$, is the *marginal standard deviation* which
+determines the overall variation of the output intercepts
+[@Rasmussen2005].
+
+[^positive]: To ensure that the covariance matrix, $K$, is positive
+    definite a small positive term is added to the diagonal.
+
+I select a weakly informative prior for $\eta$ that is skeptical of
+large values given that $\nu$ is on the log-odds scale. For $\rho$ I
+use an informative prior that constrains an overwhelming majority of
+the prior probability mass to a *length-scale* between 2 and 12, which
+provides a strong smoothing effect while aiding in computation by
+avoiding unreasonable values [@Betancourt2017].
+\begin{align*}
+    \eta & \sim \mathsf{Half-Normal}(0, 1) \\
+    \rho & \sim \mathsf{InvGamma}(7.30124, 30.0086)
 \end{align*}
 
 ### Civil Conflict
@@ -865,7 +917,7 @@ country-years with a sitting legislature are given a $1$ and
 country-years where the legislature is missing or has been suspended,
 $0$. The probability of a legislature being present, $\pi_i$, is then
 a linear function of the latent factor, $\theta$, transformed by the
-inverse logistic such that $\pi_i \in [0, 1]$. The practical effect is
+inverse logit such that $\pi_i \in [0, 1]$. The practical effect is
 that where there is data for the legislative manifest variables, the
 latent factor is informed by the measured institutional quality of the
 legislature. Where data is missing due to the suspension or lack of a
@@ -931,7 +983,7 @@ resources, should still provide an adequate proxy.
 [^wbgi]: Furthermore, a common issue with many measures of
     bureaucratic quality is missingness.  For example, the World Bank
     governance indicator on government effectiveness extends back only
-    until 1996 (TODO: cite). Given that measures of institutional
+    until 1996 [@Kaufmann2010]. Given that measures of institutional
     quality often change fairly slowly, punctuated only by abrupt
     events such as coups or revolutions, an extended time series is
     desirable. Furthermore, in the specific case of bureaucratic
@@ -942,18 +994,27 @@ resources, should still provide an adequate proxy.
 
 To capture the relative ease of mobilizing fighters, especially in
 terms of being able to offer economic selective benefits, I include
-GDP per capita. Specifically, I use the natural log of the $RGDP^o$
-variable, constant price real GDP per capita, from Penn World Tables
-(PWT) v9.1 (1950-2017) to allow for both cross-country and
-cross-temporal comparisons of GDP per capita [@Feenstra2015]. The
-justification for taking the natural log is that the marginal effect
-of the variable should decrease with higher values. In other words,
-the difference between the effects of relatively high levels of GDP
-per capita should be significantly smaller than the difference between
-the effects of low levels of GDP per capita. Finally, I also include
-an interaction term between GDP per capita and the latent measure for
-executive constraints to capture the potential conditional
-relationship.
+GDP per capita. Specifically, I use the natural log of the $RGDP^e$
+variable, constant price real GDP, from Penn World Tables (PWT) v9.1
+(1950-2017) to allow for both cross-country and cross-temporal
+comparisons of GDP per capita [@Feenstra2015].[^gdp] The justification
+for taking the natural log is that the marginal effect of the variable
+should decrease with higher values. In other words, the difference
+between the effects of relatively high levels of GDP per capita should
+be significantly smaller than the difference between the effects of
+low levels of GDP per capita. Finally, I also include an interaction
+term between GDP per capita and the latent measure for executive
+constraints to capture the potential conditional relationship.
+
+[^gdp]: Prior to taking the natural log, the GDP measure is of course
+    transformed to GDP per capita by dividing by the total population,
+    which is also available in PWT.  Note, PWT has two real GDP
+    measures available: $RGDP^o$, or output side real GDP, and
+    $RGDP^e$, or expenditure side real GDP. The former roughly
+    captures a country's productive capacity, while the latter is
+    better suited to measuring living standards [@Feenstra2015]. I use
+    $RGDP^e$ since I would argue that it serves as a better proxy for
+    the potential labour costs for rebel leaders.
 
 In addition to the previous indicators, I also include a number of
 standard covariates drawn largely from previous literature. The list
@@ -963,38 +1024,45 @@ for rebellion.  This includes a single year lagged measure of GDP per
 capita growth from PWT in order to capture short term economic shocks,
 which may affect both the strength and legitimacy of the state
 [@Bazzi2014]. I also include a measure of mean elevation from the
-GROWup dataset [@Girardin2015] to capture terrain advantageous for
-conducting an insurgency [@Fearon2003] as well as a measure of
-population density derived from population data from PWT and the area
-in square kilometers for each country from GROWup. Countries with a
-higher population density may require a more extensive and competent
-central administration and police force in order to suppress violent
-dissent [@Fearon2003]. There's also the possibility that a high
-population density increases the competition for resources. If the
-state is identified as the source of a particular scarcity, the risk
-of civil conflict may increase. Similar to GDP per capita, I also
-transform mean elevation and population by the natural log with the
-expectation that the scale increase should diminish as values get
-larger. Finally, I include measures of ethnic fractionalization in the
-form of the number of political relevant ethnic groups and the percent
-of the population facing discrimination. Where there are significant
-ethnic cleavages and state sponsored discrimination, ethnic ties can
-facilitate collective action thereby lowering the mobilization costs
-of rebel groups [@Cederman2011].
+CShapes dataset [@Weidmann2010] as made available through the GROWup
+data platform [@Girardin2015] to capture terrain advantageous for
+conducting an insurgency [@Fearon2003]. In addition, I employ a
+measure of population density derived from population data from PWT
+and the area in square kilometers for each country from
+CShapes. Countries with a higher population density may require a more
+extensive and competent central administration and police force in
+order to suppress violent dissent [@Fearon2003]. There's also the
+possibility that a high population density increases the competition
+for resources. If the state is identified as the source of a
+particular scarcity, the risk of civil conflict may increase. Similar
+to GDP per capita, I also transform mean elevation and population
+density by the natural log with the expectation that the scale
+increase should diminish as values get larger. Finally, I include
+measures of ethnic fractionalization in the form of the number of
+political relevant ethnic groups and the percent of the population
+facing discrimination as taken from the Ethnic Power Relations dataset
+[@Vogt2015]. Where there are significant ethnic cleavages and state
+sponsored discrimination, ethnic ties can facilitate collective action
+thereby lowering the mobilization costs of rebel groups
+[@Cederman2011].
 
-To control for the time endogeneity of conflict --- past and current
-civil conflicts can impact the present risk of conflict onset as well
-as the current level of executive constraints --- I include a dummy
-variable for ongoing conflict [^time] and the natural log of peace
-years [^peace_yrs] [@Hegre2015a]. To account for spillover effects, I
-include a dummy variable for whether a neighbouring country is
-currently experiencing a civil conflict. One notable lack is a general
-measure of political instability, which I omit since it could be
-highly correlated with executive constraints and would potentially
-bias results, at least for years of crisis where the risk of civil
-conflict is highest. I do, however, include a dummy variable for the
-independence year since newly sovereign states may be particularly
-weak.
+As mentioned previously, to control for time dependence --- past and
+current civil conflicts can impact the present risk of conflict onset
+as well as the current level of executive constraints -- I include the
+number of peace years since the last conflict incident.[^time] To
+account for spillover effects, I include a dummy variable for whether
+a neighbouring country is currently experiencing a civil
+conflict.[^geo] Finally, one notable lack is a general measure of
+political instability, which I omit since it could be highly
+correlated with executive constraints and would potentially bias
+results, at least for years of crisis where the risk of civil conflict
+is highest. I do, however, include a dummy variable for the
+independence year since newly sovereign states may be especially weak.
+
+[^geo]: Country neighbours for each year were determined according to
+    CShape. Pre-independence conflicts were considered as neighbouring
+    to the countries bordering the territory location of the conflict,
+    not the government location.
 
 [^time]: To be more specific, civil conflicts can be highly
     destabilizing and severely affect the governing and military
@@ -1003,13 +1071,11 @@ weak.
     conflict, wartime powers may be granted to the executive bypassing
     normal institutional constraints. Thus, ongoing conflict is a
     potential confounder since it can influence both the probability
-    of the outcome as well as the executive constraints
-    measure.
-
-[^peace_yrs]: The peace years variable is calculated as the number of
-    years since the last conflict-year, including conflict-years from
-    extrasystemic conflicts. For countries left censored due to the
-    dataset starting date, I set the start of the peace year
+    of the outcome as well as the executive constraints measure. For
+    this purpose, the peace years variable is calculated as the number
+    of years since the last conflict-year, including conflict-years
+    from extrasystemic conflicts. For countries left censored due to
+    the dataset starting date, I set the start of the peace year
     calculation to 1946, the end of World War II. The rationale is
     that World War II was a significant international event that
     reshaped the world order and even had domestic consequences for
@@ -1108,7 +1174,7 @@ kable(fa_pars, "latex", align = "c", booktabs = T, linesep = "", escape = F,
                   protect_latex = F)
 ```
 
-The $\delta$ and $\eta$ parameters correspond to the slope and
+The $\delta$ and $\kappa$ parameters correspond to the slope and
 intercept in the linear predictor for the presence of a legislature,
 *v2lgbicam*. The effect of their inclusion can be seen in figure
 \ref{fig:bicam}. The latent factor, $\theta$, follows the
