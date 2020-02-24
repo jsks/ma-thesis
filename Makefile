@@ -38,13 +38,13 @@ $(extract) -n $(draws) -s $(1) $^ > $@
 endef
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: bash clean clean_all manuscript_dependencies help watch_sync watch_pdf \
-	wc Rdependencies.csv
+.PHONY: bash clean clean_all manuscript_dependencies help todo watch_sync \
+	watch_pdf wc Rdependencies.csv
 .SECONDARY:
 
 ###
 # Convenience rules for development workflow
-bash: ## Drop into bash. Only useful to launch interactive shell in container.
+bash: ## Drop into bash. Only useful within a container instance.
 	@bash
 
 help: ## Useless help message
@@ -58,6 +58,9 @@ clean: ## Remove all generated files, excluding posteriors
 		$(data)/*.rds $(data)/*.RData *.html *.pdf *.tex *.log \
 		Rdependencies.csv stan/model stan/model.o
 
+todo: ## Search for TODO comments in project files
+	@grep --color=always --include='*.Rmd' --include='*.R' -rni todo *
+
 watch_sync: ## Autosync project files to host 'gce'
 	@fswatch --event Updated --event Removed -roe .git . | \
 		xargs -n1 -I{} scripts/sync.sh
@@ -67,8 +70,9 @@ watch_pdf: ## Autobuild PDF in a container instance
 		fswatch --event Updated -oe .git $(manuscript) | \
 		xargs -n1 -I{} scripts/run.sh paper.pdf
 
-wc: ## Rough estimate of word count
-	@# All text except codeblocks, toc, appendix, and bibliography
+wc: ## Very rough estimate of word count
+	@# All text except codeblocks, toc, appendix, and bibliography.
+	@# We also miss abstract, caption text, and expanded citations.
 	@sed -e '/^```/,/^```/d' -e '/Appendices/,$$d' $(manuscript) | \
 		pandoc --quiet --from markdown --to plain | \
 		wc -w | \
@@ -137,8 +141,8 @@ $(foreach x, $(schemas), \
 	$(eval $(call cmdstan-rule,$(x:models/%.json=%),$(shell jq -re '.stan' < $(x)))))
 
 # Extract parameters matching regex and concat results into a separate
-# csv. This way we avoid having to load the entire posterior matrix in
-# R.
+# csv. This way we avoid having to load the entire posterior matrix
+# into R.
 $(post)/%/err_posteriors.csv: $(samples)
 	$(call concat,'^lg_est[.][[:digit:]]*[.]1$$|^nonlg_est[.][[:digit:]]*[.]1$$')
 
