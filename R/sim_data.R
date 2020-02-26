@@ -20,10 +20,10 @@ lambda <- rlnorm(D, 0, 0.5)
 psi <- rweibull(D, 5, 1)
 
 # Legislative variables
-eta <- rnorm(1)
+kappa <- rnorm(1)
 delta <- rlnorm(1, 0, 0.5)
 
-xi <- eta + delta * theta
+xi <- kappa + delta * theta
 
 w <- rbinom(N, 1, inv.logit(xi))
 stopifnot(any(w == 1))
@@ -31,7 +31,9 @@ stopifnot(any(w == 1))
 N_obs <- sum(w)
 obs_idx <- which(w == 1)
 
-lg <- theta[obs_idx] %*% t(lambda[1:3]) + mvrnorm(N_obs, rep(0, 3), diag(psi[1:3]))
+# Note: psi is the standard deviation, but mvrnorm expects a
+# covariance matrix
+lg <- theta[obs_idx] %*% t(lambda[1:3]) + mvrnorm(N_obs, rep(0, 3), diag((psi[1:3]) ^ 2))
 lg <- sweep(lg, 2, gamma[1:3], `+`)
 
 lg_err <- matrix(rbeta(N_obs * ncol(lg), 5, 5), N_obs, ncol(lg))
@@ -40,7 +42,7 @@ for (i in 1:ncol(lg))
     lg_obs[, i] <- rnorm(N_obs, lg[, i], lg_err[, i])
 
 # Non-legislative variables
-nonlg <- theta %*% t(lambda[4:6]) + mvrnorm(N, rep(0, 3), diag(psi[4:6]))
+nonlg <- theta %*% t(lambda[4:6]) + mvrnorm(N, rep(0, 3), diag((psi[4:6]) ^ 2))
 nonlg <- sweep(nonlg, 2, gamma[4:6], `+`)
 
 nonlg_err <- matrix(rbeta(N * ncol(nonlg), 5, 5), N, ncol(nonlg))
