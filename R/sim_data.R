@@ -20,7 +20,7 @@ lambda <- rlnorm(D, 0, 0.5)
 psi <- rweibull(D, 5, 1)
 
 # Legislative variables
-kappa <- rnorm(1)
+kappa <- rnorm(1, 0, 2.5)
 delta <- rlnorm(1, 0, 0.5)
 
 xi <- kappa + delta * theta
@@ -51,34 +51,55 @@ for (i in 1:ncol(nonlg))
     nonlg_obs[, i] <- rnorm(N, nonlg[, i], nonlg_err[, i])
 
 # Conflict regression
+rho <- rinvgamma(1, 7.30124, 30.0086)
+eta <- rhnorm(1, 0.5)
+
+D <- dist(1:N, diag = T, upper = T) %>% as.matrix
+
+K <- eta^2 * exp((-0.5 / (2 * rho^2)) * D^2)
+f <- mvrnorm(1, rep(0, N), K)
+
 alpha <- rnorm(1, 0, 5)
-beta <- rnorm(4, 0, 2.5)
+beta <- rnorm(3, 0, 2.5)
 
-X <- mvrnorm(N, c(0, 2), matrix(c(2, .5, .5, 3), 2, 2))
-X <- data.frame(a = rnorm(N, 0, 2), b = rnorm(N, 0, 3))
-interaction_idx  <- 2L
+X <- rnorm(N, 2, 2)
 
-n_years <- N %/% 10L
-n_countries <- 10L
+n_years <- N %/% 5L
+n_countries <- 5L
 
 sigma <- rhcauchy(2, 1)
 countries <- rnorm(n_countries, 0, sigma[1])
 years <- rnorm(n_years, 0, sigma[2])
 
-cy <- expand.grid(1:n_countries, 1:n_years)
-cy <- cy[sample(nrow(cy)), ]
-
+cy <- expand.grid(1:n_years, 1:n_countries)
 stopifnot(nrow(cy) == N)
 
-country_idx <- cy[, 1]
-year_idx <- cy[, 2]
+dataset <- setNames(cy, c("year", "country")) %>%
+    mutate(x = X,
+           exec_idx = 1:N,
+           peace_yrs = 1,
+           y = 0)
 
-p <- inv.logit(alpha + beta[1] * theta + beta[2] * X[, 1] +
-               beta[3] * X[, 2] + beta[4] * theta * X[, interaction_idx] +
-               years[year_idx] + countries[country_idx])
+country <- 0
+for (i in 1:nrow(dataset)) {
+    if (country != dataset$country[i] || dataset$y[i - 1] == 1) {
+        country <- dataset$country[i]
+        dataset$peace_yrs[i] <- 1
+    } else {
+        dataset$peace_yrs[i] <- dataset$peace_yrs[i - 1] + 1
+    }
 
-y <- rbinom(N, 1, p)
-sprintf("%d simulated conflicts out of %d country-years", sum(y), N)
+    p <- inv.logit(alpha +
+                   beta[1] * theta[dataset$exec_idx[i]] +
+                   beta[2] * dataset$x[i] +
+                   beta[3] * theta[dataset$exec_idx[i]] * dataset$x[i] +
+                   f[dataset$peace_yrs[i]] +
+                   years[dataset$year[i]] +
+                   countries[dataset$country[i]])
+    dataset$y[i] <- rbinom(1, 1, p)
+}
+
+sprintf("%d simulated conflicts out of %d country-years", sum(dataset$y), N)
 
 ###
 # Generate json file for Stan
@@ -89,23 +110,32 @@ data <- list(J = N,
              missing_idx = which(w == 0),
              lg_D = ncol(lg_obs),
              nonlg_D = ncol(nonlg_obs),
+
              lg = lg_obs,
              lg_se = lg_err,
              nonlg = nonlg_obs,
              nonlg_se = nonlg_err,
-             lgotovst_idx = 0L,
+
              lgbicam = w,
 
              N = N,
-             M = 2L,
-             X = as.matrix(X),
-             interaction_idx = interaction_idx,
-             exec_idx = 1:N,
+             M = 1L,
+             X = dataset$x %>% data.matrix,
+
+             interaction_idx = 1,
+             exec_idx = dataset$exec_idx,
+
              n_countries = n_countries,
              n_years = n_years,
-             country_id = country_idx,
-             year_id = year_idx,
-             y = y)
+             n_peace_yrs = n_distinct(dataset$peace_yrs),
+
+             country_id = dataset$country,
+             year_id = dataset$year,
+             peace_yrs_id = dataset$peace_yrs,
+
+             peace_yrs = unique(dataset$peace_yrs) %>% sort,
+
+             y = dataset$y)
 
 str(data)
 stopifnot(!sapply(data, anyNA))
@@ -118,12 +148,14 @@ true_values <- data.frame(parameter = c(sprintf("lambda[%d]", seq_along(lambda))
                                         sprintf("psi[%d]", seq_along(psi)),
                                         sprintf("gamma[%d]", seq_along(gamma)),
                                         "delta",
+                                        "kappa",
+                                        "rho",
                                         "eta",
                                         "alpha",
                                         sprintf("beta[%d]", seq_along(beta)),
                                         sprintf("sigma[%d]", seq_along(sigma)),
                                         sprintf("theta[%d]", seq_along(theta))),
-                          point = c(lambda, psi, gamma, delta, eta,
+                          point = c(lambda, psi, gamma, delta, kappa, rho, eta,
                                     alpha, beta, sigma, theta),
                           type = "True Values",
                           stringsAsFactors = F)

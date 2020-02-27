@@ -1811,7 +1811,23 @@ grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2, nrow = 3)
 
 
 ```{r eval = F, warning = F}
-load("posteriors/sim/simulated_summary.RData")
+true_values <- readRDS("posteriors/sim/simulated_parameters.rds")
+
+fa <- read_post("posteriors/sim/fa_posteriors.csv")
+reg <- read_post("posteriors/sim/reg_posteriors.csv")
+
+fit <- bind_cols(fa, reg)
+
+
+post <- post_summarise(fit, c("lambda", "psi", "gamma", "delta",
+                              "kappa", "rho", "eta", "alpha", "beta",
+                              "sigma")) %>%
+    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
+    mutate(type = "Posterior Estimate")
+
+pars.df <- filter(true_values, !grepl("theta", parameter)) %>%
+    bind_rows(post) %>%
+    mutate(type = as.factor(type))
 
 ggplot(pars.df, aes(parameter, point, color = type)) +
     geom_point() +
@@ -1822,38 +1838,13 @@ ggplot(pars.df, aes(parameter, point, color = type)) +
 ```
 
 ```{r eval = F, warning = F}
-latent.df <- arrange(latent.df, true_value) %>%
-    mutate(idx = 1:n())
+latent.df <- post_summarise(fit, pars = "theta", probs = c(0.025, 0.975)) %>%
+    rename(codelow = `2.5%`, codehigh = `97.5`)
 
-ggplot(latent.df, aes(idx, true_value)) +
-    geom_point(col = "darkgrey") +
-    geom_errorbar(aes(ymin = codelow, ymax = codehigh), alpha = 0.2, col = "darkblue") +
-    ylab("True Value") +
-    theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank(),
-          axis.ticks.x = element_blank())
+x <- mean(theta <= latent.df$codehigh & theta >= latent.df$codelow)
 
 ```
 
-```{r eval = F, results = 'hide'}
-x <- with(latent.df, mean(true_value <= codehigh & true_value >= codelow))
-#x * 100
-
-#plot(df$lg_se[, 1], df$lg[, 1] - colMeans(lg_est))
-#plot(df$lg_se[, 1], lapply(lg_est, IQR) %>% unlist)
-
-#which(df$lg[, 1] + 2 * df$lg_se[, 1] < colMeans(lg_est) |
-#      df$lg[, 1] - 2 * df$lg_se[, 1] > colMeans(lg_est))
-
-#v <- lapply(theta_old, IQR) %>% unlist
-#plot(df$lg_se[, 1], v[df$obs_idx])
-
-#plot(density(p), xlim = c(0, 1), ylim = c(0, 2))
-#for (i in 1:100) lines(density(p_hat[i, ]), col = alpha("lightblue", 0.2))
-
-#table(colMeans(p_hat) > .5, y)
-
-```
 
 \newpage
 
