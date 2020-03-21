@@ -5,7 +5,7 @@
 #' and are not meant to be particularly useful outside the context of
 #' this analysis.
 #'
-#' @import ggplot2
+#' @import ggplot2 ggthemes
 #' @docType package
 #' @name thesis.utils
 if (getRversion() >= "2.15.1")
