@@ -133,14 +133,15 @@ $(post)/sim/data.json: R/sim_data.R
 # Generate implicit rules for sampling each model
 define cmdstan-rule
 $(post)/$(1)/samples-chain_%.csv: $(post)/$(1)/data.json stan/$(2)
-	echo "[$$$$(date +'%a %d %b %y %T %z')] Started $$@" >> $$(@D)/log
+	@echo "[$$$$(date +'%a %d %b %y %T %z')] Started $$@" >> $$(@D)/log
+	@cp stan/$(2).stan $$(@D)/chain_$$*-$(2).stan
 	stan/$(2) id=$$* \
 		data file=$$< output file=$$@ \
 		random seed=$$$$(( $$(seed) + $$* - 1 )) \
-		method=sample algorithm=hmc engine=nuts max_depth=12 |& \
+		method=sample  adapt delta=0.85 \
+		algorithm=hmc engine=nuts max_depth=10 |& \
 			tee -a $$(@D)/log
 endef
-
 $(foreach x, $(schemas), \
 	$(eval $(call cmdstan-rule,$(x:models/%.json=%),$(shell jq -re '.stan' < $(x)))))
 
