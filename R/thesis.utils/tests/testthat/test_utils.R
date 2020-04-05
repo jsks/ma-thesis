@@ -24,6 +24,12 @@ test_that("calc_peace_yrs", {
     expect_identical(calc_peace_yrs(years, ongoing),
                      c(0, 1:4, 0, 1:4))
 
+    years <- 1900:1906
+    ongoing <- c(0, 1, 1, 1, 0, 0, 1)
+
+    expect_identical(calc_peace_yrs(years, ongoing),
+                     c(0, 1, 0, 0, 0, 1, 2))
+
     years <- c(1900, 1902:1904)
     ongoing <- rep(0, 4)
 
@@ -35,6 +41,12 @@ test_that("calc_peace_yrs", {
 
     expect_error(calc_peace_yrs(years, ongoing),
                  "Unsorted years vector")
+
+    years <- 1900:1904
+    ongoing <- c(0, 1, 2, 0, 1)
+
+    expect_error(calc_peace_yrs(years, ongoing),
+                 "Expected a binary variable for incidence")
 })
 
 
@@ -127,11 +139,11 @@ test_that("partial", {
 test_that("summary_stats", {
     df <- data.frame(x = letters[1:10], y = c(1:9, NA))
     out <- data.frame(Variable = "y",
-                      N = 9,
-                      Mean = 5,
-                      `Std. dev.` = sd(1:9) %>% signif(3),
-                      `Min.` = 1,
-                      `Max.` = 9,
+                      N = "9",
+                      Mean = "5",
+                      `Std.dev.` = sd(1:9) %>% signif(3) %>% as.character,
+                      `Min.` = "1",
+                      `Max.` = "9",
                       stringsAsFactors = F)
 
     expect_equal(summary_stats(df), out)
