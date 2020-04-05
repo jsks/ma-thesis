@@ -72,11 +72,15 @@ watch_pdf: ## Autobuild PDF in a container instance
 
 wc: ## Very rough estimate of word count
 	@# All text except codeblocks, toc, appendix, and bibliography.
-	@# We also miss abstract, caption text, and expanded citations.
-	@sed -e '/^```/,/^```/d' -e '/Appendices/,$$d' $(manuscript) | \
-		pandoc --quiet --from markdown --to plain | \
+	@# 200 is added for the abstract, but caption text is missing
+	@# from this count.
+	@sed -e 's/\(suppress-bibliography:\) false/\1 true/' \
+			-e '/^```/,/^```/d' \
+			-e '/Appendices/,$$d' $(manuscript) | \
+		pandoc --quiet -F pandoc-citeproc -f markdown -t plain | \
 		wc -w | \
-		sed 's/^[[:space:]]*/word count: /'
+		xargs -n1 expr 200 + | \
+		sed 's/^/word count: /'
 
 # Records R package versions from the latest run into the csv file
 # 'Rdependencies.csv'

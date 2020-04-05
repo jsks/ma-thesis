@@ -2,6 +2,7 @@
 title: Executive Constraints and Civil Conflict Onset
 author: J.L.A. Krusell
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
+suppress-bibliography: false
 bibliography: library.bib
 csl: assets/american-political-science-association.csl
 link-citations: true
