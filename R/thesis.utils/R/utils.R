@@ -31,6 +31,8 @@ calc_peace_yrs <- function(years, incidence) {
         stop("Unsorted years vector", call. = F)
     else if (any(consecutive(years) != 1))
         stop("Breaks found in years vector", call. = F)
+    else if (dplyr::n_distinct(incidence) > 2)
+        stop("Expected a binary variable for incidence", call. = F)
 
     locf_idx <- function(x) {
         x[x == 1] <- which(x == 1)
@@ -217,6 +219,8 @@ summary_stats.data.frame <- function(x, vars = colnames(x)) {
     if (is.null(vars))
         stop("Missing target columns")
 
+    fmt <- . %>% signif(3) %>% prettyNum(big.mark = ",")
+
     df <- x[, vars, drop = F]
     # N, mean, std.dev, min, max
     ll <- lapply(colnames(df), function(s) {
@@ -226,11 +230,11 @@ summary_stats.data.frame <- function(x, vars = colnames(x)) {
             return(NULL)
 
         data.frame(Variable = s,
-                   N = sum(!is.na(col)),
-                   Mean = mean(col, na.rm = T) %>% signif(3),
-                   `Std. dev.` = sd(col, na.rm = T) %>% signif(3),
-                   `Min.` = min(col, na.rm = T) %>% signif(3),
-                   `Max.` = max(col, na.rm = T) %>% signif(3),
+                   N = sum(!is.na(col)) %>% prettyNum(big.mark = ","),
+                   Mean = mean(col, na.rm = T) %>% fmt,
+                   `Std.dev.` = sd(col, na.rm = T) %>% fmt,
+                   `Min.` = min(col, na.rm = T) %>% fmt,
+                   `Max.` = max(col, na.rm = T) %>% fmt,
                    stringsAsFactors = F)
     })
 

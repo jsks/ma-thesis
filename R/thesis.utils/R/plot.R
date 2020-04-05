@@ -14,7 +14,8 @@ plot_pars.matrix <- function(x, ylab = "Parameter Estimates", hline = F) {
     df <- post_summarise(x, probs = c(0.10, 0.5, 0.9)) %>%
         rename(codelow = `10%`,
                median = `50%`,
-               codehigh = `90%`)
+               codehigh = `90%`) %>%
+        mutate(parameter = factor(parameter, levels = parameter))
 
     p <- ggplot(df, aes_(x = ~parameter, y = ~median)) +
         geom_errorbar(aes_(x = ~parameter, ymin = ~codelow, ymax = ~codehigh),
