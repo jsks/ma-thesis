@@ -18,6 +18,7 @@ Rdependencies.csv
 .git
 cmdstan
 docs
+paper_cache
 paper_files
 posteriors
 replications

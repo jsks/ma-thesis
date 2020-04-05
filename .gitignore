@@ -1,6 +1,5 @@
 .DS_Store
 paper.log
-paper_cache/
 R/scratch.R
 refs/iisystem.dat
 refs/microstatessystem.dat
@@ -26,6 +25,7 @@ cmdstan/
 data/
 docs/
 replications/
+paper_cache/
 plots/
 posteriors/
 
