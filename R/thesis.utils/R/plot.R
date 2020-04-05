@@ -28,7 +28,8 @@ plot_pars.matrix <- function(x, ylab = "Parameter Estimates", hline = F) {
         ylab(ylab)
 
     if (isTRUE(hline))
-        p + geom_hline(yintercept = 0, alpha = 0.5, color = "grey")
+        p <- p + geom_hline(yintercept = 0, alpha = 0.5,
+                            color = "grey", linetype = "dotted")
 
     p
 }
