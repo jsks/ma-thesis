@@ -26,16 +26,20 @@ assert_cy <- function(df) {
 #' Merging stats
 #'
 #' Extremely simply debugging function that does nothing more than
-#' simply print out the number of conflict episodes, countries, and
+#' simply print out the number of conflicts, countries, and
 #' country-years in a given data frame. Completely useless for any
 #' generic task.
 #'
 #' @param df DataFrame
 #'
 #' @export
-dbg_info <- function(df) {
-    msg <- sprintf("%d conflict episodes, %d countries, %s country-years",
-                   sum(df$lepisode_onset, na.rm = T),
+dbg_info <- function(df, onset_col = "episode_onset") {
+    if (!onset_col %in% colnames(df))
+        sprintf("Can't find dependent variable: %s", onset_col) %>%
+            stop(call. = F)
+
+    msg <- sprintf("%d target onsets, %d countries, %s country-years",
+                   sum(df[, onset_col], na.rm = T),
                    dplyr::n_distinct(df$country_name),
                    prettyNum(nrow(df), big.mark = ","))
 
