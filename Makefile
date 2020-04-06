@@ -38,8 +38,8 @@ $(extract) -n $(draws) -s $(1) $^ > $@
 endef
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: bash clean clean_all manuscript_dependencies help todo watch_sync \
-	watch_pdf wc Rdependencies.csv
+.PHONY: bash clean clean_all help todo watch_sync watch_pdf wc \
+	Rdependencies.csv
 .SECONDARY:
 
 ###
@@ -177,15 +177,15 @@ $(foreach x, $(models), $(eval $(call model-rule,$(x))))
 
 ###
 # Build final manuscript
-manuscript_dependencies: $(manuscript) \
+manuscript_dependencies := $(manuscript) \
 	library.bib \
 	assets/stan.xml \
 	assets/american-political-science-association.csl \
 	Rdependencies.csv \
 	$(results)
 
-%.pdf: manuscript_dependencies
+%.pdf: $(manuscript_dependencies)
 	Rscript -e "rmarkdown::render('$(manuscript)', output_file = '$@')"
 
-%.html: manuscript_dependencies
+%.html: $(manuscript_dependencies)
 	Rscript -e "rmarkdown::render('$(manuscript)', 'html_document', '$@')"
