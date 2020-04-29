@@ -1,9 +1,0 @@
-{
-    "name": "full_no_interaction",
-    "stan": "sem",
-    "outcome": "lepisode_onset",
-    "predictors": ["rgdpepc", "rgdpepc_gro", "cinc", "pop_density", "meanelev",
-                   "rlvt_groups_count", "neighbour_conflict", "ongoing",
-                   "peace_yrs"],
-    "interaction": ""
-}

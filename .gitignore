@@ -26,6 +26,7 @@ data/
 docs/
 replications/
 paper_cache/
+paper_files/
 plots/
 posteriors/
 
