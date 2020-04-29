@@ -62,13 +62,14 @@ todo: ## Search for TODO comments in project files
 	@grep --color=always --include='*.Rmd' --include='*.R' -rni todo *
 
 watch_sync: ## Autosync project files to host 'gce'
-	@fswatch --event Updated --event Removed -roe .git . | \
-		xargs -n1 -I{} scripts/sync.sh
+	@while true; do \
+		(git ls-files -o -X .gitignore; \
+		 git ls-files; \
+		 find data -type f) | entr -ad scripts/sync.sh; \
+	 done
 
 watch_pdf: ## Autobuild PDF in a container instance
-	@export CLEANUP=1; \
-		fswatch --event Updated -oe .git $(manuscript) | \
-		xargs -n1 -I{} scripts/run.sh paper.pdf
+	@CLEANUP=1 entr -p scripts/run.sh <<< $(manuscript)
 
 wc: ## Very rough estimate of word count
 	@# All text except codeblocks, toc, appendix, and bibliography.
