@@ -1567,6 +1567,113 @@ conflict. That said, it should be mentioned that the there is a much
 higher degree of uncertainty in the estimate with the 80 percent
 posterior credible interval ranging from -0.558 to 0.064.
 
+TODO: grab this programmatically
+
+#### Random Effects
+
+There are three sets of random effects included in the regression
+model. The first to be presented in figure \ref{fig:year} is the year
+intercepts with 80 percent posterior credible intervals. There is no
+discernible time trend in the year specific variability. The estimates
+are strongly pulled towards zero as a result of the partial pooling
+with upticks, such as the in the initial years of the 1990s during the
+dissolution of the Soviet Union and Yugoslavia, roughly mirroring the
+global incidence rate of onsets.
+
+```{r fig.cap = "\\label{fig:year} Log-odds year intercepts - $80\\%$ CIs"}
+Z_year <- extract(reg, "Z_year")
+colnames(Z_year) <- { unique(final.df$year) + 1 } %>% sort
+
+breaks <- seq(min(final.df$year), max(final.df$year), by = 4)
+plot_pars(Z_year, hline = T) +
+    scale_x_discrete(breaks = breaks)
+
+```
+
+
+```{r results = "hide"}
+alpha <- extract(reg, "alpha")
+
+alpha_s <- quantile(alpha, probs = c(0.1, 0.9)) %>% signif(3)
+alpha_interval <- sprintf("[%g,%g]", alpha_s[1], alpha_s[2])
+```
+
+Figure \ref{fig:country} presents the country intercepts. Since all of
+the countries cannot be easily visualized at once only the top ten and
+bottom ten depicted. From the results it is clear that there is
+considerably less uncertainty in the estimates for the top
+countries. The intercepts for these countries are consistently above
+zero meaning that the risk of civil conflict onset is higher than that
+predicted solely by the other predictors. Unsurprisingly, these
+countries tend to experience the highest number of civil conflict
+onsets in the dataset which, conditional on the data, accounts for the
+higher baseline risk. The countries at the bottom have experienced
+relatively few, if any, conflict onsets relative to their values for
+the other predictors. The majority of intercepts for these countries
+overlap zero possibly because the global intercept is already fairly
+low, `r alpha_interval` (80 percent log-odds CI).
+
+```{r, fig.cap = "\\label{fig:country} Log-odds country intercepts - $80\\%$ CIs"}
+
+Z_country <- extract(reg, "Z_country")
+colnames(Z_country) <- unique(final.df$country_name) %>% sort
+
+x <- apply(Z_country, 2, median) %>% order(decreasing = F)
+top <- head(x, 10)
+bottom <- tail(x, 10)
+
+fn <- function(x, title) {
+    plot_pars(x, hline = T) +
+        coord_flip() +
+        theme(axis.title.y = element_blank()) +
+        ggtitle(title)
+}
+
+p1 <- fn(Z_country[, top], "Bottom 10")
+p2 <- fn(Z_country[, bottom], "Top 10")
+
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
+
+```{r results = "hide"}
+gp <- extract(reg, c("rho", "eta")) %>% post_summarise(probs = c(0.1, 0.9)) %>%
+    mutate(interval = sprintf("[%.3f, %.3f]", signif(`10%`, 3), signif(`90%`, 3)))
+```
+
+Finally, figure \ref{fig:peace} plots the peace year intercepts.[^gp]
+The strongest effect is found in the years immediately following an
+occurrence of intrastate political violence resulting in an increased
+risk for an additional onset.  Approximately a decade after the last
+incidence of violence, the effect is drawn towards zero. The
+additional spike around approximately 30 years follows an uptick in
+conflict onsets in the dataset mostly among authoritarian regimes such
+as, for example, the 1989 coup d'etat overthrowing the Stroessner
+regime in Paraguay, the Saur Revolution in 1978 in Afghanistan, and
+the start of the Nepalese Civil War in 1996. After 30 years, the
+effect of each additional year of peace tends to be negative; however,
+there is a very high degree of uncertainty in the estimates that
+undermines any general conclusion regarding a pacifying effect.
+
+[^gp]: The 80 percent posterior credible intervals for the
+    hyperparameters from the gaussian process modeling the effect of
+    peace years were
+    `r filter(gp, parameter == "rho") %$% interval` and
+    `r filter(gp, parameter == "eta") %$% interval`
+    for the length-scale ($\rho$) and the marginal standard deviation
+    ($\eta$) respectively.
+
+```{r, fig.cap = "\\label{fig:peace} Log-odds peace year intercepts - $80\\%$ CIs"}
+f <- extract(reg, "f")
+colnames(f) <- unique(final.df$lpeace_yrs) %>% sort
+
+plot_pars(f, hline = T) +
+    scale_x_discrete(breaks = seq(0, ncol(f), by = 4))
+```
+
+
+#### Interaction Effect
 
 ```{r results = "hide"}
 gdp_rwa <- filter(merged.df, country_name == "Rwanda", year == 2007) %$%
