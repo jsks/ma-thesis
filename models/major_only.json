@@ -1,7 +1,7 @@
 {
-    "name": "full_model",
+    "name": "major_only",
     "stan": "sem",
-    "outcome": "lepisode_onset",
+    "outcome": "lmajor_onset",
     "predictors": ["rgdpepc", "rgdpepc_gro", "cinc", "discrimpop",
                    "pop_density", "meanelev", "rlvt_groups_count",
                    "neighbour_conflict", "major_ongoing",

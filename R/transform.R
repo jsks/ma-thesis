@@ -32,21 +32,29 @@ for (v2 in lg_vars) {
 }
 
 ###
-# Final dataset for model
+# Final dataset for model. Start by dropping country-years where we
+# have missingness in our manifest variables NOT caused by lack of
+# legislature (v2lgbicam) and log transforming key predictors.
 final.df <- merged.df %>%
-    select(country_name, year, lonset, lmajor_onset, lepisode_onset,
-           lepisode_major_onset, peace_yrs, v2lgbicam,
-           one_of(constraint_vars), one_of(paste0(constraint_vars, "_sd")),
-           rgdpepc, rgdpepc_gro, cinc, pop_density, meanelev, ongoing,
-           independence, rlvt_groups_count, discrimpop,
-           neighbour_conflict) %>%
     filter_at(constraint_vars, all_vars(!is.na(.))) %>%
+    arrange(country_name, year) %>%
     mutate(rgdpepc = log(rgdpepc),
            pop_density = log(pop_density),
            meanelev = log(meanelev),
            reduced_idx =
                do.call(paste, lapply(c("country_name", constraint_vars), as.symbol)) %>%
                    collapse_changes)
+
+# Rather than lag each predictor, take the lead of the outcome and
+# peace years.
+final.df %<>%
+    group_by(country_name, idx = consecutive(year)) %>%
+    mutate(lepisode_onset = lead(episode_onset),
+           lmajor_onset = lead(major_onset),
+           lcum_onset = lead(cum_onset),
+           lpeace_yrs = lead(peace_yrs)) %>%
+    ungroup %>%
+    select(-idx)
 
 dbg_info(final.df)
 

@@ -176,37 +176,27 @@ civil %<>% filter(type_of_conflict %in% 3:4)
 episode_ucdp <- find_onset(civil, c("conflict_id", "start_date2")) %>%
     rename(episode_onset = onset)
 
-# Episode onsets - major conflicts only
+# Episode onsets - high intensity
 episode_major_ucdp <- filter(civil, intensity_level == 2) %>%
     find_onset(c("conflict_id", "start_date2")) %>%
-    rename(episode_major_onset = onset)
-
-# Unique conflict onsets - all conflicts
-conflict_ucdp <- find_onset(civil, "conflict_id")
-
-# Unique conflict onsets - major conflicts only
-conflict_major_ucdp <- filter(civil, intensity_level == 2) %>%
-    find_onset("conflict_id") %>%
     rename(major_onset = onset)
 
-ucdp <- list(episode_ucdp, episode_major_ucdp, conflict_ucdp, conflict_major_ucdp) %>%
+# Episode onsets - cumulative intensity
+episode_cum_ucdp <- filter(civil, cumulative_intensity == 1) %>%
+    find_onset(c("conflict_id", "start_date2")) %>%
+    rename(cum_onset = onset)
+
+ucdp <- list(episode_ucdp, episode_major_ucdp, episode_cum_ucdp) %>%
     Reduce(partial(full_join, by = c("gwno_a", "year")), .)
 
 merged.df <- left_join(vdem, ucdp, by = c("gwid" = "gwno_a", "year")) %>%
     left_join(full_counts.df, by = c("gwid" = "gwno_a", "year")) %>%
-    mutate(ongoing = ifelse(is.na(intensity), 0, intensity),
+    mutate(ongoing = ifelse(is.na(intensity), 0, 1),
+           major_ongoing = ifelse(is.na(intensity) | intensity == 1, 0, 1),
            neighbour_conflict = ifelse(is.na(n_neighbour_conflicts), 0, 1),
-           onset = ifelse(is.na(onset), 0, 1),
-           major_onset = ifelse(is.na(major_onset), 0, 1),
            episode_onset = ifelse(is.na(episode_onset), 0, 1),
-           episode_major_onset = ifelse(is.na(episode_major_onset), 0, 1)) %>%
-    group_by(country_name, idx = consecutive(year)) %>%
-    mutate(lonset = lead(onset),
-           lmajor_onset = lead(major_onset),
-           lepisode_onset = lead(episode_onset),
-           lepisode_major_onset = lead(episode_major_onset)) %>%
-    ungroup %>%
-    select(-idx)
+           major_onset = ifelse(is.na(major_onset), 0, 1),
+           cum_onset = ifelse(is.na(cum_onset), 0, 1))
 
 # Calculate number of peace years since last ongoing civil conflict or
 # independence. For countries censored due to start date, start

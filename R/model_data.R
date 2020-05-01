@@ -21,16 +21,20 @@ output_dir <- basename(args$schema) %>%
     file_path_sans_ext %>%
     file.path("posteriors", .)
 
+# Keep gwid for world plots in manuscript
 final.df %<>%
-    select(schema$outcome, country_name, year, reduced_idx,
-           one_of(schema$predictors)) %>%
+    select(country_name, gwid, year, reduced_idx, lpeace_yrs,
+           schema$outcome, one_of(schema$predictors)) %>%
     na.omit
-dbg_info(final.df)
+dbg_info(final.df, schema$outcome)
+
+stopifnot(schema$predictors %in% colnames(final.df))
 
 ###
 # Control variables
 X <- final.df %>%
-    select(-country_name, -year, -matches("onset"), -reduced_idx, -peace_yrs) %>%
+    select(-country_name, -year, -gwid, -matches("onset"),
+           -reduced_idx, -lpeace_yrs) %>%
     mutate_if(Negate(is.ordinal), normalize) %>%
     data.matrix
 
@@ -71,15 +75,15 @@ data <- list(
     interaction_idx = interaction_idx,
     exec_idx = final.df$reduced_idx,
 
-    n_peace_yrs = n_distinct(final.df$peace_yrs),
+    n_peace_yrs = n_distinct(final.df$lpeace_yrs),
     n_countries = n_distinct(final.df$country_name),
     n_years = n_distinct(final.df$year),
 
     country_id = to_idx(final.df$country_name),
     year_id = to_idx(final.df$year),
-    peace_yrs_id = to_idx(final.df$peace_yrs),
+    peace_yrs_id = to_idx(final.df$lpeace_yrs),
 
-    peace_yrs = unique(final.df$peace_yrs) %>% sort,
+    peace_yrs = unique(final.df$lpeace_yrs) %>% sort,
 
     y = final.df[[schema$outcome]]
 )
