@@ -46,7 +46,7 @@ transformed data {
 
   // Number of regression coefficients. Increase by one if we include
   // an interaction term with the latent factor.
-  int n_beta = interaction_idx > 0 ? M + 1 : M;
+  int n_beta = interaction_idx > 0 ? M + 2 : M + 1;
 }
 
 parameters {
@@ -69,8 +69,7 @@ parameters {
 
   real alpha;
 
-  // Size = Control vars + theta
-  vector[n_beta + 1] beta;
+  vector[n_beta] beta;
 
   vector[n_countries] raw_country;
   vector[n_years] raw_year;
@@ -119,7 +118,7 @@ transformed parameters {
     vector[N] interaction_term;
 
     interaction_term = theta[exec_idx] .* X[, interaction_idx];
-    nu += beta[n_beta + 1] * interaction_term;
+    nu += beta[n_beta] * interaction_term;
   }
 }
 
@@ -149,7 +148,7 @@ model {
   }
 
   // Onset regression
-  rho ~ inv_gamma(8.91924, 34.5805);
+  rho ~ inv_gamma(15.5031, 78.2992);
   eta ~ std_normal();
   raw_gp ~ std_normal();
 

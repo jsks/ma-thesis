@@ -51,12 +51,12 @@ for (i in 1:ncol(nonlg))
     nonlg_obs[, i] <- rnorm(N, nonlg[, i], nonlg_err[, i])
 
 # Conflict regression
-rho <- rinvgamma(1, 7.30124, 30.0086)
-eta <- rhnorm(1, 0.5)
+rho <- rinvgamma(1, 15.5031, 78.2992);
+eta <- rhnorm(1, 1)
 
 D <- dist(1:N, diag = T, upper = T) %>% as.matrix
 
-K <- eta^2 * exp((-0.5 / (2 * rho^2)) * D^2)
+K <- eta^2 * exp(-0.5 * (D / rho)^2)
 f <- mvrnorm(1, rep(0, N), K)
 
 alpha <- rnorm(1, 0, 5)
@@ -64,8 +64,8 @@ beta <- rnorm(3, 0, 2.5)
 
 X <- rnorm(N, 2, 2)
 
-n_years <- N %/% 5L
-n_countries <- 5L
+n_years <- N %/% 4L
+n_countries <- 4L
 
 sigma <- rhcauchy(2, 1)
 countries <- rnorm(n_countries, 0, sigma[1])
@@ -154,9 +154,10 @@ true_values <- data.frame(parameter = c(sprintf("lambda[%d]", seq_along(lambda))
                                         "alpha",
                                         sprintf("beta[%d]", seq_along(beta)),
                                         sprintf("sigma[%d]", seq_along(sigma)),
-                                        sprintf("theta[%d]", seq_along(theta))),
+                                        sprintf("theta[%d]", seq_along(theta)),
+                                        sprintf("y[%d]", seq_along(dataset$y))),
                           point = c(lambda, psi, gamma, delta, kappa, rho, eta,
-                                    alpha, beta, sigma, theta),
+                                    alpha, beta, sigma, theta, dataset$y),
                           type = "True Values",
                           stringsAsFactors = F)
 
