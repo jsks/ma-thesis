@@ -1207,7 +1207,7 @@ plots indicate that on average, for country-years where there is no
 legislature, *i.e.* $v2lgbicam$ is zero, the latent factor is lower,
 although still conditional on the values for the remaining manifest
 variables. Where the legislature is present, $\theta$ is distributed
-according to the $Normal(0, 1)$ prior.
+according to the $\mathsf{Normal}(0, 1)$ prior.
 
 ```{r fig.width = 6, fig.height = 2, fig.cap = "\\label{fig:bicam} Posterior density plots for executive constraints"}
 theta <- extract(fa, "theta")
@@ -1233,7 +1233,8 @@ the manifest variables. This posterior shrinkage can be seen in figure
 the upper and low bounds of the $80$ percent posterior quantile
 intervals for an example manifest variable in $Z^{\ast}$ against the
 observed V-Dem standard deviations as well as the difference between
-the estimated posterior mean and the observed mean.
+the estimated posterior mean and the observed mean in order to further
+demonstrate this effect.
 
 ```{r fig.cap = "\\label{fig:fa-line} Posterior shrinkage for \\textit{v2juncind}"}
 err <- read_post("posteriors/full_model/err_posteriors.csv")
@@ -1292,27 +1293,29 @@ grid.arrange(p1, p2, ncol = 2)
 
 #### Executive Constraints Estimates
 
-In total there are `r nrow(final.df)` country-year estimates of
-$\theta$, comprised of `r n_distinct(final.df$country_name)` unique
-countries and scaled from approximately $-2$ to $2$. Since the
-complete time series for every single country can not be easily
-visualised, an exploratory overview on the performance of the
-executive constraints measure is provided in the form of several
-different plots.  The first, figure \ref{fig:theta}, is a restricted
-time series plot consisting of only China, Brazil, Nigeria, Norway,
-and Russia. The countries were chosen to represent a diverse set of
-geographic regions as well as political contexts. From the plot,
-China, being a single party authoritarian state, is consistently
-ranked the worst in executive constraints. The decline for Russia
-largely follows the ascent of Vladimir Putin to the presidency at the
-end of 1999 and his gradual consolidation of power in the decades that
-followed.[^russia] For both Nigeria and Brazil, the measure captures
-periods of military dictatorship such as the era of military rule in
-Brazil following the 1964 coup d'etat and the period following Johnson
-Aguiyi-Ironsi's seizure of power in the 1966 coup d'etat in Nigeria.
-The last country, Norway, is an example of a consolidated polyarchy
-for the time period under consideration with consistently strong
-constraints against the executive office.
+In total there are `r nrow(final.df) %>% prettyNum(big.mark = ",")`
+country-year estimates of $\theta$, comprised of `r
+n_distinct(final.df$country_name)` unique countries and scaled from
+approximately $-2$ to $2$. Since the complete time series for every
+single country can not be easily visualised, an exploratory overview
+on the performance of the executive constraints measure is provided in
+the form of several different plots.  The first, figure
+\ref{fig:theta}, is a restricted time series plot consisting of only
+China, Brazil, Nigeria, Norway, and Russia. The countries were chosen
+to represent a diverse set of geographic regions as well as political
+contexts. From the plot, China, being a single party authoritarian
+state, is consistently ranked the worst in executive constraints. The
+decline for Russia largely follows the ascent of Vladimir Putin to the
+presidency at the end of 1999 and his gradual consolidation of power
+in the decades that followed.[^russia] For both Nigeria and Brazil,
+the measure is able to distinguish between democratic rule and periods
+of military dictatorship such as the era of military rule in Brazil
+following the 1964 coup d'etat and the period following Johnson
+Aguiyi-Ironsi's seizure of power in the 1966 coup d'etat in
+Nigeria. The last country, Norway is an example of a consolidated
+polyarchy for the time period under consideration with consistently
+strong constraints against the executive office which are accurately
+captured by the measure.
 
 [^russia]: As can be seen in the plot, the observations for Russia
     begin in 1991 with the fall of the Soviet Union. There is data
@@ -1433,9 +1436,9 @@ ggplot(df, aes(country_name, median, colour = year)) +
 
 ### Onset Regression
 
-Figure \ref{fig:reg} plots the slope coefficients on the log-odds
-scale from the logistic regression linking the latent construct for
-executive constraints to the outcome, civil conflict onset. Credible
+Figure \ref{fig:reg} plots the slope coefficients from the logistic
+regression linking the latent construct for executive constraints to
+the outcome, civil conflict onset, on the log-odds scale. Credible
 intervals are summarised the same as previous plots, 80 percent
 quantile intervals, and exact values are reported in table
 \ref{tab:reg} together with the posterior probabilities that each
@@ -1478,18 +1481,18 @@ kable(beta_s, "latex", align = c("c", "r", "r"), booktabs = T,
 plot_pars(beta, hline = T)
 ```
 
-This means that for the $\beta$ parameter for executive constraints
-there is a `r as.numeric(beta_s[1, 2]) * 100` percent posterior
-probability that the parameter is less than zero and a 80 percent
-posterior probability that an increase of one standard deviation
-decreases the log-odds of conflict onset between $`r beta_s[1, 1]`$. A
-one standard deviation increase in this context corresponds roughly to
-the difference between the level of executive constraints for Zambia
-in 1967 under the administration of Kenneth Kaunda right before the
-banning of opposition parties following the 1968 election, with score
-of approximately 0, and Greece in 1976 shortly after the end of
-military rule and establishment of a democratic republic, with a score
-of approximately 1.
+For the $\beta$ parameter for executive constraints there is a
+`r as.numeric(beta_s[1, 2]) * 100` percent posterior probability that the
+parameter is less than zero and a 80 percent posterior probability
+that an increase of one standard deviation decreases the log-odds of
+conflict onset between $`r beta_s[1, 1]`$. A one standard deviation
+increase in this context corresponds roughly to the difference between
+the level of executive constraints for Zambia in 1967 under the
+administration of Kenneth Kaunda right before the banning of
+opposition parties following the 1968 election, with a score of
+approximately 0, and Greece in 1976 shortly after the end of military
+rule and the establishment of a democratic republic with a score of
+approximately 1.
 
 
 ```{r results = "hide"}
@@ -1547,25 +1550,25 @@ from Cambodia in 1987 with a population of $`r cmb$pop`$ million and
 an area of $`r cmb$area_sqkm`$ square kilometers to India in 1976 with
 a population of $`r india$pop`$ million and an area of
 $`r india$area_sqkm`$ square kilometers. A one unit increase for mean
-elevation roughly matches the difference between Russia, $`r russia`$
-meters, and Georgia, $`r georgia`$ meters. And, a one unit increase
-for proportion discrimination is roughly equivalent to Thailand from
-2002 until present with $`r thai`$ percent and Bhutan from 1989 with
-$`r bhutan`$ percent.
+elevation roughly matches the difference between Russia at $`r russia`$
+meters and Georgia at $`r georgia`$ meters. And, a one unit increase
+for proportion of the population facing discrimination is roughly
+equivalent to Thailand from 2002 until present with $`r thai`$ percent
+and Bhutan from 1989 with $`r bhutan`$ percent.
 
 Finally, the GDP per capita and executive constraints interaction term
 and the dummy variable for ongoing high intensity conflict decrease
 the risk of conflict onset. This latter result, although surprising,
 may be due to the subsuming nature of high intensity civil wars. In
 the face of an all-encompassing civil war, there may be a plethora of
-factions with divergent interests active; however, their political
+active factions with divergent interests; however, their political
 goals and interests are structured according to the current
 incompatibility between the dominant political actors. Thus, there may
 be new armed groups emerging who are willing to challenge to the
-state, but that emergent may not necessarily be coded as a new civil
-conflict. That said, it should be mentioned that the there is a much
-higher degree of uncertainty in the estimate with the 80 percent
-posterior credible interval ranging from -0.558 to 0.064.
+state, but that emergence may not necessarily be coded as a new civil
+conflict. It should be noted, however, that there is a high degree of
+uncertainty in the estimate with the 80 percent posterior credible
+interval ranging from -0.558 to 0.064.
 
 TODO: grab this programmatically
 
@@ -1694,47 +1697,57 @@ for executive constraints and GDP per Capita I calculate the marginal
 effect of $\theta$, executive constraints, on the predicted
 probability of civil conflict onset for different levels of GDP per
 capita while holding constant the other covariates.  In this case, I
-took the mean of GDP per capita growth, population density, mean
-elevation, politically relevant ethnic group count, and peace years
-while setting the dummy indicators for independence, ongoing conflict,
-and neighbouring conflict and the random intercepts for year and
-country to 0. The levels of GDP per capita were selected based on the
-10\%, 50\%, and 90\% quantiles of the standardized log transformed
-values. These levels roughly correspond to the GDP per capita of
-Rwanda in 2007 at $`r gdp_rwa`$, the Philippines in 2008 at $`r gdp_phl`$,
-and Portugal in 2009 at $`r gdp_po`$. In the dataset there are 60
-conflict episode onsets below the first level, $152$ between the first
-and second, $55$ between the second and third, and $4$ above the
-third.
+take the mean of GDP per capita growth, CINC, the proportion of
+discriminated population, population density, mean elevation, and the
+number of politically relevant ethnic groups. I also set the dummy
+indicators for independence, major ongoing conflict, and neighbouring
+conflict and the random intercepts for year and country to zero. For
+peace years I take the intercept for the average number of peace years
+rounded to the nearest integer, which turns out to be 19. The levels
+of GDP per capita were selected based on the 10\%, 50\%, and 90\%
+quantiles of the standardized log transformed values. These levels
+roughly correspond to the GDP per capita of Rwanda in 2007 at
+$`r gdp_rwa`$ 2011 US dollars, the Philippines in 2008 at $`r gdp_phl`$
+2011 US dollars, and Portugal in 2009 at $`r gdp_po`$ 2011 US
+dollars. In the dataset there are 60 conflict episode onsets below the
+first level, 152 between the first and second, 55 between the second
+and third, and 4 above the third.
 
 ```{r fig.cap = "\\label{fig:int} Interaction between executive constraints and GDP per capita with 80\\% CIs"}
 # Interaction plot
-alpha <- extract(reg, "alpha")
 theta_seq <- seq(-2.5, 2.5, .01)
-
 state <- quantile(X[, "rgdpepc"], probs = c(0.1, .5, 0.9))
 
-f <- function(x, y) {
-    with(as.data.frame(X),
+marginal_data.df <- as.data.frame(X) %>%
+    summarise_all(~mean(.)) %>%
+    mutate(rlvt_groups_count = round(rlvt_groups_count),
+           neighbour_conflict = 0,
+           major_ongoing = 0,
+           independence = 0)
+
+peace_yr <- f[, mean(final.df$lpeace_yrs) %>% round]
+
+fn <- function(x, y) {
+    with(marginal_data.df,
          alpha +
          beta[, 1] * x +
          beta[, 2] * y +
-         beta[, 3] * mean(rgdpepc_gro) +
-         beta[, 4] * mean(cinc) +
-         beta[, 5] * mean(discrimpop) +
-         beta[, 6] * mean(pop_density) +
-         beta[, 7] * mean(meanelev) +
-         beta[, 8] * mean(rlvt_groups_count) +
-         beta[, 9] * 0 +
-         beta[, 10] * 0 +
-         beta[, 11] * 0 +
-         beta[, 12] * x * y)
+         beta[, 3] * rgdpepc_gro +
+         beta[, 4] * cinc +
+         beta[, 5] * discrimpop +
+         beta[, 6] * pop_density +
+         beta[, 7] * meanelev +
+         beta[, 8] * rlvt_groups_count +
+         beta[, 9] * neighbour_conflict +
+         beta[, 10] * major_ongoing +
+         beta[, 11] * independence +
+         beta[, 12] * x * y +
+         peace_yr)
 }
-
 
 df <- lapply(state, function(y) {
     mclapply(theta_seq, function(point) {
-        p_hat <- boot::inv.logit(f(point, y)) * 100
+        p_hat <- boot::inv.logit(fn(point, y)) * 100
         post_summarise(p_hat, probs = c(0.1, 0.5, 0.9)) %>%
             mutate(theta = point,
                    y = y)
