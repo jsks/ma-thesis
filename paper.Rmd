@@ -1976,7 +1976,7 @@ subnational level depending on data availability.
 
 ## A - Stan Code {#appendix-a}
 
-```{stan, code = readLines("stan/model.stan"), eval = F, output.var = "x", echo = T}
+```{stan, code = readLines("stan/sem.stan"), eval = F, output.var = "x", echo = T}
 ```
 
 \newpage
