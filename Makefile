@@ -56,7 +56,7 @@ help: ## Useless help message
 clean: ## Remove all generated files, excluding posteriors
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
 		$(data)/*.rds $(data)/*.RData *.html *.pdf *.tex *.log \
-		Rdependencies.csv stan/model stan/model.o
+		Rdependencies.csv stan/sem stan/sem.o
 
 todo: ## Search for TODO comments in project files
 	@grep --color=always --include='*.Rmd' --include='*.R' -rni todo *
@@ -120,6 +120,7 @@ $(data)/prepped_data.RData: $(data)/merged_data.rds R/transform.R
 # defined in a json schema ('models/') to per-chain posterior csv
 # files and then per-model summarised files.
 stan/%: stan/%.stan
+	$(MAKE) -C $(cmdstan) STANPROG=$(ROOT)/stan/$* clean-program
 	$(MAKE) -C $(cmdstan) $(ROOT)/stan/$*
 
 $(post)/%/data.json: R/model_data.R models/%.json $(data)/prepped_data.RData
