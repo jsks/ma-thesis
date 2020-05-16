@@ -59,7 +59,7 @@ clean: ## Remove all generated files, excluding posteriors
 		Rdependencies.csv stan/sem stan/sem.o
 
 todo: ## Search for TODO comments in project files
-	@grep --color=always --include='*.Rmd' --include='*.R' -rni todo *
+	@grep --color=always --exclude=Makefile -rni todo $$(git ls-files)
 
 watch_sync: ## Autosync project files to host 'gce'
 	@while true; do \
