@@ -1657,7 +1657,8 @@ regime in Paraguay, the Saur Revolution in 1978 in Afghanistan, and
 the start of the Nepalese Civil War in 1996. After 30 years, the
 effect of each additional year of peace tends to be negative; however,
 there is a very high degree of uncertainty in the estimates that
-undermines any general conclusion regarding a pacifying effect.
+undermines any general conclusion regarding a pacifying effect in the
+model.
 
 [^gp]: The 80 percent posterior credible intervals for the
     hyperparameters from the gaussian process modeling the effect of
@@ -1692,30 +1693,36 @@ gdp_po <- filter(merged.df, country_name == "Portugal", year == 2009) %$%
     prettyNum(big.mark = ",")
 ```
 
-To interpret the results for the interaction term between the slopes
-for executive constraints and GDP per Capita I calculate the marginal
-effect of $\theta$, executive constraints, on the predicted
-probability of civil conflict onset for different levels of GDP per
-capita while holding constant the other covariates.  In this case, I
-take the mean of GDP per capita growth, CINC, the proportion of
-discriminated population, population density, mean elevation, and the
-number of politically relevant ethnic groups. I also set the dummy
-indicators for independence, major ongoing conflict, and neighbouring
-conflict and the random intercepts for year and country to zero. For
-peace years I take the intercept for the average number of peace years
-rounded to the nearest integer, which turns out to be 19. The levels
-of GDP per capita were selected based on the 10\%, 50\%, and 90\%
-quantiles of the standardized log transformed values. These levels
+To interpret the interaction term between executive constraints and
+GDP per Capita I calculate the marginal effect of $\theta$, executive
+constraints, on the predicted probability of civil conflict onset for
+different levels of GDP per capita while holding constant the other
+covariates. In this case, I take the mean of GDP per capita growth,
+CINC, the proportion of discriminated population, population density,
+mean elevation, and the number of politically relevant ethnic groups
+rounded to the nearest integer. I also set the dummy indicators for
+independence, major ongoing conflict, and neighbouring conflict to
+zero following the majority of observations in the dataset. I set the
+random intercepts for year and country to zero, which is the average
+effect. For peace years I take the intercept corresponding to the
+average number of peace years rounded to the nearest integer. The
+levels of GDP per capita were select based on the 10\%, 50\%, and 90
+\% quantiles of the standardized log transformed values. These levels
 roughly correspond to the GDP per capita of Rwanda in 2007 at
 $`r gdp_rwa`$ 2011 US dollars, the Philippines in 2008 at $`r gdp_phl`$
 2011 US dollars, and Portugal in 2009 at $`r gdp_po`$ 2011 US
 dollars. In the dataset there are 60 conflict episode onsets below the
 first level, 152 between the first and second, 55 between the second
-and third, and 4 above the third.
+and third, and 4 above the third. The results are plotted in figure
+\ref{fig:int}.
 
-```{r fig.cap = "\\label{fig:int} Interaction between executive constraints and GDP per capita with 80\\% CIs"}
+```{r fig.cap = "\\label{fig:int} Interaction between executive constraints and GDP per capita with 80 percent CIs"}
 # Interaction plot
-theta_seq <- seq(-2.5, 2.5, .01)
+medians <- apply(theta, 2, quantile, probs = 0.5)
+lower_bound <- min(medians) %>% round(digits = 1)
+upper_bound <- max(medians) %>% round(digits = 1)
+
+theta_seq <- seq(lower_bound, upper_bound, .01)
 state <- quantile(X[, "rgdpepc"], probs = c(0.1, .5, 0.9))
 
 marginal_data.df <- as.data.frame(X) %>%
@@ -1775,35 +1782,87 @@ ggplot(df, aes(theta, median)) +
 
 ```
 
-From the results in figure \ref{fig:int} it is clear that the overall
-effect of executive constraints when interacted with GDP per capita on
-the predicted probability of conflict onset is negative. For countries
-with a relatively high level of GDP per capita, going from the worst
-to best in executive constraints decreases the predicted probability
-of conflict onset from [1.5, 4.5] down to below 0.5. This effect
-diminishes, however, for lower values of GDP per capita to the point
-that executive constraints are practically indeterminate to the risk
-of conflict onset for low-income country-years.
+From the listed plots it is clear that for medium to high income
+country-years the overall effect of executive constraints when
+interacted with GDP per capita on the predicted probability of
+conflict onset is negative --- that is to say a more constrained
+executive is associated with a decreased risk of civil conflict onset.
+For example, for country-years with a relatively high level of GDP per
+capita, going from the worst to best in executive constraints
+decreases the predicted probability from [1.5, 4.5] down to below
+0.5. This effect diminishes, however, for lower values of GDP per
+capita to the point that executive constraints are practically
+indeterminate to the risk of conflict onset for country-years situated
+around the 10\% quantile for GDP per capita due to the high degree of
+posterior uncertainty. In the low GDP per capita plot, there is,
+nonetheless, a slight increase in the median predicted probability,
+which begs the question: for GDP per capita values lower than the 10\%
+quantile is there a distinguishable reversal in the relationship
+between executive constraints and civil conflict such that there is
+actually a *positive* increase in the predicted probability for higher
+levels of executive constraints?
+
+
+```{r fig.cap="\\label{fig:gdp} Difference in predicted probabilities between the lowest and highest level of executive constraints for different values of GDP per capita"}
+rgdpepc <- seq(min(X[, "rgdpepc"]), state[1], 0.01)
+df <- mclapply(rgdpepc, function(y) {
+    low <- boot::inv.logit(fn(lower_bound, y)) * 100
+    high <- boot::inv.logit(fn(upper_bound, y)) * 100
+
+    post_summarise(high - low, probs = c(0.1, 0.5, 0.9)) %>%
+        mutate(y = y,
+               prob = mean(high > low))
+}, mc.cores = 4) %>% bind_rows
+
+df %<>%
+    rename(codelow = `10%`, median = `50%`, codehigh = `90%`) %>%
+    mutate(interval = sprintf("[%.3f, %.3f]",
+                              signif(codelow, 3),
+                              signif(codehigh, 3)))
+
+df$original <- exp(df$y * sd(final.df$rgdpepc) + mean(final.df$rgdpepc))
+
+ggplot(df, aes(original, median)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = codelow, ymax = codehigh), alpha = 0.2) +
+    theme_tufte() +
+    xlab("GDP per Capita")
+```
+
+To investigate this possibility, \ref{fig:gdp} plots the pointwise
+difference between the predicted probability of civil conflict given
+the highest level of executive constraints and the predicted
+probability given the lowest level of executive constraints for
+differing values of GDP per capita below the 10\% quantile and down to
+the minimum observed value in the dataset while holding constant the
+remaining covariates in the same fashion as the interaction plots in
+figure \ref{fig:int}.[^theta_bounds] At the far end of the X-axis,
+given a GDP per capita of approximately $1,109$ 2011 US dollars, there
+is an 80 percent posterior probability that the difference lies within
+the interval `r last(df$interval)`. At the opposite end, given a GDP
+per capita of approximately $223$ 2011 US dollars, there is an 80
+percent posterior probability that the difference is between
+`r first(df$interval)`. The lower bounds of the credible intervals remain
+fairly consistent across changing values of GDP per capita while the
+upper bounds increases due to the distributions of predicted
+probabilities being progressively skewed as GDP per capita
+decreases. The high degree of uncertainty precludes the ability to
+conclusively assert that there is a positive relationship between
+civil conflict risk and executive constraints for low income
+country-years. This is further bolstered by the fact that there are
+relatively few observations falling within the extreme tail ends of
+either the executive constraints posterior distribution or the
+empirical distribution of GDP per capita --- in the case of the
+latter, only `r signif(mean(X[, "rgdpepc"] < mean(df$y)), 3) * 100`
+percent of the observations lay below the midpoint of the X-axis at
+600 2011 US dollars.
+
+[^theta_bounds]: Since the executive constraints parameter, $\theta$,
+    is on the unbounded scale, the highest and lowest levels used in
+    the calculations for \ref{fig:gdp} are drawn from the minimum and
+    maximum of the median posterior estimates.
 
 ### Assessing Model Fit
-
-Figure \ref{fig:phat} plots the densities of the first 50 posterior
-draws for the predicted probabilities of conflict onset for two
-groups, country-years that actually experienced an onset of a civil
-conflict and country-years that did not. On average, the predicted
-probabilities for the actual onset country-years are higher albeit
-still extremely low. This can be seen in the summary statistics
-reported in table \ref{tab:psum} for the posterior means of the
-predicted probabilities. For onset country-years the interquartile
-interval is only 0.0475 to 0.2 with a max of 0.516. To better compare
-the predicted probabilities to the actual data, table
-\ref{tab:confusion} presents a confusion matrix with a 0.2 cutoff,
-which approximately corresponds to the third quartile in the summary
-table.  `r signif((93 / (259 + 93)) * 100, 3)` percent of onsets and
-`r signif((7902 / (7902 + 172)) * 100, 3)` percent of non-onsets are
-correctly predicted. The false positive rate is
-`r signif((172 / (7902 + 172)) * 100, 3)` percent and the false
-negative rate is `r signif((259 / (93 + 259)) * 100, 3)` percent.
 
 ```{r fig.height = 2, fig.cap = "\\label{fig:phat} Density plot for predicted probabilities"}
 extra <- read_post("posteriors/full_model/extra_posteriors.csv")
@@ -1817,10 +1876,10 @@ plot_dens(p_hat, groups = groups) +
 ```
 
 ```{r psum}
-p_mean <- colMeans(p_hat)
+p_median <- apply(p_hat, 2, median)
 
-df <- bind_rows(summary(p_mean[final.df$lepisode_onset == 1]),
-                summary(p_mean[final.df$lepisode_onset == 0])) %>%
+df <- bind_rows(summary(p_median[final.df$lepisode_onset == 1]),
+                summary(p_median[final.df$lepisode_onset == 0])) %>%
     mutate_all(~signif(., 3))
 
 rownames(df) <- c("Conflict Onset", "No Onset")
@@ -1830,18 +1889,44 @@ kable(df, "latex", align = "c", booktabs = T, linesep = "", escape = F,
 ```
 
 ```{r confusion}
-m <- table(p_mean > .2, final.df$lepisode_onset)
+m <- table(p_median > .168, final.df$lepisode_onset)
 
 rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
 colnames(m) <- c("Actual: No Onset", "Actual: Onset")
+
+tpr <- signif(100 * m["Predicted: Onset", "Actual: Onset"] /
+              sum(m[, "Actual: Onset"]), 3)
+tnr <- signif(100 * m["Predicted: No Onset", "Actual: No Onset"] /
+              sum(m[, "Actual: No Onset"]), 3)
+
+fpr <- signif(100 * m["Predicted: Onset", "Actual: No Onset"] /
+              sum(m[, "Actual: No Onset"]), 3)
+fnr <- signif(100 * m["Predicted: No Onset", "Actual: Onset"] /
+              sum(m[, "Actual: Onset"]), 3)
 
 kable(m, "latex", align = "c", booktabs = T, linesep = "", escape = F,
       caption = "Confusion matrix with a 0.2 cutoff")
 ```
 
+To assess how well the presented model fits the observed data, I first
+consider the predicted probabilities of conflict onset by plotting the
+first 50 posterior draws for two groups, country-years that actually
+experienced an onset of civil conflict and country-years that did
+not. On average, the predicted probabilities for the actual onset
+country-years are higher albeit still extremely low. This can be seen
+in the summary statistics reported in table \ref{tab:psum} for the
+posterior medians of the predicted probabilities. For onset
+country-years the interquartile interval is only `r df[1, "1st Qu."]`
+to `r df[1, "3rd Qu."]` with a max of `r df[1, "Max."]`. To better
+compare the predicted probabilities to the actual data, table
+\ref{tab:confusion} presents a confusion matrix with a 0.17 cutoff,
+which approximately corresponds to the third quartile in the summary
+table. `r tpr` percent of onsets and `r tnr` percent of non-onsets are
+correctly predicted. The false positive rate is `r fpr` percent and
+the false negative rate is `r fnr` percent.
 
 ```{r results = "hide"}
-x <- evalmod(scores = p_mean, labels = final.df$lepisode_onset)
+x <- evalmod(scores = p_median, labels = final.df$lepisode_onset)
 
 auc <- attr(x$roc[[1]], "auc") %>% signif(3)
 auc_pr <- attr(x$prcs[[1]], "auc") %>% signif(3)
@@ -1849,29 +1934,31 @@ auc_pr <- attr(x$prcs[[1]], "auc") %>% signif(3)
 
 Figure \ref{fig:roc} plots a receiver operating characteristic (ROC)
 curve depicting the tradeoff between the true positive rate
-(*sensitivity*) and the false positive rate --- $1 -
-\mbox{specificity}$ where *specificity* refers to the true negative
-rate --- for varying probability thresholds according to the posterior
-means of the predicted probabilities. For example, for a threshold of
-approximately 0.1, the model will correctly predict 50 percent of
-onsets while misclassifying only 8 percent of non-onsets. The total
-performance of the model can be summarized by the area under the curve
-(AUC), which in this case is `r auc`.[^auc] However, for the present
-analysis the results from the ROC curve are misleading since there is
-a significant class imbalance in the dataset. Onsets comprise only 4
-percent of all observations meaning that the false positive rate is
-less sensitive to changing thresholds. Figure \ref{fig:roc} therefore
-also plots a precision-recall (PRC) curve, which depicts the tradeoff
-between *precision* --- the number of true positives divided by the
-sum of the true positives and false positives --- and *recall* --- the
-number of true positives divided by the sum of the true positives and
-false negatives --- for varying thresholds. The advantage is that
+(*sensitivity*) and the false positive rate --- denoted by the formula
+$1 - \mbox{specificity}$, where *specificity* refers to the true
+negative rate --- for varying probability thresholds according to the
+posterior medians of the predicted probabilities. For example, given a
+threshold of approximately 0.085, the model will correctly predict
+roughly 50 percent of onsets while misclassifying only 8 percent of
+non-onsets. The total performance of the model can be summarized by
+the area under the curve (AUC), which in this case is `r auc`.[^auc]
+However, for the present analysis the results from the ROC curve are
+misleading since there is a significant class imbalance in the
+dataset. Onsets comprise only
+`r signif(100 * mean(final.df$lepisode_onset == 1), 3)` percent of all
+observations meaning that the false positive rate is less sensitive to
+changing thresholds. Figure \ref{fig:roc} therefore also plots a
+precision-recall (PRC) curve, which depicts the tradeoff between
+*precision* --- the number of true positives divided by the sum of the
+true positives and false positives --- and *recall* --- the number of
+true positives divided by the sum of the true positives and false
+negatives --- for varying thresholds. The advantage is that
 *precision* is invariant to the number of non-onset years in the
 dataset. From this plot it is clear that the precision of the model,
-the ability to discriminate between onset country-years and false
-predicted non-set country-years, drops drastically as the *recall* of
-the model increases. The *AUC-PR* for this plot is only `r auc_pr`.
-[^auc_pr]
+the ability to discriminate between onset country-years and falsely
+predicted non-onset country-years, drops drastically as the *recall* of
+the model increases. The *AUC-PR* for this plot is only
+`r auc_pr`.[^auc_pr]
 
 [^auc]: An AUC of 1 for a ROC curve indicates that the model is able
     to perfectly predict the outcome while an AUC of 0.5 denotes the
@@ -1883,7 +1970,6 @@ the model increases. The *AUC-PR* for this plot is only `r auc_pr`.
     outcomes in the dataset. In this case this means approximately
     .042.
 
-
 ```{r fig.width = 8, fig.cap = "\\label{fig:roc} ROC & Precision-Recall Plots"}
 
 autoplot(x, curvetype = c("ROC", "PRC"))
@@ -1892,10 +1978,10 @@ autoplot(x, curvetype = c("ROC", "PRC"))
 Taken together, the evidence suggests a fairly poor fit to the
 underlying data. The confusion matrix demonstrates that even with a
 relatively low cutoff, the model is still only able to accurately
-predict 25 percent of conflict onsets. According to the ROC curve,
-decreasing this threshold improves the true positive rate with a
-relatively decent tradeoff in terms of the false positive rate, but as
-stated, this is largely due to the imbalance in the outcome
+predict `r tpr` percent of conflict onsets. According to the ROC
+curve, decreasing this threshold improves the true positive rate with
+a relatively decent tradeoff in terms of the false positive rate, but
+as stated, this is largely due to the imbalance in the outcome
 variable. In terms of *precision*, the performance of the model
 quickly degrades as the threshold decreases.
 
