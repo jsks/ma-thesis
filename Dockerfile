@@ -37,6 +37,7 @@ RUN wget 'https://github.com/stan-dev/cmdstan/releases/download/v2.23.0/cmdstan-
 # Commandline tool to process cmdstan posteriors files
 COPY utils /root/utils
 RUN cd /root/utils \
+    && make test \
     && make clean all \
     && mv extract /root/bin
 

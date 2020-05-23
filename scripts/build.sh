@@ -46,9 +46,9 @@ shift $(($OPTIND - 1))
 which podman 2>&1 >/dev/null && cmd=podman || cmd=docker
 
 if [ "$cmd" == "podman" ]; then
-    $cmd build --format docker -t jsks/conflict_onset .
+    $cmd build --cap-add=CAP_SYS_PTRACE --format docker -t jsks/conflict_onset .
 else
-    $cmd build -t jsks/conflict_onset .
+    $cmd build --cap-add=SYS_PTRACE -t jsks/conflict_onset .
 fi
 
 [ -n "$PUSH_IMG" ] && $cmd push jsks/conflict_onset
