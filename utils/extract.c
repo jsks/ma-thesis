@@ -27,8 +27,8 @@
 #define BUF_SIZE 1024 * 1024 * 8
 
 typedef struct bitarray {
-size_t capacity;
-uint64_t *data;
+    size_t capacity;
+    uint64_t *data;
 } bitarray;
 
 static char buf[BUF_SIZE];
@@ -64,18 +64,18 @@ bitarray *create_bitarray(size_t len) {
 }
 
 void resize_bitarray(bitarray *x) {
-    size_t old_size = x->capacity * sizeof(uint64_t);
+    size_t old_size= x->capacity;
     x->capacity *= 2;
 
     if (!(x->data = reallocarray(x->data, x->capacity, sizeof(uint64_t))))
         err(EXIT_FAILURE, NULL);
 
-    memset(x->data, 0, (x->capacity * sizeof(uint64_t)) - old_size);
+    memset(x->data + old_size, 0, (x->capacity - old_size) * sizeof(uint64_t));
 }
 
 void set_bitarray(bitarray *x, uint64_t v) {
     uint64_t k = v / 64;
-    if (k > x->capacity)
+    if (k + 1 > x->capacity)
         resize_bitarray(x);
 
     x->data[k] |= UINT64_C(1) << (v % 64);
@@ -83,7 +83,7 @@ void set_bitarray(bitarray *x, uint64_t v) {
 
 bool check_bitarray(bitarray *x, uint64_t v) {
     uint64_t k = v / 64;
-    if (k > x->capacity)
+    if (k + 1 > x->capacity)
         return false;
 
     return (x->data[k] & (UINT64_C(1) << (v % 64))) != 0;
