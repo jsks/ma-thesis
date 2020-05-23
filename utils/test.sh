@@ -11,9 +11,9 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-reset="\e[0m"
-red="\e[31m"
-green="\e[32m"
+reset="\033[0m"
+red="\033[31m"
+green="\033[32m"
 
 cross="${red}✘${reset} "
 check="${green}✔${reset}"
@@ -25,25 +25,25 @@ checksum() {
     md5sum $1 | awk '{print $1}'
 }
 
-compare() {
-    [ "$(checksum $1)" == "$(checksum $2)" ]
-}
-
 describe() {
     DESC_STR="$*"
 }
 
 check() {
-    unset opt n OPTIND
+    # OPTIND resets for each function call in zsh and dash, but not
+    # bash. Set to 1, since OPTIND can't be unset in dash.
+    OPTIND=1
+
+    unset opt n
     getopts 'n:' opt
     if [ "$opt" != "?" ]; then
         n=$OPTARG
-        shift $(($OPTIND - 1))
+        shift $(( OPTIND - 1 ))
     fi
 
     ./extract -n ${n:-2000} -s $1 $2 > $TEST_DIR/output.csv
 
-    if ! compare "$TEST_DIR"/output.csv $3; then
+    if [ "$(checksum $TEST_DIR/output.csv)" != "$(checksum $3)" ]; then
         fail=$((fail + 1))
         printf "%s...$cross\n" "$DESC_STR"
     else
@@ -71,6 +71,6 @@ check -n 100 '[0-9]_[^a]$' "$TEST_DIR"/large_matrix.csv \
 
 printf "Finished: %d $check, %d $cross\n" $pass $fail
 
-if (( fail > 0 )); then
+if [ "$fail" -gt 0 ]; then
     exit 127
 fi
