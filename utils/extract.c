@@ -2,14 +2,15 @@
 //
 // ./extract [-h] [-n <nlines>] -s <regex> <FILE>...
 //
-// Simple program that extracts specified parameters from a Stan posterior
-// output file(s) and concatenates the result to stdout.
+// Simple program that extracts parameters from a Stan posterior output file(s)
+// and concatenates the result to stdout.
 //
 // example: ./extract -s '^alpha|^beta' -n 10 samples-chain_*.csv
 //
 // Fair warning: there's a lot of shortcuts in this program. Memory is not
 // freed and file descriptors are not closed with the assumption that the OS
-// will take of it when we exit.
+// will take of it when we exit. Plus, it's assumed that the posterior csv
+// files are comma deliminated with no quotes around columns names.
 
 #define _GNU_SOURCE
 
@@ -89,6 +90,15 @@ bool check_bitarray(bitarray *x, uint64_t v) {
     return (x->data[k] & (UINT64_C(1) << (v % 64))) != 0;
 }
 
+bool is_empty_bitarray(bitarray *x) {
+    for (size_t i = 0; i < x->capacity; i++) {
+        if (x->data[i] != 0)
+            return false;
+    }
+
+    return true;
+}
+
 void destroy_bitarray (bitarray **x) {
     free((*x)->data);
     free(*x);
@@ -136,7 +146,8 @@ void output(char *s, size_t len, bool add_comma) {
 }
 
 void flush(void) {
-    write2(STDOUT_FILENO, buf, offset);
+    if (offset > 0)
+        write2(STDOUT_FILENO, buf, offset);
 }
 
 ssize_t next_line(char **line, size_t *n, FILE *fp) {
@@ -205,10 +216,11 @@ int main(int argc, char *argv[]) {
             err(EXIT_FAILURE, "posix_fadvise");
     }
 
-    bitarray *columns = create_bitarray(2048);  // Array tracking matching columns
+    bitarray *columns = create_bitarray(10);    // Array tracking matching columns
     char *line = NULL,                          // next_line/getline line buffer
          *delim = NULL,                         // Pointer to first delim, ','
-         *p;                                    // Token iterator (points to next char after delim)
+         *p,                                    // Token iterator (points to next char after delim)
+         *token;                                // Header token from strsep
     size_t n = 0,                               // Size of next_line/getline buffer
            len;                                 // Token length for each parsed field
     ssize_t nr;                                 // Number of bytes read by getline/next_line
@@ -216,38 +228,29 @@ int main(int argc, char *argv[]) {
     regmatch_t pmatch;                          // Regex match struct
 
     // Find matching columns based on the header for the first file
-    while ((nr = next_line(&line, &n, files[0])) > 0) {
-        // Don't lose track of pointer to start of line since we re-use the
-        // buffer for every next_line call, so use p to iterate past each token
-        p = line;
+    nr = next_line(&line, &n, files[0]);
 
-        // Search for tokens using strchrnul. Unlike strsep, we don't replace
-        // each occurence of ',' with '\0', so instead keep track of the length
-        // of a token with len.
-        for (int i = 0;; i++) {
-            delim = strchrnul(p, ',');
-            len = delim - p;
+    // Don't lose track of pointer to start of 'line' since we re-use the
+    // buffer for every next_line call, so use p to iterate past each token
+    p = line;
 
-            // Match regex pattern based on length rather than '\0'
-            pmatch.rm_so = 0;
-            pmatch.rm_eo = len;
+    for (unsigned int i = 0;; i++) {
+        if (!(token = strsep(&p, ",")))
+            break;
 
-            if ((ret  = regexec(&re, p, 1, &pmatch, REG_STARTEND)) == 0) {
-                output(p, len, !first);
-                first = false;
-                set_bitarray(columns, i);
-            }
-
-            // strchrnul returns pointer to end of line ('\0') if ',' not found
-            if (*delim == '\0')
-                break;
-            else
-                p = delim + 1;
+        if ((ret = regexec(&re, token, 1, &pmatch, 0)) == 0) {
+            output(token, strlen(token), !first);
+            first = false;
+            set_bitarray(columns, i);
         }
-
-        output("\n", 1, false);
-        break;
     }
+
+    // If we haven't found any column names matching our regexes,
+    // simply quit without writing to stdout
+    if (is_empty_bitarray(columns))
+        goto cleanup;
+
+    output("\n", 1, false);
 
     // Filter remaining rows for each input file based on matched columns
     for (int i = 0; i < num_files; i++) {
@@ -282,6 +285,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    goto cleanup;
+
+cleanup:
 #ifdef DEBUG
     destroy_bitarray(&columns);
     regfree(&re);
