@@ -7,11 +7,12 @@
 # dynamically read in for each test.
 ###
 
+suppressMessages(library(docopt))
 suppressMessages(library(dplyr))
 
-test_dir <- commandArgs(trailingOnly = T)
-if (length(test_dir) == 0)
-    stop("Missing test directory argument", call. = F)
+doc <- "usage: ./test_data.R <test_dir>"
+args <- docopt(doc)
+test_dir <- args$test_dir
 
 dir.create(test_dir, showWarnings = F)
 

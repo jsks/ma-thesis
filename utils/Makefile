@@ -16,7 +16,7 @@ extract: extract.c
 test: debug
 	@test_dir=$$(mktemp -d); \
 		echo "Running tests in $$test_dir"; \
-		Rscript test_data.R $$test_dir; \
+		Rscript test_data.R $$test_dir && \
 		./test.sh $$test_dir; \
 		rv=$$?; \
 		rm -rf $$test_dir; \
