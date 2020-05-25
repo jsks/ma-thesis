@@ -28,4 +28,5 @@ fi
 
 $CMD run -it $mount_opts $rm_opts \
      -e cmdstan=/cmdstan -e extract=/root/bin/extract \
+     --cap-add=CAP_SYS_PTRACE \
      "jsks/conflict_onset:${IMG_TAG:-latest}" make -j4 $@

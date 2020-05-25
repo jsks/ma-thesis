@@ -1,11 +1,14 @@
 data/*.rds
 data/*.RData
+R/thesis.utils.Rcheck
+thesis.utils.Rcheck
 R/thesis.utils_*.tar.gz
+thesis.utils_*.tar.gz
 stan/model
 stan/*.o
 stan/*.hpp
 stan/*.d
-utils/extract
+utils/extract/extract
 *.html
 *.pdf
 *.log
