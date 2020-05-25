@@ -35,11 +35,12 @@ RUN wget 'https://github.com/stan-dev/cmdstan/releases/download/v2.23.0/cmdstan-
     && rm cmdstan-2.23.0.tar.gz
 
 # Commandline tool to process cmdstan posteriors files
-COPY utils /root/utils
+COPY utils/extract /root/utils/
 RUN cd /root/utils \
     && make test \
     && make clean all \
-    && mv extract /root/bin
+    && mv extract /root/bin \
+    && rm -rf /root/utils
 
 RUN mkdir -p /proj/thesis.utils/
 COPY R/thesis.utils /proj/thesis.utils/
