@@ -17,9 +17,9 @@ RUN apt-get update \
         zstd \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget 'https://github.com/jgm/pandoc/releases/download/2.9.1.1/pandoc-2.9.1.1-1-amd64.deb' \
-    && dpkg -i pandoc-2.9.1.1-1-amd64.deb \
-    && rm pandoc-2.9.1.1-1-amd64.deb
+RUN wget 'https://github.com/jgm/pandoc/releases/download/2.9.2.1/pandoc-2.9.2.1-1-amd64.deb' \
+    && dpkg -i pandoc-2.9.2.1-1-amd64.deb \
+    && rm pandoc-2.9.2.1-1-amd64.deb
 
 RUN mkdir -p /root/.R /root/utils /root/bin
 COPY .R /root/.R

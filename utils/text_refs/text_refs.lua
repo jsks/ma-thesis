@@ -3,11 +3,13 @@
 --
 -- https://bookdown.org/yihui/bookdown/markdown-extensions-by-bookdown.html#fn5
 
+PANDOC_VERSION:must_be_at_least '2.9.2'
+
 refs = {}
 
 function warn(txt)
    if PANDOC_STATE.verbosity == "INFO" or PANDOC_STATE.verbosity == "WARNING" then
-      io.stderr:write("[WARNING] " .. txt .. "\n")
+      io.stderr:write("[WARNING] ", txt, "\n")
    end
 end
 
@@ -45,13 +47,13 @@ function replace_ref(elem)
 
    ll = refs[m]:clone()
    if i > 0 then
-      start = string.sub(elem.text, 1, i - 1)
-      ll:insert(1, pandoc.Str(start))
+      local head = string.sub(elem.text, 1, i - 1)
+      ll:insert(1, pandoc.Str(head))
    end
 
    if j < elem.text:len() then
-      stop = string.sub(elem.text, j + 1, elem.text:len())
-      ll:insert(pandoc.Str(stop))
+      local tail = string.sub(elem.text, j + 1, elem.text:len())
+      ll:insert(pandoc.Str(tail))
    end
 
    return ll
