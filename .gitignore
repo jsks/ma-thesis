@@ -4,7 +4,7 @@ R/scratch.R
 refs/iisystem.dat
 refs/microstatessystem.dat
 stan/*
-utils/extract
+utils/extract/extract
 
 !stan/*.stan
 
