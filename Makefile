@@ -38,7 +38,7 @@ $(extract) -n $(draws) -s $(1) $^ > $@
 endef
 
 all: paper.pdf ## Default rule: paper.pdf
-.PHONY: bash clean clean_all help todo watch_sync watch_pdf wc \
+.PHONY: bash clean clean_all help test todo watch_sync watch_pdf wc \
 	Rdependencies.csv
 .SECONDARY:
 
@@ -57,6 +57,11 @@ clean: ## Remove all generated files, excluding posteriors
 	rm -rf R/thesis.utils.Rcheck R/thesis.utils_*.tar.gz \
 		$(data)/*.rds $(data)/*.RData *.html *.pdf *.tex *.log \
 		Rdependencies.csv stan/sem stan/sem.o
+
+test: ## Test utility functions/programs
+	$(MAKE) -C utils/text_refs test
+	$(MAKE) -C utils/extract test
+	R CMD build R/thesis.utils && R CMD check thesis.utils_*.tar.gz
 
 todo: ## Search for TODO comments in project files
 	@grep --color=always --exclude=Makefile -rni todo $$(git ls-files)
