@@ -13,12 +13,17 @@ function warn(txt)
    end
 end
 
+local function replace(str, match, replacement)
+   match = string.gsub(match, "[%%%]%^%-$().[*+?]", "%%%1")
+   return string.gsub(str, match, replacement)
+end
+
 function find_ref(para)
    if para.c[1].t ~= "Str" then
       return para
    end
 
-   key = para.c[1].text
+   local key = para.c[1].text
    if not string.match(key, "^%(ref:.+%)$") then
       return para
    else
@@ -33,13 +38,13 @@ function find_ref(para)
    end
 end
 
-function replace_ref(elem)
+function Str_replace(elem)
    local i, j = string.find(elem.text, "%(ref:.+%)")
    if not i then
       return nil
    end
 
-   m = string.sub(elem.text, i, j)
+   local m = string.sub(elem.text, i, j)
    if not refs[m] then
       warn("Text reference " .. m .. " undefined")
       return nil
@@ -59,7 +64,17 @@ function replace_ref(elem)
    return ll
 end
 
+function RawBlock_replace(elem)
+   local m = string.match(elem.text, "%(ref:.+%)")
+   if m and refs[m] then
+      elem.text = replace(elem.text, m, pandoc.utils.stringify(refs[m]))
+   end
+
+   return elem
+end
+
 return {
    { Para = find_ref },
-   { Str = replace_ref }
+   { Str = Str_replace,
+     RawBlock = RawBlock_replace }
 }
