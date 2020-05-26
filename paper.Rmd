@@ -1188,11 +1188,11 @@ fa_pars <- extract(fa, c("lambda", "gamma", "psi", "delta", "kappa")) %>%
     select(-`10%`, -`90%`) %>%
     pivot_wider(id_cols = manifest, names_from = parameter, values_from = interval)
 
-rownames(fa_pars) <- sprintf("\\textit{%s}", fa_pars$manifest)
-fa_pars$manifest <- NULL
+# I absolutely hate tibbles
+fa.mm <- select(fa_pars, -manifest) %>% as.matrix
+rownames(fa.mm) <-sprintf("\\textit{%s}", fa_pars$manifest)
 
-kable(fa_pars, "latex", align = "c", booktabs = T, linesep = "", escape = F,
-      caption = "Posterior credible intervals for measurement model parameters") %>%
+kable(fa.mm, "latex", align = "c", booktabs = T, linesep = "", escape = F,
     kable_styling(latex_options = c("striped", "scale_down"), full_width = F,
                   protect_latex = F)
 ```
