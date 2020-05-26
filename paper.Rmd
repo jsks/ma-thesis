@@ -27,7 +27,8 @@ output:
         toc: true
         toc_depth: 2
         pandoc_args: ["--syntax-definition", "assets/stan.xml",
-                      "--highlight-style", "kate"]
+                      "--highlight-style", "kate",
+                      "--lua-filter", "utils/text_refs/text_refs.lua"]
     html_document:
         smart: true
         toc: true
@@ -516,10 +517,10 @@ are interesting in their own right.
 
 To examine the relationship between civil conflict onset and executive
 constraints, I construct a dataset of relevant variables and run a
-bayesian structural equation model with a measurement portion estimating
-executive constraints as a latent construct and a multilevel logistic
-regression relating the latent construct to the observed outcome,
-civil conflict.
+bayesian latent variable model with a measurement portion
+estimating executive constraints as a latent construct and a
+multilevel logistic regression relating the latent construct to the
+observed outcome, civil conflict.
 
 The use of bayesian methods is particularly advantageous in this
 setting since the constructed dataset is comprised of the entire
@@ -550,7 +551,7 @@ including the operationalizations and data sources as well as the
 measurement model for executive constraints.[^model]
 
 [^model]: The model code is written in Stan [@Carpenter2017] and was
-    run using the `CmdStan` interface version 2.22.1 [@Stan2020] with
+    run using the `CmdStan` interface version 2.23.0 [@Stan2020] with
     four parallel chains at 2000 iterations each with a warmup
     of 1000. Convergence was assessed according to the potential scale
     reduction factor $\widehat{R}$ and effective sample size (ESS)
@@ -725,7 +726,10 @@ the proportion of countries experiencing an ongoing civil conflict and
 the proportion of countries experiencing new onsets of conflict over
 time.
 
-```{r fig.cap = "\\label{fig:onsets} Proportion of countries experiencing ongoing civil conflicts and new onsets"}
+(ref:onsets) Proportions of countries per year experiencing at least
+    one ongoing civil conflict and at least one new onset.
+
+```{r fig.cap = "\\label{fig:onsets} (ref:onsets)"}
 
 df <- group_by(merged.df, year) %>%
     summarise(`New Onsets` = sum(episode_onset) / n(),
@@ -779,21 +783,22 @@ overconfident results [@Treier2008; @Marquardt2019].
     *discrimination* and *difficulty* parameters in classical IRT
     models.
 
-For the purposes of this paper I estimate an index measuring
-executive constraints from a factor analysis of multiple manifest
-variables drawn from the V-Dem dataset. The aim is to capture the
-extent to which the executive is *de facto* constrained by other
-government institutions --- more specifically, the legislature,
-judiciary, and independent investigative bodies --- rather than the
-*de jure* powers of any one institution *vis-à-vis* the executive, and
-to do so using a latent variable aggregation that avoids the arbitrary
-weighting of linear additive indices.[^additive] The aggregation
-method is largely similar to the accountability index created by
-@Luhrmann2017 and the presidentialism index created by @Sigman2018. By
-creating a separate index, however, I am able to adjust the list of
-included manifest variables as well as embed the factor analysis
-within the larger regression model such that the uncertainty from the
-latent factor propagates as a result of the estimation process.
+For the purposes of this paper I estimate an index measuring executive
+constraints from a factor analysis of multiple manifest variables
+drawn from the V-Dem dataset. The aim is to capture the extent to
+which the executive is *de facto* constrained by other government
+institutions --- more specifically, the legislature, judiciary, and
+independent investigative bodies --- rather than the *de jure* powers
+of any one institution *vis-à-vis* the executive, and to do so using a
+latent variable aggregation that avoids the arbitrary weighting of
+linear additive indices.[^additive] The aggregation method is largely
+similar to the accountability index created by @Luhrmann2017 and the
+presidentialism index created by @Sigman2018 already available in the
+V-Dem dataset. By creating a separate index, however, I am able to
+adjust the list of included manifest variables as well as embed the
+factor analysis within the larger regression model such that the
+uncertainty from the latent factor propagates as a result of the
+estimation process.
 
 [^additive]: A theoretical argument could be made that the oversight
     offered by each institution is a necessary condition and that any
@@ -817,6 +822,8 @@ decisions. And for the final dimension, independent investigative
 bodies, I include the variable *v2lgotovst*, executive oversight by
 bodies other than the legislature.
 
+(ref:fa-sum) Descriptive statistics for manifest variables
+
 ```{r fa-sum}
 manifest <- merged.df %>%
     select(v2lgoppart, v2lgfunds, v2lginvstp, v2lgqstexp, v2juhcind,
@@ -826,7 +833,7 @@ q <- summary_stats(manifest) %>%
     mutate(Variable = paste0("\\textit{", Variable, "}"))
 
 kable(q, "latex", align = "c", booktabs = T, linesep = "", escape = F,
-      caption = "Descriptive statistics for manifest variables") %>%
+      caption = "(ref:fa-sum)") %>%
     kable_styling(latex_options = "striped")
 
 ```
@@ -850,7 +857,9 @@ investigate.  Finally, figure \ref{fig:cor} also provides a
 correlation matrix demonstrating a fairly high level of correlation
 across all variables indicating some commonality in the covariation.
 
-```{r fig.height = 5, fig.width = 7, fig.cap = "\\label{fig:cor} Correlation Heatmap"}
+(ref:cor) Correlation heatmap of manifest variables
+
+```{r fig.height = 5, fig.width = 7, fig.cap = "\\label{fig:cor} (ref:cor)"}
 m <- cor(manifest, use = "pairwise.complete.obs") %>%
     signif(3)
 
@@ -1104,6 +1113,8 @@ vulnerable.
 Table \ref{tab:reg-stats} lists the full descriptive statistics for
 all regression covariates.
 
+(ref:reg-stats) Descriptive statistics for regression covariates
+
 ```{r reg-stats}
 df <- merged.df %>%
     select(rgdpepc, rgdpepc_gro, cinc, discrimpop, pop_density,
@@ -1114,7 +1125,7 @@ q <- summary_stats(df)
 
 kable(q, "latex", align = c("l", "r", "r", "r", "r", "r"),
       booktabs = T, linesep = "", escape = T,
-      caption = "Descriptive statistics for regression covariates") %>%
+      caption = "(ref:reg-stats)") %>%
     kable_styling(latex_options = "striped")
 
 ```
@@ -1130,7 +1141,10 @@ specifications for the dependent variable, conflict onset.
 
 ### Measurement Model
 
-```{r fig.height = 4, fig.cap = "\\label{fig:fpars} Measurement Model Parameter Estimates"}
+(ref:fpars) Executive constraints measurement model parameter
+    estimates with 80 percent posterior credible intervals.
+
+```{r fig.height = 4, fig.cap = "\\label{fig:fpars} (ref:fpars)"}
 load("./posteriors/full_model/input.RData")
 fa <- read_post("./posteriors/full_model/fa_posteriors.csv")
 
@@ -1178,6 +1192,11 @@ example, after adjusting for measurement error, the mean for
 $v2lgfunds$ is on average slightly higher than the remaining manifest
 variables, hence the negative intercept.
 
+(ref:fa)
+
+Executive constraints measurement model parameter
+    estimates with 80 percent posterior credible intervals
+
 ```{r fa, fig.height = 6, fig.width = 6}
 fa_pars <- extract(fa, c("lambda", "gamma", "psi", "delta", "kappa")) %>%
     post_summarise(probs = c(0.10, 0.9)) %>%
@@ -1193,6 +1212,7 @@ fa.mm <- select(fa_pars, -manifest) %>% as.matrix
 rownames(fa.mm) <-sprintf("\\textit{%s}", fa_pars$manifest)
 
 kable(fa.mm, "latex", align = "c", booktabs = T, linesep = "", escape = F,
+      caption = "(ref:fa)") %>%
     kable_styling(latex_options = c("striped", "scale_down"), full_width = F,
                   protect_latex = F)
 ```
@@ -1209,7 +1229,11 @@ although still conditional on the values for the remaining manifest
 variables. Where the legislature is present, $\theta$ is distributed
 according to the $\mathsf{Normal}(0, 1)$ prior.
 
-```{r fig.width = 6, fig.height = 2, fig.cap = "\\label{fig:bicam} Posterior density plots for executive constraints"}
+(ref:bicam) Posterior density plots for the executive constraints
+    measure, $\theta$.
+
+
+```{r fig.width = 6, fig.height = 2, fig.cap = "\\label{fig:bicam} (ref:bicam)"}
 theta <- extract(fa, "theta")
 
 groups <- ifelse(lgbicam == 1, "Legislature Present", "No Legislature")
@@ -1236,7 +1260,10 @@ observed V-Dem standard deviations as well as the difference between
 the estimated posterior mean and the observed mean in order to further
 demonstrate this effect.
 
-```{r fig.cap = "\\label{fig:fa-line} Posterior shrinkage for \\textit{v2juncind}"}
+(ref:fa-line) Posterior shrinkage for *v2juncind*. The observed point
+    estimates are the data points reported by V-Dem.
+
+```{r fig.cap = "\\label{fig:fa-line} (ref:fa-line)"}
 err <- read_post("posteriors/full_model/err_posteriors.csv")
 
 target <- colnames(nonlg_mm$obs)[1]
@@ -1274,7 +1301,14 @@ ggplot(x, aes(theta, point, group = group, col = factor)) +
 
 ```
 
-```{r fig.cap = "\\label{fig:err} Posterior CI and point estimates vs. observed error"}
+
+(ref:err) On the left, the posterior uncertainty for *v2juncind* as
+    estimated by the model plotted against the observed error reported
+    by V-Dem as *v2juncind_sd*. On the right, the difference between
+    the point estimates estimated by the model and the point estimates
+    reported by V-Dem versus the observed error for *v2juncind*.
+
+```{r fig.cap = "\\label{fig:err} (ref:err)"}
 p1 <- ggplot(nonlg_est, aes(se, interval)) +
     geom_point(col = "#56B4E9", alpha = 0.2, shape = 1) +
     theme_tufte() +
@@ -1327,7 +1361,10 @@ captured by the measure.
     difficulty of converting the Soviet measure of economic
     performance, Net Material Product, to GDP.
 
-```{r fig.width = 7, fig.height = 5, fig.cap = "\\label{fig:theta} Executive Constraints Over Time"}
+(ref:theta) Executive constraints over time for several selected
+    countries.
+
+```{r fig.width = 7, fig.height = 5, fig.cap = "\\label{fig:theta} (ref:theta)"}
 theta_summarised <- post_summarise(theta, probs = c(0.10, 0.5, 0.90)) %>%
     rename(codelow = `10%`, median = `50%`, codehigh = `90%`)
 
@@ -1360,7 +1397,10 @@ states, are markedly lower, *i.e.* lacking in effective constraints
 against the executive, than the former Eastern bloc countries. This
 plot does not depict, however, the uncertainty in the estimates.
 
-```{r results = "hide", fig.width = 8, fig.cap = "\\label{fig:map} Executive Constraints - 2012. Grey indicates countries missing from the dataset."}
+(ref:map) Executive constraints in 2012 for all countries present in
+    the dataset. Missingness indicated by the color grey.
+
+```{r results = "hide", fig.width = 8, fig.cap = "\\label{fig:map} (ref:map)"}
 map_data <- st_read("data/raw/cshapes_0.6/cshapes.shp") %>%
     filter(GWEYEAR == max(GWEYEAR)) %>%
     select(country_name = CNTRY_NAME, gwid = GWCODE)
@@ -1402,7 +1442,10 @@ than 2010. In the case of Tunisia with even more visual overlap, there
 is a $`r tunisia_p`$ percent posterior probability that the estimate
 for 2010 is higher than 2000.
 
-```{r fig.cap = "\\label{fig:tie} Executive Constraints 2000 vs 2010"}
+(ref:cap) Executive constraints in 2000 versus 2010 for several
+    selected countries.
+
+```{r fig.cap = "\\label{fig:tie} (ref:cap)"}
 targets <- c("Algeria", "Argentina", "Armenia", "Chile", "Colombia",
              "Egypt", "Georgia", "Ghana", "Hungary", "Indonesia",
              "Iran", "Israel", "Japan", "Kenya", "Mexico", "Poland",
@@ -1448,6 +1491,9 @@ the variables are standardized to have mean 0 and standard deviation
 Count, Neighbouring Conflict, Ongoing Major Conflict, and
 Independence.
 
+(ref:reg) 80 percent posterior credible intervals for regression
+    slopes
+
 ```{r reg, fig.height = 3}
 reg <- read_post("posteriors/full_model/reg_posteriors.csv")
 
@@ -1472,12 +1518,15 @@ rownames(beta_s) <- colnames(beta) %>% gsub("_", "\\\\_", .)
 
 kable(beta_s, "latex", align = c("c", "r", "r"), booktabs = T,
       linesep = "", escape = F,
-      caption = "Posterior credible intervals for regression slopes") %>%
+      caption = "(ref:reg)") %>%
     kable_styling(latex_options = "striped", "scale_down")
 ```
 
 
-```{r fig.cap = "\\label{fig:reg} Regression parameters"}
+(ref:fig-reg) Regression slopes with 80 percent posterior credible
+    intervals.
+
+```{r fig.cap = "\\label{fig:reg} (ref:fig-reg)"}
 plot_pars(beta, hline = T)
 ```
 
@@ -1583,7 +1632,9 @@ with upticks, such as the in the initial years of the 1990s during the
 dissolution of the Soviet Union and Yugoslavia, roughly mirroring the
 global incidence rate of onsets.
 
-```{r fig.cap = "\\label{fig:year} Log-odds year intercepts - $80\\%$ CIs"}
+(ref:year) Log-odds year intercepts with 80 percent credible intervals
+
+```{r fig.cap = "\\label{fig:year} (ref:year)"}
 Z_year <- extract(reg, "Z_year")
 colnames(Z_year) <- { unique(final.df$year) + 1 } %>% sort
 
@@ -1616,7 +1667,10 @@ the other predictors. The majority of intercepts for these countries
 overlap zero possibly because the global intercept is already fairly
 low, `r alpha_interval` (80 percent log-odds CI).
 
-```{r, fig.cap = "\\label{fig:country} Log-odds country intercepts - $80\\%$ CIs"}
+(ref:country) Log-odds country intercepts with 80 percent credible
+    intervals
+
+```{r, fig.cap = "\\label{fig:country} (ref:country)"}
 
 Z_country <- extract(reg, "Z_country")
 colnames(Z_country) <- unique(final.df$country_name) %>% sort
@@ -1668,7 +1722,10 @@ model.
     for the length-scale ($\rho$) and the marginal standard deviation
     ($\eta$) respectively.
 
-```{r, fig.cap = "\\label{fig:peace} Log-odds peace year intercepts - $80\\%$ CIs"}
+(ref:peace) Log-odds peace year intercepts with 80 percent credible
+    intervals
+
+```{r, fig.cap = "\\label{fig:peace} (ref:peace)"}
 f <- extract(reg, "f")
 colnames(f) <- unique(final.df$lpeace_yrs) %>% sort
 
@@ -1716,7 +1773,10 @@ first level, 152 between the first and second, 55 between the second
 and third, and 4 above the third. The results are plotted in figure
 \ref{fig:int}.
 
-```{r fig.cap = "\\label{fig:int} Interaction between executive constraints and GDP per capita with 80 percent CIs"}
+(ref:int) Interaction effect between executive constraints and GDP per
+    capita with 80 percent credible intervals.
+
+```{r fig.cap = "\\label{fig:int} (ref:int)"}
 # Interaction plot
 medians <- apply(theta, 2, quantile, probs = 0.5)
 lower_bound <- min(medians) %>% round(digits = 1)
@@ -1803,7 +1863,11 @@ actually a *positive* increase in the predicted probability for higher
 levels of executive constraints?
 
 
-```{r fig.cap="\\label{fig:gdp} Difference in predicted probabilities between the lowest and highest level of executive constraints for different values of GDP per capita"}
+(ref:gdp) Difference in predicted probabilities between the lowest and
+    highest level of executive constraints for different values of GDP
+    per capita.
+
+```{r fig.cap="\\label{fig:gdp} (ref:gdp)"}
 rgdpepc <- seq(min(X[, "rgdpepc"]), state[1], 0.01)
 df <- mclapply(rgdpepc, function(y) {
     low <- boot::inv.logit(fn(lower_bound, y)) * 100
@@ -1864,7 +1928,10 @@ percent of the observations lay below the midpoint of the X-axis at
 
 ### Assessing Model Fit
 
-```{r fig.height = 2, fig.cap = "\\label{fig:phat} Density plot for predicted probabilities"}
+(ref:phat) Density plot of predicted probabilities for actual onset
+    country-years and no onset country-years.
+
+```{r fig.height = 2, fig.cap = "\\label{fig:phat} (ref:phat)"}
 extra <- read_post("posteriors/full_model/extra_posteriors.csv")
 p_hat <- extract(extra, "p_hat")
 
@@ -1874,6 +1941,8 @@ groups <- ifelse(final.df$lepisode_onset == 1,
 plot_dens(p_hat, groups = groups) +
     xlim(c(0, 0.4))
 ```
+
+(ref:psum) Summarized posterior predicted probabilities
 
 ```{r psum}
 p_median <- apply(p_hat, 2, median)
@@ -1885,8 +1954,10 @@ df <- bind_rows(summary(p_median[final.df$lepisode_onset == 1]),
 rownames(df) <- c("Conflict Onset", "No Onset")
 
 kable(df, "latex", align = "c", booktabs = T, linesep = "", escape = F,
-      caption = "Summarized posterior predicted probabilities")
+      caption = "(ref:psum)")
 ```
+
+(ref:confusion) Confusion matrix with a 0.168 cutoff
 
 ```{r confusion}
 m <- table(p_median > .168, final.df$lepisode_onset)
@@ -1905,7 +1976,7 @@ fnr <- signif(100 * m["Predicted: No Onset", "Actual: Onset"] /
               sum(m[, "Actual: Onset"]), 3)
 
 kable(m, "latex", align = "c", booktabs = T, linesep = "", escape = F,
-      caption = "Confusion matrix with a 0.2 cutoff")
+      caption = "(ref:confusion)")
 ```
 
 To assess how well the presented model fits the observed data, I first
@@ -1970,8 +2041,9 @@ the model increases. The *AUC-PR* for this plot is only
     outcomes in the dataset. In this case this means approximately
     .042.
 
-```{r fig.width = 8, fig.cap = "\\label{fig:roc} ROC & Precision-Recall Plots"}
+(ref:roc) ROC & Precision-Recall plots
 
+```{r fig.width = 8, fig.cap = "\\label{fig:roc} (ref:roc)"}
 autoplot(x, curvetype = c("ROC", "PRC"))
 ```
 
