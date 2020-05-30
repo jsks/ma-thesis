@@ -70,3 +70,44 @@ plot_dens <- function(m, n = 50, groups = NULL) {
               axis.ticks.y = element_blank()) +
         coord_cartesian(expand = F)
 }
+
+#' Tie Fighter Plot
+#'
+#' Plots posterior intervals for each country-year for a summarised
+#' parameter.
+#'
+#' @param df DataFrame containing `country_name`, `year`, and the
+#'     summary statistics for a selected parameter (`codelow`,
+#'     `median`, `codehigh`)
+#'
+#' @details Unlike the other plotting functions, `tfplot` does not
+#'     accept as input the raw posteriors. This is because it's a
+#'     relatively inflexible function that requires `country_name` and
+#'     `year` to already be matched for each observation.
+#'
+#' @export
+tfplot <- function(df) {
+    # Couple of simple checks. Not too exhaustive since this is a
+    # fairly narrow use function.
+    expected <- c("country_name", "year", "median", "codehigh",
+                  "codelow")
+
+    if (length(d <- setdiff(expected, colnames(df))) > 0)
+        sprintf("Missing columns: %s", paste(d, collapse = ", ")) %>%
+            stop(call. = F)
+
+    if (dplyr::n_distinct(df$year) != 2)
+        stop("Unexpected number of unique years", call. = F)
+
+    levels <- dplyr::filter(df, year == dplyr::last(year))
+    levels <- dplyr::arrange(levels, median) %$% country_name
+
+    ggplot(df, aes_string("country_name", "median", colour = "year")) +
+        geom_errorbar(aes_string(ymax = "codehigh", ymin = "codelow"),
+                      position = position_dodge(width = 0.5)) +
+        theme_tufte() +
+        scale_color_colorblind() +
+        theme(axis.title.y = element_blank(),
+              legend.title = element_blank()) +
+        coord_flip()
+}
