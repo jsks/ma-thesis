@@ -171,7 +171,7 @@ $(post)/%/extra_posteriors.csv: $(samples)
 # don't need them anymore
 $(post)/%/stan_output.tar.zst: $(samples) | $(output:%=$(post)/\%/%)
 	$(cmdstan)/bin/diagnose $^ |& tee -a $(post)/$*/log
-	@tar --remove-files --zstd -cf $(@D)/stan_output.tar.zst $^
+	@tar -C $(@D) --remove-files --zstd -cf $@ $(^F)
 
 # Generate phony targets for each model so that they can be called
 # directly. For example, `make -j4 full_model`.
