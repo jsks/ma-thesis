@@ -33,8 +33,7 @@ typedef struct bitarray {
 } bitarray;
 
 static char buf[BUF_SIZE];
-static size_t bufsize = BUF_SIZE,
-              offset = 0;
+static size_t offset = 0;
 
 void usage(void) {
     printf("Usage: %s [-h] [-n nlines] -s <regex> <file>...\n",
@@ -64,11 +63,14 @@ bitarray *create_bitarray(size_t len) {
     return x;
 }
 
-void resize_bitarray(bitarray *x) {
-    size_t old_size= x->capacity;
-    x->capacity *= 2;
+void resize_bitarray(bitarray *x, size_t new_size) {
+    if (new_size <= x->capacity)
+        return;
 
-    if (!(x->data = reallocarray(x->data, x->capacity, sizeof(uint64_t))))
+    size_t old_size = x->capacity;
+    x->capacity = new_size;
+
+    if (!(x->data = reallocarray(x->data, new_size, sizeof(uint64_t))))
         err(EXIT_FAILURE, NULL);
 
     memset(x->data + old_size, 0, (x->capacity - old_size) * sizeof(uint64_t));
@@ -77,7 +79,7 @@ void resize_bitarray(bitarray *x) {
 void set_bitarray(bitarray *x, uint64_t v) {
     uint64_t k = v / 64;
     if (k + 1 > x->capacity)
-        resize_bitarray(x);
+        resize_bitarray(x, 2 * (k + 1));
 
     x->data[k] |= UINT64_C(1) << (v % 64);
 }
@@ -118,23 +120,23 @@ void write2(int fd, void *buf, size_t count) {
 // chunks using the global variable 'buf'.
 void output(char *s, size_t len, bool add_comma) {
     // Sanity check
-    if (len + add_comma > bufsize)
+    if (len + add_comma > BUF_SIZE)
         errx(EXIT_FAILURE, "Token size too large for buffer");
 
-    if (offset == bufsize) {
-        write2(STDOUT_FILENO, buf, bufsize);
+    if (offset == BUF_SIZE) {
+        write2(STDOUT_FILENO, buf, BUF_SIZE);
         offset = 0;
     }
 
     if (add_comma)
         buf[offset++] = ',';
 
-    if (offset + len >  bufsize) {
-        size_t partial_len = bufsize - offset;
+    if (offset + len >  BUF_SIZE) {
+        size_t partial_len = BUF_SIZE - offset;
 
         // Fill up the buffer as much as possible and drain
         memcpy(&buf[offset], s, partial_len);
-        write2(STDOUT_FILENO, buf, bufsize);
+        write2(STDOUT_FILENO, buf, BUF_SIZE);
 
         // Copy remaining bytes from field
         offset = len - partial_len;
@@ -216,7 +218,7 @@ int main(int argc, char *argv[]) {
             err(EXIT_FAILURE, "posix_fadvise");
     }
 
-    bitarray *columns = create_bitarray(10);    // Array tracking matching columns
+    bitarray *columns = create_bitarray(1024);  // Array tracking matching columns
     char *line = NULL,                          // next_line/getline line buffer
          *delim = NULL,                         // Pointer to first delim, ','
          *p,                                    // Token iterator (points to next char after delim)

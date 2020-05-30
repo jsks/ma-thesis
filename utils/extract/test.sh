@@ -57,17 +57,17 @@ check '^alpha$' "$TEST_DIR"/small_matrix.csv "$TEST_DIR"/alpha.csv
 describe "Match single column by letter count in small matrix"
 check '\S{6,}' "$TEST_DIR"/small_matrix.csv "$TEST_DIR"/alpha_beta.csv
 
-describe "Matching two or more leading digits"
-check -n 2000 '^[0-9]{2,}_\S$' "$TEST_DIR"/large_matrix.csv \
-      "$TEST_DIR"/multiple_digit_all_rows.csv
+describe "Matching two or more leading digits and letter a"
+check -n 5 '^[0-9]{2,}_a$' "$TEST_DIR"/large_matrix.csv \
+      "$TEST_DIR"/multiple_digit_a.csv
 
-describe "Matching single digit"
-check -n 100 '^[0-9]_\S$' "$TEST_DIR"/large_matrix.csv \
-      "$TEST_DIR"/single_digit_100_rows.csv
+describe "Matching single digit with 2 rows"
+check -n 2 '^[0-9]_\S$' "$TEST_DIR"/large_matrix.csv \
+      "$TEST_DIR"/single_digit_2_rows.csv
 
-describe "Matching multiple digits and any letter not 'a'"
-check -n 100 '[0-9]_[^a]$' "$TEST_DIR"/large_matrix.csv \
-      "$TEST_DIR"/multiple_digits_not_a_100_rows.csv
+describe "Matching multiple digits not starting with 1"
+check -n 5 '^[^1]' "$TEST_DIR"/large_matrix.csv \
+      "$TEST_DIR"/multiple_digits_not_1.csv
 
 printf "Finished: %d $check, %d $cross\n" $pass $fail
 

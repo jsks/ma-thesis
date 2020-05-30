@@ -8,7 +8,6 @@
 ###
 
 suppressMessages(library(docopt))
-suppressMessages(library(dplyr))
 
 doc <- "usage: ./test_data.R <test_dir>"
 args <- docopt(doc)
@@ -25,15 +24,13 @@ write.csv(small_matrix, f, quote = F, row.names = F)
 df <- as.data.frame(small_matrix)
 
 f <- file.path(test_dir, "alpha.csv")
-select(df, alpha) %>%
-    write.csv(f, quote = F, row.names = F)
+write.csv(small_matrix[, "alpha", drop = F], f, quote = F, row.names = F)
 
 f <- file.path(test_dir, "alpha_beta.csv")
-select(df, alpha_beta) %>%
-    write.csv(f, quote = F, row.names = F)
+write.csv(small_matrix[, "alpha_beta", drop = F], f, quote = F, row.names = F)
 
-columns <- 500
-rows <- 2000
+columns <- 100000
+rows <- 5
 
 large_matrix <- matrix(rnorm(rows * columns), rows, columns)
 colnames(large_matrix) <- paste0(1:columns, "_", letters)
@@ -47,18 +44,14 @@ writeLines(headers, f)
 write.table(large_matrix, f, quote = F, sep = ",", col.names = F,
             row.names = F, append = T)
 
-df <- as.data.frame(large_matrix)
+f <- file.path(test_dir, "multiple_digit_a.csv")
+b <- grepl("^\\d{2,}_a$", colnames(large_matrix))
+write.csv(large_matrix[, b], f, quote = F, row.names = F)
 
-f <- file.path(test_dir, "multiple_digit_all_rows.csv")
-select(df, matches("^\\d{2,}_\\S$")) %>%
-    write.csv(f, quote = F, row.names = F)
+f <- file.path(test_dir, "single_digit_2_rows.csv")
+b <- grepl("^\\d_\\S$", colnames(large_matrix))
+write.csv(large_matrix[1:2, b], f, quote = F, row.names = F)
 
-f <- file.path(test_dir, "single_digit_100_rows.csv")
-select(df, matches("^\\d_\\S$")) %>%
-    slice(1:100) %>%
-    write.csv(f, quote = F, row.names = F)
-
-f <- file.path(test_dir, "multiple_digits_not_a_100_rows.csv")
-select(df, matches("\\d_[^a]$")) %>%
-    slice(1:100) %>%
-    write.csv(f, quote = F, row.names = F)
+f <- file.path(test_dir, "multiple_digits_not_1.csv")
+b <- substring(colnames(large_matrix), 1, 1) != 1
+write.csv(large_matrix[, b], f, quote = F, row.names = F)
