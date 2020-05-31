@@ -24,7 +24,7 @@ function find_ref(para)
    end
 
    local key = para.c[1].text
-   if not string.match(key, "^%(ref:.+%)$") then
+   if not string.match(key, "^%(ref:.-%)$") then
       return para
    else
       para.c:remove(1)
@@ -39,7 +39,7 @@ function find_ref(para)
 end
 
 function Str_replace(elem)
-   local i, j = string.find(elem.text, "%(ref:.+%)")
+   local i, j = string.find(elem.text, "%(ref:.-%)")
    if not i then
       return nil
    end
@@ -65,7 +65,7 @@ function Str_replace(elem)
 end
 
 function RawBlock_replace(elem)
-   local m = string.match(elem.text, "%(ref:.+%)")
+   local m = string.match(elem.text, "%(ref:.-%)")
    if m and refs[m] then
       elem.text = replace(elem.text, m, pandoc.utils.stringify(refs[m]))
    end
