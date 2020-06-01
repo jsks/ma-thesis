@@ -232,7 +232,7 @@ summary_stats.data.frame <- function(x, vars = colnames(x)) {
         data.frame(Variable = s,
                    N = sum(!is.na(col)) %>% prettyNum(big.mark = ","),
                    Mean = mean(col, na.rm = T) %>% fmt,
-                   `Std.dev.` = sd(col, na.rm = T) %>% fmt,
+                   `Std.dev.` = stats::sd(col, na.rm = T) %>% fmt,
                    `Min.` = min(col, na.rm = T) %>% fmt,
                    `Max.` = max(col, na.rm = T) %>% fmt,
                    stringsAsFactors = F)

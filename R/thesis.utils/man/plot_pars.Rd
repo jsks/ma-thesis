@@ -2,16 +2,23 @@
 % Please edit documentation in R/plot.R
 \name{plot_pars}
 \alias{plot_pars}
-\title{Parameter plot}
+\title{Posterior parameter plot}
 \usage{
 plot_pars(x, ...)
 }
 \arguments{
-\item{m}{Posterior matrix where each column is a separate parameter}
+\item{x}{Either a posterior object created using \code{\link[=read_post]{read_post()}} or a
+matrix where each column is a separate parameter with multiple
+rows per posterior draw.}
 
-\item{labels}{Optional CharacterVector of x-axis labels.}
+\item{pars}{Parameters to extract if \code{x} is a posterior object.}
+
+\item{hline}{Draw horizontal intercept at 0.}
+}
+\value{
+A ggplot plotting object.
 }
 \description{
-Plots posterior median plus 68/95 quantile intervals for the given
-parameters.
+Plots the posterior point estimate and 80 percent credible interval
+per parameter.
 }
