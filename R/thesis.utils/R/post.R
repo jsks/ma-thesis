@@ -58,6 +58,18 @@ read_post <- function(file) {
     structure(fit, class = c(class(fit), "posterior"))
 }
 
+#' Posterior class
+#'
+#' Checks whether an object inherits from the `posterior` class as
+#' returned by [read_post].
+#'
+#' @param x Object to test
+#'
+#' @return Boolean
+#'
+#' @export
+is.posterior <- function(x) inherits(x, "posterior")
+
 #' Extract parameters
 #'
 #' Extracts posteriors from a `posterior` object created using
