@@ -1,7 +1,9 @@
--- Simple script that implements bookdown's text references as a lua
--- filter directly in pandoc.
---
--- https://bookdown.org/yihui/bookdown/markdown-extensions-by-bookdown.html#fn5
+--[[
+   text_refs.lua - Bookdown text references as pandoc lua filter
+
+   Copyright (c) 2020 Joshua Krusell
+   License: MIT
+]]
 
 PANDOC_VERSION:must_be_at_least '2.9.2'
 

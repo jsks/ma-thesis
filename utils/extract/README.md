@@ -13,7 +13,7 @@ make
 ./extract -h
 ```
 
-### Example
+## Example
 
 Assuming four chains have been sampled for a model with at least two
 parameters, `alpha` and `beta`, with the output saved as `samples_<chain
@@ -25,3 +25,7 @@ outputed to the file `alpha_beta.csv` with the following command:
 ./extract -s '^alpha|^beta' -n 10 samples_*.csv > alpha_beta.csv
 ```
 
+## License
+
+The code contained in this directory is licensed under the terms of
+the MIT license.

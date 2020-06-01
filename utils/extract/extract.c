@@ -1,16 +1,9 @@
-// extract.c
-//
-// ./extract [-h] [-n <nlines>] -s <regex> <FILE>...
-//
-// Simple program that extracts parameters from a Stan posterior output file(s)
-// and concatenates the result to stdout.
-//
-// example: ./extract -s '^alpha|^beta' -n 10 samples-chain_*.csv
-//
-// Fair warning: there's a lot of shortcuts in this program. Memory is not
-// freed and file descriptors are not closed with the assumption that the OS
-// will take of it when we exit. Plus, it's assumed that the posterior csv
-// files are comma deliminated with no quotes around columns names.
+/*
+ * extract.c - Extract parameters from cmdstan posterior files
+ *
+ * Copyright (c) 2020 Joshua Krusell
+ * License: MIT
+ */
 
 #define _GNU_SOURCE
 
@@ -43,7 +36,7 @@ void usage(void) {
 void help(void) {
     usage();
     printf("\n");
-    printf("Extracts given parameters from stan posterior csv file(s) based on regex expression.\n");
+    printf("Extracts parameters from stan posterior csv file(s) based on regex expression.\n");
     printf("\n");
     printf("Options:\n");
     printf("\t-h Useless help message\n");
@@ -116,8 +109,11 @@ void write2(int fd, void *buf, size_t count) {
     }
 }
 
-// To avoid the overhead of calling write for every field, buffer output into
-// chunks using the global variable 'buf'.
+
+/*
+ * To avoid the overhead of calling write for every field, buffer
+ * output into chunks using the global variable 'buf'.
+ */
 void output(char *s, size_t len, bool add_comma) {
     // Sanity check
     if (len + add_comma > BUF_SIZE)

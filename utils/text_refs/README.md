@@ -35,3 +35,8 @@ then the text reference will not be parsed.
 
 One bonus though to using a lua filter is that, unlike bookdown, text
 references here can span multiple lines.
+
+## LICENSE
+
+The code contained in this directory is licensed under the terms of
+the MIT license.
