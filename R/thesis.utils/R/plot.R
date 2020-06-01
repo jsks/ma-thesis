@@ -101,8 +101,19 @@ overlay_pars <- function(pars = NULL, legend_labels = NULL, ...) {
               axis.title.y = element_blank())
 }
 
+#' Posterior density plot
+#'
+#' Plots the density curves for the first `n` posterior draws from the
+#' posterior matrix `m`.
+#'
+#' @param m Posterior matrix
+#' @param n Number of posterior draws to be used
+#' @param groups Grouping factor to separate observations
+#'
 #' @export
 plot_dens <- function(m, n = 50, groups = NULL) {
+    # TODO: create proper S3 methods for this function
+
     if (is.null(groups))
         stop("Missing grouping variable")
 
