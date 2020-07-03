@@ -62,9 +62,9 @@ opts_chunk$set(echo = F, eval = T, warning = F, fig.width = 5,
 # Introduction {-}
 
 Since the end of World War II, civil conflict has been the deadliest
-and most prevalent form of conflict. In that time period, upwards to
-two-thirds of all countries have experienced at least one minor
-insurgency and approximately one-third of all countries have
+and most prevalent form of state-based conflict. In that time period,
+upwards to two-thirds of all countries have experienced at least one
+minor insurgency and approximately one-third of all countries have
 experienced a major civil war with at least 1,000 battle deaths
 [@Pettersson2019]. Given the impact of civil conflict and the
 increasing availability of conflict related data, the last several
@@ -72,63 +72,63 @@ decades has witnessed a veritable explosion in the number of
 quantitative studies investigating the causes of civil conflict
 [@Blattman2017]. Scholars have proposed numerous theories ranging from
 motivation-based arguments --- such as, for example, the role of
-horizontal inequalities [@Cederman2011] --- to opportunity-based
-explanations centered on economic factors [@Collier2004; @Collier2009]
-as well as the political and structural conditions underlying state
-weakness [@Hegre2001; @Fearon2003]. This latter strain of research in
-particular has spurred extensive work into examining the
-distinguishing features of weak states and whether political
-institutions play a significant role in the risk of civil conflict.
-Several studies in this vein have argued in favor of institutions by
-utilizing disaggregated measures to also investigate the specific
-types of institutions relevant to the study of civil conflict
-[@Taydas2010; @Hegre2015a; @Bartusevic2018].
+horizontal inequalities and ethnic identities [@Cederman2011] --- to
+opportunity-based explanations centered on economic factors
+[@Collier2004; @Collier2009] as well as the political and structural
+conditions underlying state weakness [@Hegre2001; @Fearon2003]. This
+latter strain of research in particular has spurred extensive work
+into examining the distinguishing features of weak states and whether
+political institutions play a significant role in the risk of civil
+conflict. Several studies in this vein have argued in favor of
+institutions by investigating, for example, aspects of governance,
+institutional quality, and opportunities for political participation
+[@Fjelde2009; @Taydas2010; @Hegre2015a; @Bartusevic2018].
 
 This paper extends that work by taking a disaggregated approach to
-studying the effect of executive constraints on the risk of civil
-conflict onset. The motivation to specifically focus on executive
-constraints is two-fold: first, the executive is often times one of
-the key decision-makers in a state's regime. Institutions that provide
-a check against the types of actions which may exacerbate the risk of
-rebellion should be relevant to the study of civil conflict. In doing
-we can further our understanding of how political institutions shape
-the incentives for violence, especially through the influence of
-institutions on state behaviour.  Second, the link between executive
-constraints and civil conflict is relatively understudied. The
-previous literature that exists is fairly limited and contradictory in
-terms of results [@Getmansky2013; @Fjelde2009].
+studying political institutions by focusing specifically on the effect
+of executive constraints on the risk of civil conflict onset. The
+motivation to focus on executive constraints is two-fold: first, the
+executive is often times one of the key decision-makers in a state's
+regime. Institutions that provide a check against the types of actions
+which may exacerbate the risk of rebellion should be relevant to the
+study of civil conflict. Such an approach can further our
+understanding of how specific political institutions may shape the
+incentives for violence, especially through the influence on state
+behaviour. Second, the link between executive constraints is
+relatively understudied. The previous literature that exists is fairly
+limited and contradictory in terms of results.
 
-The principle finding is that there is tentative evidence that
-executive constraints do matter and that there is a negative
-relationship between the latent level of constraints on the executive
-and the risk of civil conflict onset. However, this relationship
-largely disappears for low-income country-years when an interaction
-term with GDP per capita is included. If the primary theoretical
-mechanism involves the impact of executive constraints on rebel
-mobilization --- an unchecked executive may be more likely to engage
-in indiscriminate violence which could lead to a loss of legitimacy as
-well as the ability of rebel groups to offer local security guarantees
-to attract recruits --- then the incentives for violence in low-income
-country-years may be so great that it does not matter how constrained
-the executive may or may not be.
+The principle finding of this paper is that there is tentative
+evidence that executive constraints do matter and that there is a
+negative relationship between the latent level of constraints on the
+executive and the risk of civil conflict onset. However, this
+relationship largely disappears for low-income country-years when an
+interaction term with GDP per capita is included. If the primary
+theoretical mechanism involves the impact of executive constraints on
+rebel mobilization --- an unchecked executive may be more likely to
+engage in indiscriminate violence which could lead to a loss of
+legitimacy as well as the ability of rebel groups to offer local
+security guarantees to attract recruits --- then the incentives for
+violence in low-income country-years may be so great that it does not
+matter how constrained the executive may or may not be.
 
 We should not be overconfident with these results, however. Similar to
-most other studies examining conflict onset, the model is a poor fit
-to the underlying data. Modeling civil conflict is a difficult task,
-especially when trying to capture the dynamics of conflict with a
-standard time series cross-country regression. The results will
-require verification by additional studies using alternative
-methodological approaches.
+most other studies examining conflict onset, the presented models are
+a poor fit to the underlying data. Modeling civil conflict is a
+difficult task, especially when trying to capture the dynamics of
+conflict with a standard time series cross-country regression. The
+results will require verification by additional studies using
+alternative methodological approaches.
 
 In what follows, a deeper justification for why political institutions
 are relevant to the study of civil conflict together with an overview
 of related empirical literature will be presented. The theoretical
 mechanisms linking executive constraints to conflict onset will then
-be discussed followed by an empirical analysis for which a latent
-estimate for executive constraints will be estimated and used in a
-cross-country time series logistic regression predicting conflict
-onset.
-
+be discussed followed by an empirical analysis using a bayesian latent
+variable model to estimate executive constraints from the basis of
+several observed manifest variables. This latent measure will then be
+used to predict civil conflict onset using a cross-country time series
+logistic regression.
 
 # Theoretical Overview {-}
 
@@ -174,34 +174,35 @@ from forming an exhaustive list, there are thus a number of different
 ways in which institutions can enter into theoretical discussions
 about civil conflict.
 
-Unsurprisingly, insofar as the role of institutions has been examined
-by previous literature the focus has largely been on the broader
-notion of democracy, which at a minimum is a system regulating access
-to political power through popular representation determined by free
-and competitive elections [@Schumpeter1962]. Democracy serves as a
-proxy for a number of normatively desirable institutions and has been
-hypothesised to have a pacifying domestic effect according to two
-predominant mechanisms. The first is centered on the concept of
-relative deprivation, or inequalities in value expectations and value
-capabilities, as a primary source of discontent that can motivate
-collective violence [@Gurr1970]. [^gurr] Democracy is thought to
-decrease the amount of political discontent by providing avenues for
-free expression and adjudicating group conflicts through non-violent
-institutional means --- for example, through the regular occurrence of
-free and fair elections [@Hegre2014]. The second mechanism assumes
-that violent conflict is costly and that there exists a bargained
-solution preferable to fighting, assuming that actors are rational and
-able to internalize the cost of violence [@Fearon1995]. One of the
-reasons why a bargained solution may be impossible is the risk of
-future shifts in the distribution of power. More specifically, a
-future change in favor of the relative strength of one of the parties
-can provide an incentive to later renege. This influences the present
-degree to which concessions can be offered and parties are willing to
-credibly commit [@Powell2006]. Within the domestic sphere, democracy
-offers a possible solution by formalising the regular contest of power
-with full enfranchisement, thereby providing a *de jure* guarantee for
-the balance of power [@Origins2006], and should, likewise, decrease
-the likelihood of civil conflict.
+Unsurprisingly, insofar as the role of institutions on the likelihood
+of civil conflict has been examined by previous literature the focus
+has largely been on the broader notion of democracy, which at a
+minimum is a system regulating access to political power through
+popular representation determined by free and competitive elections
+[@Schumpeter1962]. Democracy serves as a proxy for a number of
+normatively desirable institutions and has been hypothesised to have a
+pacifying domestic effect according to two predominant mechanisms. The
+first is centered on the concept of relative deprivation, or
+inequalities in value expectations and value capabilities, as a
+primary source of discontent that can motivate collective violence
+[@Gurr1970]. [^gurr] Democracy is thought to decrease the amount of
+political discontent by providing avenues for free expression and
+adjudicating group conflicts through non-violent institutional means
+--- for example, through the regular occurrence of free and fair
+elections [@Hegre2014]. The second mechanism assumes that violent
+conflict is costly and that there exists a bargained solution
+preferable to fighting, assuming that actors are rational and able to
+internalize the cost of violence [@Fearon1995]. One of the reasons why
+a bargained solution may be impossible is the risk of future shifts in
+the distribution of power. More specifically, a future change in favor
+of the relative strength of one of the parties can provide an
+incentive to later renege. This influences the present degree to which
+concessions can be offered and parties are willing to credibly commit
+[@Powell2006]. Within the domestic sphere, democracy offers a possible
+solution by formalising the regular contest of power with full
+enfranchisement, thereby providing a *de jure* guarantee for the
+balance of power [@Origins2006], and should, likewise, decrease the
+likelihood of civil conflict.
 
 [^gurr]: Gurr explains value expectations as being that which we think
     we are entitled to and value capabilities as that which we think
@@ -245,9 +246,9 @@ less repression, thus being a proxy for the latent level of political
 discontent against the state. However, the argument follows that even
 if the number of political grievances vary across regime types, they
 are still ubiquitous enough to be a poor explanation for why conflict
-breaks out in only a relatively small subset of countries. Instead,
-the determining factors for conflict onset are the structural
-conditions conducive to rebellion.[^opportunities]
+breaks out in only a relatively small subset of countries at any given
+point in time. Instead, the determining factors for conflict onset are
+the structural conditions conducive to rebellion.[^opportunities]
 
 [^opportunities]: For Fearon and Laitin these structural conditions
     are related to the features which make rebellion militarily
@@ -260,9 +261,9 @@ conditions conducive to rebellion.[^opportunities]
     financial feasibility relative to the strength of the state. On
     the basis of their results they go so far as provide support to
     the proposition, "where a rebellion is financially and militarily
-    feasible it will occur." Both approaches, however, reach the same
-    conclusion concerning the empirical evidence surrounding the role
-    of democracy.
+    feasible it will occur" [@Collier2009]. Both approaches, however,
+    reach the same conclusion concerning the empirical evidence
+    surrounding the role of democracy.
 
 To provide a more nuanced picture, an ongoing strain of research has
 been dedicated to disaggregating measures of democracy into either
@@ -282,26 +283,27 @@ configurations affecting a regime's ability to coerce or co-opt the
 opposition. The conclusion is that previous indeterminate results
 regarding the link between political institutions and conflict risk
 may have been hamstrung by aggregate measures which poorly reflect the
-within-group variation of political regimes. In a larger sample
-including democratic polities, @Goldstone2010 create a regime
-classification scheme based on measures for openness of executive
-recruitment and competitiveness of political participation, as well as
-factionalism in order to distinguish between partial democracies. They
-offer a theory of civil conflict occurring in countries where elite
-divisions undermine the capacity of the state to defeat an insurgency
-and claim that a relatively parsimonious model including their regime
-classification offers better predictive accuracy than previous
-analyses and provides evidence that political institutions are a
-dominant driving factor for both political instability and civil
-conflict. Finally, @Bartusevic2018 construct a regime typology focused
-specifically on electoral features, which are argued form the
-essential core of the concept of democracy. Where there are
-constraints on electoral contestation, the authors contend that such
-constraints restrict the opportunities for non-violent political
-participation thereby legitimising anti-government violence and
-self-selecting recruits into rebel groups willing to engage in armed
-conflict. Evidence is presented which the authors claim supports not
-just the significance of regime type, but a negative monotonic
+within-group variation of political regimes.
+
+In a larger sample including democratic polities, @Goldstone2010
+create a regime classification scheme based on measures for openness
+of executive recruitment and competitiveness of political
+participation, as well as factionalism in order to distinguish between
+partial democracies. They offer a theory of civil conflict occurring
+in countries where elite divisions undermine the capacity of the state
+to defeat an insurgency and claim that a relatively parsimonious model
+containing their regime classification offers better predictive
+accuracy than previous analyses and provides evidence that political
+institutions are a dominant driving factor for both political
+instability and civil conflict. Finally, @Bartusevic2018 construct a
+regime typology focused specifically on electoral features, which are
+argued form the essential core of the concept of democracy. Where
+there are constraints on electoral contestation, the authors contend
+that such constraints restrict the opportunities for non-violent
+political participation thereby legitimising anti-government violence
+and self-selecting recruits into rebel groups willing to engage in
+armed conflict. Evidence is presented which the authors claim supports
+not just the significance of regime type, but a negative monotonic
 relationship between democracy and the risk of civil conflict.
 
 Studies utilising individual measures beyond regime classification
@@ -323,8 +325,7 @@ legitimacy of a regime when citizens identify the state as responsible
 for relative deprivation. In their empirical analysis, the authors
 separate informal institutions related to good governance from formal
 democratic institutions and find both important for reducing the
-incidence of civil conflict, or in this specific case the recurrence
-of conflict.
+incidence of recurring civil conflict.
 
 Taken together, this recent literature on civil conflict onset points
 to the ongoing importance of political institutions. There remains,
@@ -364,16 +365,16 @@ the executive thus serving as deterrents to the forms of
 authoritarian excesses in executive power which may be linked to civil
 conflict. [^ODonnell]
 
-[^ODonnell]: Adapted from the definition of horizontal accountability
-    offered by @ODonnell1998 who further argues that horizontal
-    accountability can potentially be a distinguishing feature between
-    consolidated democracies and newly democratic states, the latter
-    of which may have free and open elections, but are considerably
-    weaker in upholding liberal notions of individual freedom against
-    state power and republican notions of representation. In this way,
-    executive constraints can possibly aid in discriminating the types
-    of partially democratized regimes which may be at a heightened
-    risk for civil conflict.
+[^ODonnell]: This is adapted from the definition of horizontal
+    accountability offered by @ODonnell1998 who further argues that
+    horizontal accountability can potentially be a distinguishing
+    feature between consolidated democracies and newly democratic
+    states, the latter of which may have free and open elections, but
+    are considerably weaker in upholding liberal notions of individual
+    freedom against state power and republican notions of
+    representation. In this way, executive constraints can possibly
+    aid in discriminating the types of partially democratized regimes
+    which may be at a heightened risk for civil conflict.
 
 The final motivation for examining executive constraints is that in
 terms of previous research, the empirical evidence is
@@ -474,7 +475,7 @@ exclusive, and it is beyond the scope of the present paper to properly
 adjudicate between them; however, they do converge on a single
 testable proposition. Namely that higher levels of executive
 constraints should be associated with a lowered risk of civil conflict
-onset. This proposition can be further extended if state weakness is a
+onset. This proposition can be further extended: if state weakness is a
 primary driver of civil conflict and the relative capacity of the
 state is effected by the levels of executive constraints, as depicted
 in the first theoretical pathway regarding executive looting, then
@@ -665,12 +666,13 @@ uncorrelated. The hyperparameter, $\eta$, is the *marginal standard
 deviation* which determines the overall variation of the output
 intercepts [@Rasmussen2005].
 
-I select a weakly  informative prior for $\eta$ that is skeptical of
+I select a weakly informative prior for $\eta$ that is skeptical of
 large values given that $\nu$ is on the log-odds scale. For $\rho$ I
 use an informative prior that constrains an overwhelming majority of
 the prior probability mass to a *length-scale* between 4 and 10, which
-provides a strong smoothing effect and aids in computation by
-avoiding unreasonable values [@Betancourt2017].
+provides a strong smoothing effect and aids in computation by avoiding
+unreasonably large values far beyond the observed range
+[@Betancourt2017].
 \begin{align*}
     \eta & \sim \mathsf{HalfNormal}(0, 1) \\
     \rho & \sim \mathsf{InvGamma}(15.5031, 78.2992)
@@ -773,7 +775,7 @@ overconfident results [@Treier2008; @Marquardt2019].
 
 [^thresholds]: Thresholds relate to how the continuous latent trait
     for a given variable is mapped on to the ordinal answer categories
-    presented on the survey. Due to differential item functioning,
+    presented in the survey. Due to differential item functioning,
     experts may perceive the magnitude of difference between answer
     items differently. For example, for the variable *v2elvotbuy*,
     election vote buying, experts may vary in how they interpret the
@@ -915,8 +917,8 @@ informative priors:
     \psi & \sim \mathsf{Weibull}(2, 1)
 \end{align*}
 
-In the case of the legislative variables there is the added
-issue of missing observations for country-years lacking a
+In the case of the legislative variables there is the added issue of
+missing observations for country-years lacking a
 legislature.[^missing] For those observations, given the centrality of
 the legislature as a potential constraint against the executive, the
 latent factor should ideally be lower conditional on the other
@@ -937,7 +939,7 @@ legislature. Where data is missing due to the suspension or lack of a
 legislature, the latent factor is down weighted by the linear function
 predicting $w$, conditional on the observed values of the remaining
 manifest variables. The resulting model specification, including
-priors, is as follows:
+priors, can be summarised as follows:
 \begin{align*}
     w_i & \sim \mathsf{Bernoulli}(\pi_i) \\
     \pi_i & = \mathsf{logit}^{-1}(\eta + \delta \theta_i) \\
@@ -1073,7 +1075,7 @@ current civil conflicts can impact the present risk of conflict onset
 as well as the current level of executive constraints -- I include the
 number of peace years since the last conflict incident.[^time] I also
 include a dummy variably for ongoing high intensity conflict since
-devastating civil ways may have a particularly destabilizing
+devastating civil wars may have a particularly destabilizing
 effect.[^intensity] To account for spillover effects, I include a
 dummy variable for whether a neighbouring country is currently
 experiencing a civil conflict.[^geo] Finally, one notable lack is a
@@ -1173,11 +1175,11 @@ grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
 ```
 
 Table \ref{tab:fa} and figure \ref{fig:fpars} summarise the posterior
-draws for the measurement model parameters with 80 percent quantile
-intervals. According to the results, the factor loadings, $\lambda$,
-for each manifest variable are fairly comparable, with the exception
-of the lower value for *v2lgfunds* ("legislature controls its own
-resources") and to a lesser extent *v2lgqstexp* ("legislature
+draws for the measurement model parameters with 80 percent posterior
+quantile intervals. According to the results, the factor loadings,
+$\lambda$, for each manifest variable are fairly comparable, with the
+exception of the lower value for *v2lgfunds* ("legislature controls
+its own resources") and to a lesser extent *v2lgqstexp* ("legislature
 questions executive branch officials in practice"). Relative to the
 other manifest variables, both items are less informative in inferring
 the values of the latent factor --- a $\lambda$ of zero would indicate
@@ -1192,10 +1194,8 @@ example, after adjusting for measurement error, the mean for
 $v2lgfunds$ is on average slightly higher than the remaining manifest
 variables, hence the negative intercept.
 
-(ref:fa)
-
-Executive constraints measurement model parameter
-    estimates with 80 percent posterior credible intervals
+(ref:fa) Executive constraints measurement model parameter
+    estimates with 80 percent posterior credible intervals.
 
 ```{r fa, fig.height = 6, fig.width = 6}
 fa_pars <- extract(fa, c("lambda", "gamma", "psi", "delta", "kappa")) %>%
@@ -1328,8 +1328,8 @@ grid.arrange(p1, p2, ncol = 2)
 #### Executive Constraints Estimates
 
 In total there are `r nrow(final.df) %>% prettyNum(big.mark = ",")`
-country-year estimates of $\theta$, comprised of `r
-n_distinct(final.df$country_name)` unique countries and scaled from
+country-year estimates of $\theta$, comprised of
+`r n_distinct(final.df$country_name)` unique countries and scaled from
 approximately $-2$ to $2$. Since the complete time series for every
 single country can not be easily visualised, an exploratory overview
 on the performance of the executive constraints measure is provided in
@@ -1364,7 +1364,7 @@ captured by the measure.
 (ref:theta) Executive constraints over time for several selected
     countries.
 
-```{r fig.width = 7, fig.height = 5, fig.cap = "\\label{fig:theta} (ref:theta)"}
+```{r fig.width = 6, fig.height = 4, fig.cap = "\\label{fig:theta} (ref:theta)"}
 theta_summarised <- post_summarise(theta, probs = c(0.10, 0.5, 0.90)) %>%
     rename(codelow = `10%`, median = `50%`, codehigh = `90%`)
 
@@ -1442,10 +1442,10 @@ than 2010. In the case of Tunisia with even more visual overlap, there
 is a $`r tunisia_p`$ percent posterior probability that the estimate
 for 2010 is higher than 2000.
 
-(ref:cap) Executive constraints in 2000 versus 2010 for several
+(ref:tie) Executive constraints in 2000 versus 2010 for several
     selected countries.
 
-```{r fig.cap = "\\label{fig:tie} (ref:cap)"}
+```{r fig.cap = "\\label{fig:tie} (ref:tie)"}
 targets <- c("Algeria", "Argentina", "Armenia", "Chile", "Colombia",
              "Egypt", "Georgia", "Ghana", "Hungary", "Indonesia",
              "Iran", "Israel", "Japan", "Kenya", "Mexico", "Poland",
@@ -1458,23 +1458,7 @@ df <- filter(theta_summarised, year %in% c(2010, 2000),
            country_name = ifelse(country_name == "United States of America",
                                  "USA", country_name))
 
-levels <- filter(df, year == 2010) %>%
-    arrange(median) %$%
-    country_name
-
-df$country_name <- factor(df$country_name, levels = levels)
-
-
-ggplot(df, aes(country_name, median, colour = year)) +
-    geom_errorbar(aes(ymax = codehigh, ymin = codelow),
-                  position = position_dodge(width = 0.5)) +
-    theme_tufte() +
-    scale_color_colorblind() +
-    theme(axis.title.y = element_blank(),
-          legend.title = element_blank()) +
-    ylab("Theta") +
-    coord_flip()
-
+tfplot(df) + xlab("Theta")
 ```
 
 ### Onset Regression
@@ -1491,10 +1475,11 @@ the variables are standardized to have mean 0 and standard deviation
 Count, Neighbouring Conflict, Ongoing Major Conflict, and
 Independence.
 
-(ref:reg) 80 percent posterior credible intervals for regression
-    slopes
+(ref:reg) Regression slopes with 80 percent posterior credible
+    intervals and the posterior probability of each parameter being
+    less than and greater than zero.
 
-```{r reg, fig.height = 3}
+```{r reg}
 reg <- read_post("posteriors/full_model/reg_posteriors.csv")
 
 beta <- extract(reg, "beta")
@@ -1517,8 +1502,7 @@ beta_s <- post_summarise(beta, probs = c(0.1, 0.9)) %>%
 rownames(beta_s) <- colnames(beta) %>% gsub("_", "\\\\_", .)
 
 kable(beta_s, "latex", align = c("c", "r", "r"), booktabs = T,
-      linesep = "", escape = F,
-      caption = "(ref:reg)") %>%
+      linesep = "", escape = F, caption = "(ref:reg)") %>%
     kable_styling(latex_options = "striped", "scale_down")
 ```
 
