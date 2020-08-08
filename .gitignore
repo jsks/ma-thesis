@@ -18,6 +18,8 @@ utils/extract/extract
 **/\#*\#
 **/.\#*
 
+!assets/UU_logo_CMYK-eps-converted-to.pdf
+
 **/*.Rcheck/
 
 build/

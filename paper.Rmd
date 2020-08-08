@@ -1,12 +1,25 @@
 ---
 title: Executive Constraints and Civil Conflict Onset
-author: J.L.A. Krusell
-date: "`r format(Sys.time(), '%Y-%m-%d')`"
+author:
+    name: J.L.A. Krusell
+    affiliation: Department of Peace and Conflict Research, Uppsala University
+    supervisor: Kristine Eck
+    degree: Master's Thesis
+date: "Spring 2020"
+titlelogo: |
+    ```{=latex}
+    assets/UU_logo_CMYK-eps-converted-to.pdf
+    ```
+wordcount: 13052
 suppress-bibliography: false
 bibliography: library.bib
-csl: assets/american-political-science-association.csl
+csl: assets/chicago-author-date.csl
 link-citations: true
 documentclass: scrreprt
+classoption: paper=letter
+geometry:
+    - top=30mm
+    - heightrounded
 fontsize: 11pt
 linestretch: 1.5
 header-includes:
@@ -26,7 +39,8 @@ output:
         latex_engine: lualatex
         toc: true
         toc_depth: 2
-        pandoc_args: ["--syntax-definition", "assets/stan.xml",
+        pandoc_args: ["--template", "assets/thesis_template.latex",
+                      "--syntax-definition", "assets/stan.xml",
                       "--highlight-style", "kate",
                       "--lua-filter", "utils/text_refs/text_refs.lua"]
     html_document:
