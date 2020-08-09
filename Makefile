@@ -187,7 +187,8 @@ $(foreach x, $(models), $(eval $(call model-rule,$(x))))
 manuscript_dependencies := $(manuscript) \
 	library.bib \
 	assets/stan.xml \
-	assets/american-political-science-association.csl \
+	assets/chicago-author-date.csl \
+	assets/thesis_template.latex \
 	Rdependencies.csv \
 	$(results)
 
