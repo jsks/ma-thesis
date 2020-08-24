@@ -286,43 +286,40 @@ $if(has-frontmatter)$
 $endif$
 $if(title)$
 \begin{titlepage}
-  \begin{center}
-    \vspace*{0.5cm}
-    \Huge
-    \textbf{$title$}\par%
-    $if(subtitle)$
-    \huge
-    \textbf{$subtitle$}\par%
-    $endif$
+\begin{center}
+\vspace*{0.5cm}
+\Huge
+\textbf{$title$}\par%
+$if(subtitle)$
+\huge
+\textbf{$subtitle$}\par%
+$endif$
 
-    \vspace{10mm}
-    $if(titlelogo)$
-    \includegraphics[width=17cm,
-                     height=7cm,
-                     keepaspectratio]{$titlelogo$}
-    $endif$
-    \vspace{10mm}
+\vspace{10mm}
+$if(titlelogo)$
+\includegraphics[width=17cm, height=7cm, keepaspectratio]{$titlelogo$}
+$endif$
+\vspace{10mm}
 
-    $if(author)$
-    \LARGE
-    $author.name$\par%
-    \Large
-    $author.degree$\par%
-    $endif$
-    $if(date)$
-    \Large
-    $date$\par%
-    $endif$
-  \end{center}
+$if(author)$
+\Large
+$author.name$\par%
+$author.degree$\par%
+$endif$
+$if(date)$
+\Large
+$date$\par%
+$endif$
+\end{center}
 
-  \vfill
-  $if(author)$
-  $author.affiliation$\par%
-  Supervisor: $author.supervisor$\par%
-  $endif$
-  $if(wordcount)$
-  Word Count: $wordcount$
-  $endif$
+\vfill
+$if(author)$
+$author.affiliation$\par%
+Supervisor: $author.supervisor$\par%
+$endif$
+$if(wordcount)$
+Word Count: $wordcount$
+$endif$
 \end{titlepage}
 
 $if(abstract)$

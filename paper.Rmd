@@ -2,9 +2,9 @@
 title: Executive Constraints and Civil Conflict Onset
 author:
     name: J.L.A. Krusell
-    affiliation: Department of Peace and Conflict Research, Uppsala University
+    affiliation: Department of Peace and Conflict Research
     supervisor: Kristine Eck
-    degree: Master's Thesis
+    degree: "Master's Thesis"
 date: "Spring 2020"
 titlelogo: |
     ```{=latex}
@@ -20,7 +20,7 @@ classoption: paper=letter
 geometry:
     - top=30mm
     - heightrounded
-fontsize: 11pt
+fontsize: 12pt
 linestretch: 1.5
 header-includes:
     - \usepackage{amsmath}
@@ -32,6 +32,7 @@ header-includes:
     - \AfterEndEnvironment{align*}{\end{singlespace}\noindent\ignorespaces}
     - \counterwithout{table}{chapter}
     - \counterwithout{figure}{chapter}
+    - \usepackage[font={small}]{caption}
 output:
     pdf_document:
         fig_caption: true
@@ -69,34 +70,70 @@ library(tidyr)
 library(thesis.utils)
 
 options(knitr.kable.NA = ".")
-opts_chunk$set(echo = F, eval = T, warning = F, fig.width = 5,
-               fig.height = 3)
+opts_chunk$set(echo = F, message = F, warning = F,
+               fig.width = 5, fig.height = 3, cache = T)
+
+# TODO: this has been added to package
+fmt <- function(x, digits = 2) {
+    prettyNum(round(x, digits), big.mark = ",")
+}
+
+# Create initial descriptive stats for introduction
+ucdp <- readRDS("./data/raw/UcdpPrioConflict_v19_1.rds")
+
+total_conflicts <- n_distinct(ucdp$conflict_id)
+intrastate_conflicts <- filter(ucdp, type_of_conflict %in% 3:4) %$%
+    n_distinct(conflict_id)
+intrastate_percent <- 100 * intrastate_conflicts / total_conflicts
+
+n_states <- filter(ucdp, type_of_conflict %in% 3:4) %$%
+    n_distinct(gwno_a)
+
+battle_deaths <- readRDS("./data/raw/BattleDeaths_v19_1.rds")
+nonstate_deaths <- readRDS("./data/raw/NonState_v19_1.rds")
+
+total_deaths <- sum(battle_deaths$bd_best) + sum(nonstate_deaths$best_fatality_estimate)
+civil_deaths <- filter(battle_deaths, type_of_conflict %in% 3:4) %$%
+    sum(bd_best)
+
+civil_deaths_percent <- 100 * civil_deaths / total_deaths
 ```
 
 # Introduction {-}
 
-Since the end of World War II, civil conflict has been the deadliest
-and most prevalent form of state-based conflict. In that time period,
-upwards to two-thirds of all countries have experienced at least one
-minor insurgency and approximately one-third of all countries have
-experienced a major civil war with at least 1,000 battle deaths
-[@Pettersson2019]. Given the impact of civil conflict and the
-increasing availability of conflict related data, the last several
-decades has witnessed a veritable explosion in the number of
-quantitative studies investigating the causes of civil conflict
-[@Blattman2017]. Scholars have proposed numerous theories ranging from
-motivation-based arguments --- such as, for example, the role of
-horizontal inequalities and ethnic identities [@Cederman2011] --- to
+Since the end of World War II, civil conflict has been the most
+prevalent form of state-based conflict. Of the
+`r fmt(total_conflicts)` conflicts recorded by the UCDP/PRIO Armed
+Conflict Database v19.1 [@Gleditsch2002; @Pettersson2019] for the
+years covering 1946 until 2018, `r fmt(intrastate_conflicts)` of
+those, or approximately `r fmt(intrastate_percent, 1)` percent, are
+classified as intrastate. These civil conflicts are distributed across
+`r fmt(n_states)` countries, more than half of which having
+experienced at least one major civil war with 1,000 battle deaths at a
+minimum.  Where data is available, civil conflicts are also
+empirically among the deadliest. Out of `r fmt(total_deaths)`
+cumulative battles deaths from organized violence recorded
+since 1989 [@Pettersson2019; @Eck2007; @Sundberg2012],
+`r fmt(civil_deaths)`, or `r fmt(civil_deaths_percent, 1)` percent, are
+the result of civil conflict.
+
+Given the impact of civil conflict and the increasing availability of
+conflict related data, the last several decades has witnessed a
+veritable explosion in the number of quantitative studies
+investigating the causes of civil conflict [@Blattman2017]. Scholars
+have proposed numerous theories ranging from motivation-based
+arguments --- such as, for example, the role of horizontal
+inequalities and ethnic identities [@Cederman2011] --- to
 opportunity-based explanations centered on economic factors
 [@Collier2004; @Collier2009] as well as the political and structural
 conditions underlying state weakness [@Hegre2001; @Fearon2003]. This
 latter strain of research in particular has spurred extensive work
 into examining the distinguishing features of weak states and whether
 political institutions play a significant role in the risk of civil
-conflict. Several studies in this vein have argued in favor of
-institutions by investigating, for example, aspects of governance,
-institutional quality, and opportunities for political participation
-[@Fjelde2009; @Taydas2010; @Hegre2015a; @Bartusevic2018].
+conflict. Several studies have argued in favor of institutions by
+investigating, for example, aspects of governance, institutional
+quality, and opportunities for political participation [@Fjelde2009;
+@Taydas2010; @Hegre2015a; @Bartusevic2018].
 
 This paper extends that work by taking a disaggregated approach to
 studying political institutions by focusing specifically on the effect
@@ -107,10 +144,10 @@ regime. Institutions that provide a check against the types of actions
 which may exacerbate the risk of rebellion should be relevant to the
 study of civil conflict. Such an approach can further our
 understanding of how specific political institutions may shape the
-incentives for violence, especially through the influence on state
-behaviour. Second, the link between executive constraints is
-relatively understudied. The previous literature that exists is fairly
-limited and contradictory in terms of results.
+incentives for violence by affecting state behaviour. Second, the link
+between executive constraints is relatively understudied. The previous
+literature that exists is fairly limited and contradictory in terms of
+results.
 
 The principle finding of this paper is that there is tentative
 evidence that executive constraints do matter and that there is a
@@ -184,9 +221,9 @@ is seen as accountable to and representative of the larger population,
 thereby influencing the legitimacy of anti-government violence.  And,
 their quality can shape the capacity of the state to suppress or
 co-opt potential opposition. Although the preceding examples are far
-from forming an exhaustive list, there are thus a number of different
-ways in which institutions can enter into theoretical discussions
-about civil conflict.
+from forming an exhaustive list, they illustrate the number of
+different ways in which institutions can enter into theoretical
+discussions about civil conflict.
 
 Unsurprisingly, insofar as the role of institutions on the likelihood
 of civil conflict has been examined by previous literature the focus
@@ -240,15 +277,15 @@ authoritarianism are considered to be the most prone. The explanatory
 logic is that both democratic and fully authoritarian states tend to
 be consolidated regimes. In the case of the former, this means the
 presence of institutions conducive to conflict resolution such that
-the opportunity for rebellion may be present, given the presence of
-civil liberties conducive to organizing, but there is a notable lack
-in motivation for collective violence. For the latter, authoritarian
-regimes may produce a significant amount of political discontent;
-however, the opportunity is lacking due to the state's capacity and
-willingness to violently repress dissent. Anocratic regimes are by
-their very nature transitory, partly open and partly repressive,
-encouraging political discontent against the state without the
-capacity to either accommodate or suppress opposition.
+the opportunity for rebellion may be present, given the availability
+of civil liberties conducive to organizing, but there is a notable
+lack in motivation for collective violence. For the latter,
+authoritarian regimes may produce a significant amount of political
+discontent; however, the opportunity is lacking due to the state's
+capacity and willingness to violently repress dissent. Anocratic
+regimes are by their very nature transitory, partly open and partly
+repressive, encouraging political discontent against the state without
+the capacity to either accommodate or suppress opposition.
 
 In contrast, studies emphasizing the importance of political and
 economic opportunities for rebellion in understanding when and where
@@ -325,7 +362,7 @@ have been largely focused on the concept of governance. For instance,
 @Taydas2010 examine institutional quality as a means to capturing a
 regime's governing capacity which is theorised to be linked to
 conflict onset both in terms of political discontent --- a regime's
-inability to govern effectively and respond to public needs leading to
+inability to govern effectively and respond to public needs leads to
 grievances and a loss in legitimacy --- and political opportunities
 for rebellion --- poor institutional quality undermines the state's
 ability to handle a nascent, violent uprising. Specifically, they
@@ -387,8 +424,8 @@ conflict. [^ODonnell]
     are considerably weaker in upholding liberal notions of individual
     freedom against state power and republican notions of
     representation. In this way, executive constraints can possibly
-    aid in discriminating the types of partially democratized regimes
-    which may be at a heightened risk for civil conflict.
+    aid in discriminating between the types of partially democratized
+    regimes which may be at a heightened risk for civil conflict.
 
 The final motivation for examining executive constraints is that in
 terms of previous research, the empirical evidence is
@@ -695,20 +732,36 @@ unreasonably large values far beyond the observed range
 ### Civil Conflict
 
 The dependent variable, *civil conflict onset*, is taken from the
-UCDP/PRIO Armed Conflict Dataset v19.1 [@Gleditsch2002;
-@Pettersson2019]. According to the dataset, intra-state conflict is
-defined as a violent contest over a government or territory between a
-state and non-state actor with a minimum threshold of 25 battle deaths
-within a single country-year with a coverage from 1946 to 2018.  The
-data was merged based on the government side for conflicts labeled as
-internal or internationalized internal --- *i.e.* where
-*type_of_conflict* was either 3 or 4. Multiple conflicts within the
-same years were aggregated to form a binary variable coded as 1 to
-denote the onset of at least one new civil conflict and 0 for all
-other years, including years of ongoing conflict.[^conflict_type]
+UCDP/PRIO Armed Conflict Dataset (ACD) v19.1.[^onset_dataset]
+According to the dataset, intra-state conflict is defined as a violent
+contest over a government or territory between a state and non-state
+actor with a minimum threshold of 25 battle deaths within a single
+country-year with a coverage from 1946 to 2018.  The data was merged
+based on the government side for conflicts labeled as internal or
+internationalized internal --- *i.e.* where *type_of_conflict* was
+either 3 or 4. Multiple conflicts within the same years were
+aggregated to form a binary variable coded as 1 to denote the onset of
+at least one new civil conflict and 0 for all other years, including
+years of ongoing conflict.[^conflict_type]
+
+[^onset_dataset]: UCDP also makes available a pre-aggregated onset
+    dataset for internal and internationalized internal armed
+    conflicts. However, there are a number of coded onsets which do
+    not correspond to the conflict years listed in the standard
+    ACD. For example, China is coded as experiencing episode onsets in
+    1969, 1974, 1978, 1983, 1986 with unique conflict starts in 1969
+    and 1974 according to the *onset1* and *newconf* variables in the
+    onset dataset.  In the ACD, however, China is only coded as being
+    engaged in an interstate conflict with Myanmar/Burma (1969),
+    Russia (1969), and Vietnam (1974 - 1988, with several gap
+    years). Likewise discrepancies exist for a number of other
+    countries affecting 80 country-years in total. Since the onset
+    dataset does not inlude identifying information on each conflict,
+    I use the larger ACD to programmatically calculate the conflict
+    onsets.
 
 [^conflict_type]: Extrasystemic conflicts, *i.e.* imperial or colonial
-    conflicts, were excluded largely due to lack of data. For example,
+    conflicts, were excluded largely due to lack of data. Notably,
     there is very little easily available economic data for colonial
     territories and it would be undesirable to use the data for the
     colonizing power due to the often wide discrepancies in
@@ -734,7 +787,7 @@ still hold.[^robust]
     [Appendix C](#appendix-c).
 
 In total there are `r sum(merged.df$episode_onset)` onsets in the
-dataset according to the episodic definition affecting
+assembled dataset according to the episodic definition affecting
 `r filter(merged.df, episode_onset == 1) %$% n_distinct(country_name)`
 unique countries out of a total of
 `r n_distinct(merged.df$country_name)`. Figure \ref{fig:onsets} plots
@@ -770,7 +823,7 @@ cross-national time series dataset providing multidimensional,
 disaggregated data on democracy and political institutions for over
 200 countries with an overall year coverage from 1789 until 2018. The
 principal data is drawn from expert coded surveys involving a global
-network of over 3000 coders, most of whom are academics or
+network of over 3,000 coders, most of whom are academics or
 professionals working in policy related fields. Individual ratings are
 aggregated into latent variable estimates using hierarchical ordinal
 item response theory (IRT) models which take into account rater
@@ -1114,7 +1167,7 @@ vulnerable.
     the dataset starting date, I set the start of the peace year
     calculation to 1946, the end of World War II. The rationale is
     that World War II was a significant international event that
-    reshaped the world order and even had domestic consequences for
+    reshaped the world order and had domestic consequences for even
     countries not directly involved. For newly independent countries,
     I use the independence date as the start year.
 
@@ -1240,8 +1293,7 @@ more constrained executive and lower values vice versa. The density
 plots indicate that on average, for country-years where there is no
 legislature, *i.e.* $v2lgbicam$ is zero, the latent factor is lower,
 although still conditional on the values for the remaining manifest
-variables. Where the legislature is present, $\theta$ is distributed
-according to the $\mathsf{Normal}(0, 1)$ prior.
+variables.
 
 (ref:bicam) Posterior density plots for the executive constraints
     measure, $\theta$.
@@ -1443,18 +1495,18 @@ tunisia_idx <- filter(final.df, country_name == "Tunisia", year %in% c(2000, 201
 tunisia_p <- signif(mean(theta[, tunisia_idx[1]] < theta[, tunisia_idx[2]]) * 100, 2)
 ```
 
-Finally, to expand upon the country selection from \ref{fig:theta} and
-provide a temporal comparison, figure \ref{fig:tie} plots the $\theta$
-estimates for 2010 versus 2000 by country. A full list of all
-countries is available in [Appendix C](#appendix-c). Note, the
-statistical significance of differences between years for a single
-country cannot strictly be judged by overlapping credible intervals
-[@Schenker2001]. For example, Chile, despite having overlapping
-credible intervals, still has a posterior probability of approximately
-$`r chile_p`$ percent that the estimate for 2000 is lower
-than 2010. In the case of Tunisia with even more visual overlap, there
-is a $`r tunisia_p`$ percent posterior probability that the estimate
-for 2010 is higher than 2000.
+Finally, to expand upon the country selection from figure
+\ref{fig:theta} and provide a temporal comparison, figure
+\ref{fig:tie} plots the $\theta$ estimates for 2010 versus 2000 by
+country. A full list of all countries is available in [Appendix
+C](#appendix-c). Note, the statistical significance of differences
+between years for a single country cannot strictly be judged by
+overlapping credible intervals [@Schenker2001]. For example, Chile,
+despite having overlapping credible intervals, still has a posterior
+probability of approximately $`r chile_p`$ percent that the estimate
+for 2000 is lower than 2010. In the case of Tunisia with even more
+visual overlap, there is a $`r tunisia_p`$ percent posterior
+probability that the estimate for 2010 is higher than 2000.
 
 (ref:tie) Executive constraints in 2000 versus 2010 for several
     selected countries.
@@ -1626,7 +1678,7 @@ model. The first to be presented in figure \ref{fig:year} is the year
 intercepts with 80 percent posterior credible intervals. There is no
 discernible time trend in the year specific variability. The estimates
 are strongly pulled towards zero as a result of the partial pooling
-with upticks, such as the in the initial years of the 1990s during the
+with upticks, such as the initial years of the 1990s during the
 dissolution of the Soviet Union and Yugoslavia, roughly mirroring the
 global incidence rate of onsets.
 
@@ -1752,7 +1804,7 @@ To interpret the interaction term between executive constraints and
 GDP per Capita I calculate the marginal effect of $\theta$, executive
 constraints, on the predicted probability of civil conflict onset for
 different levels of GDP per capita while holding constant the other
-covariates. In this case, I take the mean of GDP per capita growth,
+covariates. This means that I take the mean of GDP per capita growth,
 CINC, the proportion of discriminated population, population density,
 mean elevation, and the number of politically relevant ethnic groups
 rounded to the nearest integer. I also set the dummy indicators for
@@ -1860,7 +1912,6 @@ between executive constraints and civil conflict such that there is
 actually a *positive* increase in the predicted probability for higher
 levels of executive constraints?
 
-
 (ref:gdp) Difference in predicted probabilities between the lowest and
     highest level of executive constraints for different values of GDP
     per capita.
@@ -1878,9 +1929,9 @@ df <- mclapply(rgdpepc, function(y) {
 
 df %<>%
     rename(codelow = `10%`, median = `50%`, codehigh = `90%`) %>%
-    mutate(interval = sprintf("[%.3f, %.3f]",
-                              signif(codelow, 3),
-                              signif(codehigh, 3)))
+    mutate(interval = sprintf("[%s, %s]",
+                              fmt(codelow, 3),
+                              fmt(codehigh, 3)))
 
 df$original <- exp(df$y * sd(final.df$rgdpepc) + mean(final.df$rgdpepc))
 
@@ -1915,14 +1966,14 @@ country-years. This is further bolstered by the fact that there are
 relatively few observations falling within the extreme tail ends of
 either the executive constraints posterior distribution or the
 empirical distribution of GDP per capita --- in the case of the
-latter, only `r signif(mean(X[, "rgdpepc"] < mean(df$y)), 3) * 100`
+latter, only `r fmt(mean(X[, "rgdpepc"] < mean(df$y)) * 100)`
 percent of the observations lay below the midpoint of the X-axis at
 600 2011 US dollars.
 
 [^theta_bounds]: Since the executive constraints parameter, $\theta$,
     is on the unbounded scale, the highest and lowest levels used in
-    the calculations for \ref{fig:gdp} are drawn from the minimum and
-    maximum of the median posterior estimates.
+    the calculations for figure \ref{fig:gdp} are drawn from the
+    minimum and maximum of the median posterior estimates.
 
 ### Assessing Model Fit
 
@@ -1963,15 +2014,15 @@ m <- table(p_median > .168, final.df$lepisode_onset)
 rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
 colnames(m) <- c("Actual: No Onset", "Actual: Onset")
 
-tpr <- signif(100 * m["Predicted: Onset", "Actual: Onset"] /
-              sum(m[, "Actual: Onset"]), 3)
-tnr <- signif(100 * m["Predicted: No Onset", "Actual: No Onset"] /
-              sum(m[, "Actual: No Onset"]), 3)
+tpr <- fmt(100 * m["Predicted: Onset", "Actual: Onset"] /
+              sum(m[, "Actual: Onset"]))
+tnr <- fmt(100 * m["Predicted: No Onset", "Actual: No Onset"] /
+              sum(m[, "Actual: No Onset"]))
 
-fpr <- signif(100 * m["Predicted: Onset", "Actual: No Onset"] /
-              sum(m[, "Actual: No Onset"]), 3)
-fnr <- signif(100 * m["Predicted: No Onset", "Actual: Onset"] /
-              sum(m[, "Actual: Onset"]), 3)
+fpr <- fmt(100 * m["Predicted: Onset", "Actual: No Onset"] /
+              sum(m[, "Actual: No Onset"]))
+fnr <- fmt(100 * m["Predicted: No Onset", "Actual: Onset"] /
+              sum(m[, "Actual: Onset"]))
 
 kable(m, "latex", align = "c", booktabs = T, linesep = "", escape = F,
       caption = "(ref:confusion)")
@@ -1988,17 +2039,17 @@ posterior medians of the predicted probabilities. For onset
 country-years the interquartile interval is only `r df[1, "1st Qu."]`
 to `r df[1, "3rd Qu."]` with a max of `r df[1, "Max."]`. To better
 compare the predicted probabilities to the actual data, table
-\ref{tab:confusion} presents a confusion matrix with a 0.17 cutoff,
-which approximately corresponds to the third quartile in the summary
-table. `r tpr` percent of onsets and `r tnr` percent of non-onsets are
-correctly predicted. The false positive rate is `r fpr` percent and
-the false negative rate is `r fnr` percent.
+\ref{tab:confusion} presents a confusion matrix with a 0.168 cutoff,
+which corresponds to the third quartile in the summary table. `r tpr`
+percent of onsets and `r tnr` percent of non-onsets are correctly
+predicted. The false positive rate is `r fpr` percent and the false
+negative rate is `r fnr` percent.
 
 ```{r results = "hide"}
 x <- evalmod(scores = p_median, labels = final.df$lepisode_onset)
 
-auc <- attr(x$roc[[1]], "auc") %>% signif(3)
-auc_pr <- attr(x$prcs[[1]], "auc") %>% signif(3)
+auc <- attr(x$roc[[1]], "auc") %>% fmt
+auc_pr <- attr(x$prcs[[1]], "auc") %>% fmt
 ```
 
 Figure \ref{fig:roc} plots a receiver operating characteristic (ROC)
@@ -2014,7 +2065,7 @@ the area under the curve (AUC), which in this case is `r auc`.[^auc]
 However, for the present analysis the results from the ROC curve are
 misleading since there is a significant class imbalance in the
 dataset. Onsets comprise only
-`r signif(100 * mean(final.df$lepisode_onset == 1), 3)` percent of all
+`r fmt(100 * mean(final.df$lepisode_onset == 1))` percent of all
 observations meaning that the false positive rate is less sensitive to
 changing thresholds. Figure \ref{fig:roc} therefore also plots a
 precision-recall (PRC) curve, which depicts the tradeoff between
@@ -2033,11 +2084,12 @@ the model increases. The *AUC-PR* for this plot is only
     to perfectly predict the outcome while an AUC of 0.5 denotes the
     performance of a purely random classifier.
 
-[^auc_pr]: Similar to the ROC curve, an ACU of 1 for a PRC curve
+[^auc_pr]: Similar to the ROC curve, an AUC of 1 for a PRC curve
     denotes a perfect model. The AUC for the null model, or random
-    classifier, is the proportion of actual positive outcomes to negative
-    outcomes in the dataset. In this case this means approximately
-    .042.
+    classifier, is the proportion of actual positive outcomes to
+    negative outcomes in the dataset. For the present model this is
+    approximately
+    `r fmt(sum(final.df$lepisode_onset == 1) / sum(final.df$lepisode_onset == 0))`.
 
 (ref:roc) ROC & Precision-Recall plots
 
