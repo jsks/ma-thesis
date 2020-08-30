@@ -54,7 +54,7 @@ abstract: |
     effectively deal with nascent rebellions, and may be more likely to
     engage in violent repression, especially in the form of indiscriminate
     violence. This can encourage political grievances, lead to a loss of
-    legitimacy for the regime, and provide the opportunity for rebel
+    legitimacy for the regime, and provide the opportunity for would be rebel
     groups to attract new members by offering protection against
     government violence. Furthermore, the lack of guaranteed checks to
     executive power may incentivise actors to avoid bargained solutions if
@@ -97,7 +97,25 @@ library(thesis.utils)
 
 options(knitr.kable.NA = ".")
 opts_chunk$set(echo = F, message = F, warning = F,
-               fig.width = 5, fig.height = 3, cache = T)
+               fig.width = 5, fig.height = 3, cache = F)
+
+variable_names <- c("rgdpepc" = "GDPpc (ln)",
+                    "rgdpepc_gro" = "GDPpc Growth",
+                    "cinc" = "CINC",
+                    "discrimpop" = "Discriminated Pop.",
+                    "pop_density" = "Pop. Density (ln)",
+                    "meanelev" = "Mean Elevation (ln)",
+                    "rlvt_groups_count" = "Relevant Groups",
+                    "neighbour_conflict" = "Neighbouring Conflict",
+                    "major_ongoing" = "High Int. Conflict",
+                    "independence" = "Independence",
+                    "exec_constraints" = "Exec. Constraints",
+                    "exec * rgdpepc" = "Exec. Constraints * GDPpc")
+
+# Don't include this in thesis.utils since the variable names are hardcoded.
+translate <- function(x) {
+    variable_names[match(x, names(variable_names))] %>% unname
+}
 ```
 
 # Introduction {-}
@@ -136,8 +154,8 @@ experienced at least one major civil war with 1,000 battle deaths at a
 minimum.  Where data is available, civil conflicts are also
 empirically among the deadliest. Out of `r fmt(total_deaths)`
 cumulative battles deaths from organized violence recorded since 1989
-[@Pettersson2019; @Eck2007; @Sundberg2012], `r
-fmt(civil_deaths_percent, 1)` percent are the result of civil
+[@Pettersson2019; @Eck2007; @Sundberg2012],
+`r fmt(civil_deaths_percent, 1)` percent are the result of civil
 conflict.
 
 Given the impact of civil conflict and the increasing availability of
@@ -208,7 +226,7 @@ logistic regression.
 
 # Theoretical Background {-}
 
-## Political Institutions and Civil Conflict
+## Political Institutions
 
 This paper takes as a starting premise a definition of institutions as
 being "systems of established and embedded social rules that structure
@@ -669,13 +687,10 @@ measurement model for executive constraints.[^model]
     reduction factor $\widehat{R}$ and effective sample size (ESS)
     [@Vehtari2019] in addition to standard Stan diagnostics. All
     pre/post-processing was done using R 3.6.2 [@Core2019]. The Stan
-    model code is available in [Appendix A](#appendix-a) and the full
+    model code is available in the [appendix](#appendix-a) and the full
     project in the form of a reproducible pipeline, including the
     Rmarkdown source for this manuscript, is available at
     [https://github.com/jsks/ma-thesis](https://github.com/jsks/ma-thesis).
-    Finally, a simulation analysis assessing the model and it's
-    ability to recover simulated true values is available in [Appendix
-    B](#appendix-b).
 
 [//]: # Load merged dataset for descriptive stats in following sections
 
@@ -1259,6 +1274,7 @@ df <- merged.df %>%
            meanelev, rlvt_groups_count, neighbour_conflict,
            major_ongoing, independence)
 
+colnames(df) <- translate(colnames(df))
 q <- summary_stats(df)
 
 kable(q, "latex", align = c("l", "r", "r", "r", "r", "r"),
@@ -1535,7 +1551,7 @@ plot does not depict, however, the uncertainty in the estimates.
 (ref:map) Executive constraints in 2012 for all countries present in
     the dataset. Missingness indicated by the color grey.
 
-```{r results = "hide", fig.width = 8, fig.cap = "\\label{fig:map} (ref:map)"}
+```{r results = "hide", fig.width = 6, fig.cap = "\\label{fig:map} (ref:map)"}
 map_data <- st_read("data/raw/cshapes_0.6/cshapes.shp") %>%
     filter(GWEYEAR == max(GWEYEAR)) %>%
     select(country_name = CNTRY_NAME, gwid = GWCODE)
@@ -1558,23 +1574,22 @@ chile_idx <- filter(final.df, country_name == "Chile", year %in% c(2000, 2010)) 
 
 chile_p <- signif(mean(theta[, chile_idx[1]] < theta[, chile_idx[2]]) * 100, 2)
 
-tunisia_idx <- filter(final.df, country_name == "Tunisia", year %in% c(2000, 2010)) %$%
+rwanda_idx <- filter(final.df, country_name == "Rwanda", year %in% c(2000, 2010)) %$%
     reduced_idx
 
-tunisia_p <- signif(mean(theta[, tunisia_idx[1]] < theta[, tunisia_idx[2]]) * 100, 2)
+rwanda_p <- signif(mean(theta[, rwanda_idx[1]] < theta[, rwanda_idx[2]]) * 100, 2)
 ```
 
 Finally, to expand upon the country selection from figure
 \ref{fig:theta} and provide a temporal comparison, figure
 \ref{fig:tie} plots the $\theta$ estimates for 2010 versus 2000 by
-country. A full list of all countries is available in [Appendix
-C](#appendix-c). Note, the statistical significance of differences
+country. Note, the statistical significance of differences
 between years for a single country cannot strictly be judged by
 overlapping credible intervals [@Schenker2001]. For example, Chile,
 despite having overlapping credible intervals, still has a posterior
 probability of approximately $`r chile_p`$ percent that the estimate
-for 2000 is lower than 2010. In the case of Tunisia with even more
-visual overlap, there is a $`r tunisia_p`$ percent posterior
+for 2000 is lower than 2010. In the case of Rwanda with even more
+visual overlap, there is a $`r rwanda_p`$ percent posterior
 probability that the estimate for 2010 is higher than 2000.
 
 (ref:tie) Executive constraints in 2000 versus 2010 for several
@@ -1618,8 +1633,10 @@ Independence.
 reg <- read_post("posteriors/full_model/reg_posteriors.csv")
 
 beta <- extract(reg, "beta")
-colnames(beta) <- c("exec_constraints", colnames(X),
-                    sprintf("exec * %s", colnames(X)[interaction_idx]))
+columns <- c("exec_constraints", colnames(X),
+             sprintf("exec * %s", colnames(X)[interaction_idx]))
+
+colnames(beta) <- translate(columns)
 
 # Probabilities that Beta < 0 and Beta > 0
 probs <- apply(beta, 2, function(x) {
@@ -1649,8 +1666,8 @@ kable(beta_s, "latex", align = c("c", "r", "r"), booktabs = T,
 plot_pars(beta, hline = T)
 ```
 
-For the $\beta$ parameter for executive constraints there is a `r
-as.numeric(beta_s[1, 2]) * 100` percent posterior probability that the
+For the $\beta$ parameter for executive constraints there is a
+`r as.numeric(beta_s[1, 2]) * 100` percent posterior probability that the
 parameter is less than zero and a 80 percent posterior probability
 that an increase of one standard deviation decreases the log-odds of
 civil conflict onset between $`r beta_s[1, 1]`$. A one standard
@@ -1665,33 +1682,33 @@ score of approximately 1.
 
 ```{r results = "hide"}
 argentina <- filter(merged.df, country_name == "Argentina", year == 1989) %$%
-    prettyNum(rgdpepc, big.mark = ",")
+    fmt(rgdpepc)
 
 slovakia <- filter(merged.df, country_name == "Slovakia", year == 2003) %$%
-    prettyNum(rgdpepc, big.mark = ",")
+    fmt(rgdpepc)
 
 cmb <- filter(merged.df, country_name == "Cambodia", year == 1987) %>%
     select(pop, area_sqkm) %>%
-    mutate(area_sqkm = signif(area_sqkm, 3),
-           pop = signif(pop, 3))
+    mutate(area_sqkm = fmt(area_sqkm),
+           pop = fmt(pop))
 
 india <- filter(merged.df, country_name == "India", year == 1976) %>%
     select(pop, area_sqkm, meanelev) %>%
-    mutate(pop = signif(pop, 3),
-           area_sqkm = signif(area_sqkm, 3),
-           meanelev = signif(area_sqkm, 3))
+    mutate(pop = fmt(pop),
+           area_sqkm = fmt(area_sqkm),
+           meanelev = fmt(meanelev))
 
 georgia <- filter(merged.df, country_name == "Georgia", year == 2012) %$%
-    signif(meanelev, 3)
+    fmt(meanelev)
 
 russia <- filter(merged.df, country_name == "Russia", year == 2012) %$%
-    signif(meanelev, 3)
+    fmt(meanelev)
 
 thai <- filter(merged.df, country_name == "Thailand", year == 2002) %$%
-    { discrimpop * 100 }
+    { fmt(discrimpop * 100) }
 
 bhutan <- filter(merged.df, country_name == "Bhutan", year == 1989) %$%
-    { discrimpop * 100 }
+    { fmt(discrimpop * 100) }
 
 ```
 
@@ -1714,15 +1731,15 @@ ethnic groups, proportion of the population facing state
 discrimination, presence of at least one neighbouring conflict, and
 the dummy variable for independence year all increase the risk of
 civil conflict onset. A one unit increase in population density is
-similar to going from Cambodia in 1987 with a population of $`r
-cmb$pop`$ million and an area of $`r cmb$area_sqkm`$ square kilometers
+similar to going from Cambodia in 1987 with a population of
+$`r cmb$pop`$ million and an area of $`r cmb$area_sqkm`$ square kilometers
 to India in 1976 with a population of $`r india$pop`$ million and an
 area of $`r india$area_sqkm`$ square kilometers. A one unit increase
 for mean elevation roughly matches the difference between Russia at
 $`r russia`$ meters and Georgia at $`r georgia`$ meters. And, a one
 unit increase for proportion of the population facing discrimination
-is roughly equivalent to Thailand from 2002 until present with $`r
-thai`$ percent and Bhutan from 1989 until present with $`r bhutan`$
+is roughly equivalent to Thailand from 2002 until present with
+$`r thai`$ percent and Bhutan from 1989 until present with $`r bhutan`$
 percent.
 
 Finally, the GDP per capita and executive constraints interaction term
@@ -1766,8 +1783,8 @@ plot_pars(Z_year, hline = T) +
 ```{r results = "hide"}
 alpha <- extract(reg, "alpha")
 
-alpha_s <- quantile(alpha, probs = c(0.1, 0.9)) %>% signif(3)
-alpha_interval <- sprintf("[%g,%g]", alpha_s[1], alpha_s[2])
+alpha_s <- quantile(alpha, probs = c(0.1, 0.9)) %>% fmt
+alpha_interval <- sprintf("[%s,%s]", alpha_s[1], alpha_s[2])
 ```
 
 Figure \ref{fig:country} presents the country intercepts. Since all of
@@ -1856,16 +1873,13 @@ plot_pars(f, hline = T) +
 
 ```{r results = "hide"}
 gdp_rwa <- filter(merged.df, country_name == "Rwanda", year == 2007) %$%
-    rgdpepc %>%
-    prettyNum(big.mark = ",")
+    fmt(rgdpepc)
 
 gdp_phl <- filter(merged.df, country_name == "Philippines", year == 2008) %$%
-    rgdpepc %>%
-    prettyNum(big.mark = ",")
+    fmt(rgdpepc)
 
 gdp_po <- filter(merged.df, country_name == "Portugal", year == 2009) %$%
-    rgdpepc %>%
-    prettyNum(big.mark = ",")
+    fmt(rgdpepc)
 ```
 
 To interpret the interaction term between executive constraints and
@@ -2306,8 +2320,8 @@ effect between executive constraints and GDP per capita, however,
 become far too uncertain to be able to conclusively assert an
 association. The probability that the interaction term is less than
 zero for the high intensity model run, *i.e.* where at least a single
-year crosses the high intensity threshold, is only `r
-fmt(ix_probs["major_only"])` while the probability for the cumulative
+year crosses the high intensity threshold, is only
+`r fmt(ix_probs["major_only"])` while the probability for the cumulative
 intensity model run is only `r fmt(ix_probs["cumulative_only"])`.
 
 [^theta]: Since the measurement model for executive constraints is
@@ -2466,83 +2480,9 @@ subnational level depending on data availability.
 
 # Appendices {-}
 
-## A - Stan Code {#appendix-a}
+## Stan Code {#appendix-a}
 
 ```{stan, code = readLines("stan/sem.stan"), eval = F, output.var = "x", echo = T}
-```
-
-\newpage
-
-## B - Prior Simulation {#appendix-b}
-
-In order
-
-```{r eval = F}
-prior_plot <- function(range, fn, title = NULL, ...) {
-    data.frame(x = range) %>%
-        ggplot(aes(x)) +
-        stat_function(fun = fn, ...) +
-        ggtitle(label = title) +
-        theme(axis.title.y = element_blank(),
-              axis.text.y = element_blank(),
-              axis.ticks.y = element_blank())
-}
-
-p1 <- prior_plot(c(-20, 20), dnorm, args = list(mean = 0, sd = 5),
-                 title = "Normal(0, 5)")
-p2 <- prior_plot(c(-10, 10), dnorm, args = list(mean = 0, sd = 2.5),
-                 title = "Normal(0, 2.5)")
-p3 <- prior_plot(c(0, 5), dlnorm, args = list(meanlog = 0, sdlog = 0.5),
-                 title = "Log-Normal(0, 0.5)")
-p4 <- prior_plot(c(0, 3), dweibull, args = list(shape = 5, scale = 1),
-                 title = "Weibull(5, 1)")
-p5 <- prior_plot(c(0, 10), dhcauchy, args = list(sigma = 1),
-                 title = "HalfCauchy(0, 1)")
-p6 <- prior_plot(c(0, 1), dbeta, args = list(shape1 = 5, shape2 = 5),
-                 title = "Beta(5, 5)")
-
-grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2, nrow = 3)
-
-```
-
-
-```{r eval = F, warning = F}
-true_values <- readRDS("posteriors/sim/simulated_parameters.rds")
-
-fa <- read_post("posteriors/sim/fa_posteriors.csv")
-reg <- read_post("posteriors/sim/reg_posteriors.csv")
-
-fit <- bind_cols(fa, reg)
-
-
-post <- post_summarise(fit, c("lambda", "psi", "gamma", "delta",
-                              "kappa", "rho", "eta", "alpha", "beta",
-                              "sigma")) %>%
-    rename(codelow = `2.5%`, median = `50%`, codehigh = `97.5%`) %>%
-    mutate(type = "Posterior Estimate")
-
-pars.df <- filter(true_values, !grepl("theta", parameter)) %>%
-    bind_rows(post) %>%
-    mutate(type = as.factor(type))
-
-ggplot(pars.df, aes(parameter, point, color = type)) +
-    geom_point() +
-    geom_errorbar(aes(parameter, ymin = codelow, ymax = codehigh),
-                  width = 0) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-```
-
-```{r eval = F, warning = F}
-latent.df <- post_summarise(fit, pars = "theta", probs = c(0.025, 0.975)) %>%
-    rename(codelow = `2.5%`, codehigh = `97.5`)
-
-x <- mean(theta <= latent.df$codehigh & theta >= latent.df$codelow)
-
-```
-
-
-
 ```
 
 \newpage
