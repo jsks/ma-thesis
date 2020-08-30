@@ -70,7 +70,7 @@ overlay_pars <- function(pars = NULL, legend_labels = NULL, ...) {
         post_summarise(args[[i]], pars = pars, probs = c(0.10, 0.50, 0.90)) %>%
             dplyr::rename(codelow = `10%`, median = `50%`, codehigh = `90%`) %>%
             dplyr::mutate(parameter = factor(parameter, levels = parameter),
-                   model = i)
+                          model = i)
     })
 
     df <- dplyr::bind_rows(ll)
@@ -169,12 +169,15 @@ tfplot <- function(df) {
     levels <- dplyr::filter(df, year == dplyr::last(year))
     levels <- dplyr::arrange(levels, median) %$% country_name
 
+    df$country_name <- factor(df$country_name, levels = levels)
+
     ggplot(df, aes_string("country_name", "median", colour = "year")) +
         geom_errorbar(aes_string(ymax = "codehigh", ymin = "codelow"),
                       position = position_dodge(width = 0.5)) +
         theme_tufte() +
         scale_color_colorblind() +
-        theme(axis.title.y = element_blank(),
+        theme(axis.title.x = element_blank(),
+              axis.title.y = element_blank(),
               legend.title = element_blank()) +
         coord_flip()
 }

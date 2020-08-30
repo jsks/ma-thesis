@@ -10,8 +10,7 @@ merged.df <- readRDS("data/merged_data.rds")
 # Manifest variables for exec_constraints
 constraint_vars <- c("v2lginvstp", "v2lgfunds", "v2lgqstexp",
                      "v2lgoppart", "v2juhcind", "v2juncind",
-                     "v2juhccomp", "v2jucomp", "v2exrescon",
-                     "v2lgotovst")
+                     "v2juhccomp", "v2jucomp", "v2exrescon")
 
 ###
 # Start by first replacing NA with Inf for v2lg* variables where

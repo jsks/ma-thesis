@@ -271,6 +271,20 @@ summary_stats.data.frame <- function(x, vars = colnames(x)) {
 to_idx <- function(x, ...) factor(x, ...) %>% as.numeric
 
 
+#' Pretty print numerics
+#'
+#' This function formats a numeric value by rounding to the specified
+#' number of digits before then calling `prettyNum`.
+#'
+#' @param x NumericVector
+#' @param digits Number of decimal digits to round to.
+#'
+#' @return CharacterVector
+#'
+#' @examples
+#' fmt(10000.1243)
+#' fmt(9999.999)
+#'
 #' @export
 fmt <- function(x, digits = 2) {
     prettyNum(round(x, digits), big.mark = ",")
