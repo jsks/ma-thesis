@@ -33,6 +33,12 @@ start a definition. Also, when defining a text reference, if there
 isn't at least one space between the reference key and the definition,
 then the text reference will not be parsed.
 
+Finally, text reference labels cannot contain an underscore. Since
+expansion occurs on the parsed AST, an underscore in the label will
+cause pandoc to interpret latex code as plain text. The solution to
+this issue would be if `Rmarkdown` wrapped any results involving
+latex, such as tables, in raw attribute blocks.
+
 One bonus though to using a lua filter is that, unlike bookdown, text
 references here can span multiple lines.
 
