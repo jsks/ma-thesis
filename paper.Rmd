@@ -10,7 +10,7 @@ titlelogo: |
     ```{=latex}
     assets/UU_logo_CMYK-eps-converted-to.pdf
     ```
-wordcount: 14000
+wordcount: 14300
 suppress-bibliography: false
 bibliography: library.bib
 csl: assets/chicago-author-date.csl
@@ -72,12 +72,11 @@ library(thesis.utils)
 options(knitr.kable.NA = ".")
 opts_chunk$set(echo = F, message = F, warning = F,
                fig.width = 5, fig.height = 3, cache = T)
+```
 
-# TODO: this has been added to package
-fmt <- function(x, digits = 2) {
-    prettyNum(round(x, digits), big.mark = ",")
-}
+# Introduction {-}
 
+```{r intro-descriptive-stats}
 # Create initial descriptive stats for introduction
 ucdp <- readRDS("./data/raw/UcdpPrioConflict_v19_1.rds")
 
@@ -98,8 +97,6 @@ civil_deaths <- filter(battle_deaths, type_of_conflict %in% 3:4) %$%
 
 civil_deaths_percent <- 100 * civil_deaths / total_deaths
 ```
-
-# Introduction {-}
 
 Since the end of World War II, civil conflict has been the most
 prevalent form of state-based conflict. Of the
@@ -2136,11 +2133,19 @@ groups. Thus, if the relationship were not to be found when re-running
 the model with only high intensity conflict onsets that would be a
 significant challenge to the external validity of the initial results.
 
+```{r}
+load("./posteriors/cumulative_only/input.RData",
+     envir = cumulative <- new.env())
+
+load("./posteriors/major_only/input.RData",
+     envir = major <- new.env())
+```
+
 In the UCDP/PRIO armed conflict dataset, high intensity is defined at
 the threshold of 1,000 battle deaths. High intensity conflicts, or
 civil wars, can be coded according to when the threshold for high
-intensity is crosses either by a single year or by the cumulative
-battle deaths.[^battle_deaths] I therefore re-run the same model,
+intensity is crossed either by a single year or by the cumulative
+battle death count.[^battle_deaths] I therefore re-run the same model,
 including the same priors and runtime parameters, twice for the two
 different operational definitions. In both cases, I retain an episodic
 delineation between separate conflicts --- in other words, conflicts
@@ -2148,8 +2153,11 @@ over the same incompatibility can have multiple onsets when there are
 lulls in fighting.[^episode_gaps] For the former, the onset year is
 set as the first year which crosses the high intensity threshold for
 each period of sustained fighting of at least 25 battle deaths. For
-the latter, onset is the coded conflict year for the cumulative period
-passing the high intensity threshold.
+the latter, onset is the first coded conflict year for the cumulative
+period passing the high intensity threshold. In total there
+`r sum(major$final.df$lmajor_onset)` onsets for the single year 1,000
+battle deaths definition, and `r sum(cumulative$final.df$lcum_onset)`
+onsets for the cumulative definition.
 
 [^battle_deaths]: A more robust modeling strategy would be to directly
     predict the number of battle deaths and then apply *a posteriori*
@@ -2183,7 +2191,7 @@ ll <- lapply(models, function(model) {
 args <- list(pars = "beta",
              legend_labels = c("Low & High Intensity",
                                "High Intensity",
-                               "Cumulatively High Intensity"))
+                               "Cumulative High Intensity"))
 do.call(overlay_pars, c(ll, args)) +
     scale_x_discrete(labels = colnames(beta))
 ```
@@ -2192,13 +2200,15 @@ do.call(overlay_pars, c(ll, args)) +
 ix_probs <- lapply(seq_along(models), function(i) {
     beta <- extract(ll[[i]], "beta")
 
-    # Really could just grab this from the existing `beta` variable,
-    # but just to be safe...
-    load(file.path("posteriors", models[i], "input.RData"),
-         envir = e <- new.env())
-    colnames(beta) <- c("exec_constraints", colnames(e$X),
-                        sprintf("exec * %s",
-                                colnames(e$X)[e$interaction_idx]))
+    if (models[i] == "major_only") {
+        colnames(beta) <- c("exec_constraints", colnames(major$X),
+                            sprintf("exec * %s",
+                                    colnames(major$X)[major$interaction_idx]))
+    } else {
+        colnames(beta) <- c("exec_constraints", colnames(cumulative$X),
+                            sprintf("exec * %s",
+                                    colnames(cumulative$X)[cumulative$interaction_idx]))
+    }
 
     mean(beta[, "exec * rgdpepc"] < 0)
 })
@@ -2207,13 +2217,20 @@ ix_probs <- unlist(ix_probs)
 names(ix_probs) <- models
 ```
 
-
-Figure \ref{fig:overlay} plots the original results compared to the
-results from running the model with the two different operational
-definitions of high intensity conflict.[^theta] The majority of
-depicted parameter estimates are fairly stable across runs. Notably, the relationship between executive constraints and conflict onsets remains negative with a high posterior probability of being less than zero. The estimates for the interaction effect between executive constraints and GDP per capita, however, become far to uncertain to be able to conclusively assert an association. The probability that the interaction term is less than zero for the high intensity model run, *i.e.* where at least a single year crosses the high intensity threshold, is only `r fmt(ix_probs["major_only"])` while the probability for the cumulative intensity model is only
+Figure \ref{fig:overlay} plots the original regression slopes compared
+to the results from running the model with the two different
+operational definitions of high intensity conflict.[^theta] The
+majority of depicted parameter estimates are fairly stable across
+runs. Notably, the relationship between executive constraints and
+conflict onsets remains negative with a high posterior probability of
+being less than zero. The estimates for the interaction effect between
+executive constraints and GDP per capita, however, become far too
+uncertain to be able to conclusively assert an association. The
+probability that the interaction term is less than zero for the high
+intensity model run, *i.e.* where at least a single year crosses the
+high intensity threshold, is only `r fmt(ix_probs["major_only"])`
+while the probability for the cumulative intensity model run is only
 `r fmt(ix_probs["cumulative_only"])`.
-
 
 [^theta]: Since the measurement model for executive constraints is
     embedded within the larger regression predicting civil conflict
@@ -2224,43 +2241,75 @@ depicted parameter estimates are fairly stable across runs. Notably, the relatio
     model and both the cumulatively high intensity model and the major
     conflicts only model is effectively one.
 
-(ref:confusion_major) Confusion matrix for conflicts with at least a
-    single year passing the high intensity threshold with a 0.168
-    cutoff for the median posterior predicted probabilities.
+(ref:confusion-major) Confusion matrix with a 0.168 cutoff for the
+    median posterior predicted probabilities from the single year high
+    intensity model run.
 
-```{r confusion_major}
+```{r confusion-major}
 extra <- read_post("./posteriors/major_only/extra_posteriors.csv")
 
 p_hat <- extract(extra, "p_hat")
 p_median <- apply(p_hat, 2, median)
 
-load("./posteriors/major_only/input.RData")
+m <- table(p_median > .168, major$final.df$lmajor_onset)
+rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
+colnames(m) <- c("Actual: No Onset", "Actual: Onset")
 
-m <- table(p_median > .168, final.df$lmajor_onset)
+# Calculate the AUCs as well
+x <- evalmod(scores = p_median, labels = major$final.df$lmajor_onset)
+major_auc <- attr(x$roc[[1]], "auc") %>% fmt
+major_auc_pr <- attr(x$prcs[[1]], "auc") %>% fmt
+
 kable(m, "latex", align = "c", booktabs = T,
-      linesep = "", escape = F, caption = "hello")
+      linesep = "", escape = F, caption = "(ref:confusion-major)")
 ```
 
-(ref:confusion_cumulative) Confusion matrix for conflicts with a
-    cumulative high intensity with a 0.168 cutoff for the median
-    posterior predicted probabilities.
+Table \ref{tab:confusion-major} presents the confusion matrix for the
+single year high intensity model run using the median posterior
+predicted probabilities. A cutoff of 0.168 was reused for comparative
+purposes to the original results. In this case, the model is unable to
+predict even a single major conflict onset with the highest median
+posterior predicted probability for an actual onset being only
+`r fmt(max(p_median[major$final.df$lmajor_onset == 1]))`. Furthermore,
+although the ROC AUC is `r major_auc`, this is again due to the major
+class imbalance between positive versus negative outcomes in the
+dataset. A precision-recall AUC of `r major_auc_pr` demonstrates the
+poor performance of the model.
 
-```{r confusion_cumulative}
+(ref:confusion-cumulative) Confusion matrix with a 0.168 cutoff for
+    the median posterior predicted probabilities from the cumulative
+    high intensity model run.
+
+```{r confusion-cumulative}
 extra <- read_post("./posteriors/cumulative_only/extra_posteriors.csv")
 
 p_hat <- extract(extra, "p_hat")
 p_median <- apply(p_hat, 2, median)
 
-load("./posteriors/cumulative_only/input.RData")
+m <- table(p_median > .168, cumulative$final.df$lcum_onset)
+rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
+colnames(m) <- c("Actual: No Onset", "Actual: Onset")
 
-m <- table(p_median > .168, final.df$lcum_onset)
+x <- evalmod(scores = p_median, labels = cumulative$final.df$lcum_onset)
+cum_auc <- attr(x$roc[[1]], "auc") %>% fmt
+cum_auc_pr <- attr(x$prcs[[1]], "auc") %>% fmt
+
 kable(m, "latex", align = "c", booktabs = T,
       linesep = "", escape = F,
-      caption = "world")
+      caption = "(ref:confusion-cumulative)")
 ```
 
-How well does the model fit the data when only examining high intensity conflicts?
+Similarly, table \ref{tab:confusion-cumulative} shows the confusion
+matrix for the cumulative high intensity model run with the same
+median posterior predicted probability cutoff. Although the model in
+this case is able to correctly classify 17 percent of onsets with an
+ROC AUC of `r cum_auc`, the overall performance is fairly limited with
+a precision-recall AUC of only `r cum_auc_pr`.
 
+Taken together the model runs examining high intensity conflicts
+suggest that the negative relationship between executive constraints
+and civil conflict onset is fairly robust. However, the same issues of
+model fit continue to plague
 
 # Conclusion {-}
 

@@ -269,3 +269,9 @@ summary_stats.data.frame <- function(x, vars = colnames(x)) {
 #'
 #' @export
 to_idx <- function(x, ...) factor(x, ...) %>% as.numeric
+
+
+#' @export
+fmt <- function(x, digits = 2) {
+    prettyNum(round(x, digits), big.mark = ",")
+}
