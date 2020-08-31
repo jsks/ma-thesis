@@ -45,7 +45,7 @@ The `run.sh` script assumes **4** available CPU cores, meaning that
 each Stan model will be invoked with a corresponding number of chains.
 
 Note, on a Google Cloud c2-standard-4 (4 vCPUs, 16GB memory) this
-takes approximately 6 hours to run.
+takes approximately 3 hours to run.
 
 Any arguments to `run.sh` will be passed to `make`, the taskrunner for
 the underlying pipeline (example: dry-run with make, `scripts/run.sh

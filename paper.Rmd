@@ -48,32 +48,37 @@ output:
         smart: true
         toc: true
 abstract: |
-    **Abstract**: Do institutional constraints on a regime's executive decrease the
-    likelihood of civil conflict onset? An unconstrained executive is free
-    to loot state resources, undermining the state's capacity to
-    effectively deal with nascent rebellions, and may be more likely to
-    engage in violent repression, especially in the form of indiscriminate
-    violence. This can encourage political grievances, lead to a loss of
-    legitimacy for the regime, and provide the opportunity for would be rebel
-    groups to attract new members by offering protection against
-    government violence. Furthermore, the lack of guaranteed checks to
-    executive power may incentivise actors to avoid bargained solutions if
-    they fear future extralegal retributions. Taken together, where there
-    is a lack of effective constraints against the executive there may be
-    an increased risk for the onset of civil conflict. To test this
-    proposition I employ a bayesian latent variable model which estimates
-    executive constraint as a latent factor derived from several manifest
-    variables and relates it to a binary measure of civil conflict onset
-    through a logistic regression.  The primary finding is that there is a
-    negative relationship such that the predicted probability for civil
-    conflict is lower where there exists higher levels of executive
-    constraints. However, this is conditional on the level of GDP per
-    capita; for low-income country-years the relationship between
-    executive constraints and civil conflict onset is indeterminate
-    possibly because it is easier to recruit and mobilize fighters
-    regardless of the overall level of executive constraints. The issue of
-    poor model fit means that the presented results should be considered
-    tentative at best.
+    **Abstract**: Do institutional constraints on a regime's executive
+    decrease the likelihood of civil conflict onset? An unconstrained
+    executive is free to loot state resources undermining the state's
+    capacity to effectively deal with nascent rebellions, and may be
+    more likely to engage in violent repression, especially in the
+    form of indiscriminate violence. This can encourage political
+    grievances, lead to a loss of legitimacy for the regime, and
+    provide the opportunity for would be rebel groups to attract new
+    members by offering protection against government
+    violence. Furthermore, the lack of guaranteed checks to executive
+    power may incentivise actors to avoid bargained solutions if they
+    fear future extralegal retributions. Taken together, where there
+    is a lack of effective constraints against the executive there may
+    be an increased risk for the onset of civil conflict. To test this
+    proposition I employ a bayesian latent variable model which
+    estimates executive constraint as a latent factor derived from
+    several manifest variables and relate it to a binary measure of
+    civil conflict onset through a logistic regression.  The primary
+    finding is that there is a negative relationship such that the
+    predicted probability for civil conflict is lower where there
+    exists higher levels of executive constraints. However, this is
+    conditional on the level of GDP per capita; for low-income
+    country-years the relationship between executive constraints and
+    civil conflict onset is indeterminate possibly because it is
+    easier to recruit and mobilize fighters in such settings
+    regardless of the overall level of executive constraints. The
+    model, however, is a poor fit to the data meaning that the
+    presented results should be considered tentative at
+    best. Nonetheless, this study helps to further the work on
+    examining specific political institutions as potential risk
+    factors for the onset of civil conflict.
 ---
 
 [//]: # Setup R environment for entire doc
@@ -107,7 +112,7 @@ variable_names <- c("rgdpepc" = "GDPpc (ln)",
                     "meanelev" = "Mean Elevation (ln)",
                     "rlvt_groups_count" = "Relevant Groups",
                     "neighbour_conflict" = "Neighbouring Conflict",
-                    "major_ongoing" = "High Int. Conflict",
+                    "major_ongoing" = "Major Conflict",
                     "independence" = "Independence",
                     "exec_constraints" = "Exec. Constraints",
                     "exec * rgdpepc" = "Exec. Constraints * GDPpc")
@@ -191,18 +196,25 @@ between executive constraints and civil conflict is relatively
 understudied. The previous literature that exists is fairly limited
 and contradictory in terms of results.
 
-The principle finding of this paper is that there is tentative
-evidence that executive constraints do matter and that there is a
-negative relationship between the latent level of constraints on the
-executive and the risk of civil conflict onset. However, this
-relationship largely disappears for low-income country-years when an
-interaction term between executive constraints and gross domestic
-product (GDP) per capita is included. If the primary theoretical
-mechanism involves the impact of executive constraints on rebel
-mobilization --- an unchecked executive may be more likely to engage
-in indiscriminate violence which could lead to a loss of legitimacy as
-well as the ability of rebel groups to offer local security guarantees
-to attract recruits --- then the incentives for violence in low-income
+To study the potential link between executive constraints and civil
+conflict onset I use a bayesian latent variable model to estimate
+executive constraints as a latent factor drawn from the basis of
+several observed manifest variables. I then relate this measure to a
+binary indicator for civil conflict onset using a cross-country time
+series logistic regression.
+
+The principle finding is that there is tentative evidence that
+executive constraints do matter and that there is a negative
+relationship between the latent level of constraints on the executive
+and the risk of civil conflict onset. However, this relationship
+largely disappears for low-income country-years when an interaction
+term between executive constraints and gross domestic product (GDP)
+per capita is included. If the primary theoretical mechanism involves
+the impact of executive constraints on rebel mobilization --- an
+unchecked executive may be more likely to engage in indiscriminate
+violence which could lead to a loss of legitimacy as well as the
+ability of rebel groups to offer local security guarantees to attract
+recruits --- then the incentives for violence in low-income
 country-years due to say economic factors may be so great that it does
 not matter how constrained the executive may or may not be.
 
@@ -218,11 +230,11 @@ In what follows, a deeper justification for why political institutions
 are relevant to the study of civil conflict together with an overview
 of related empirical literature will be presented. The theoretical
 mechanisms linking executive constraints to conflict onset will then
-be discussed followed by an empirical analysis using a bayesian latent
-variable model to estimate executive constraints from the basis of
-several observed manifest variables. This latent measure will then be
-used to predict civil conflict onset using a cross-country time series
-logistic regression.
+be discussed followed by a presentation of the paper's research design
+and empirical analysis, including both the latent variable measurement
+model for executive constraints and the cross-country time series
+logistic regression predicting civil conflict onset. The final section
+provides conclusions and possible suggestions for future research.
 
 # Theoretical Background {-}
 
@@ -874,8 +886,8 @@ the proportion of countries experiencing an ongoing civil conflict and
 the proportion of countries experiencing new onsets of conflict over
 time.
 
-(ref:onsets) Proportions of countries per year experiencing at least
-    one ongoing civil conflict and at least one new onset.
+(ref:onsets) Proportions of countries experiencing at least one
+    ongoing civil conflict and at least one new onset per year.
 
 ```{r fig.cap = "\\label{fig:onsets} (ref:onsets)"}
 
@@ -1448,7 +1460,7 @@ ggplot(x, aes(theta, point, group = group, col = factor)) +
     scale_color_colorblind() +
     theme(legend.title = element_blank()) +
     ylab(target) +
-    xlab("Theta")
+    xlab("Executive Constraints")
 
 ```
 
@@ -1756,7 +1768,7 @@ conflict. It should be noted, however, that there is a high degree of
 uncertainty in the estimate with the 80 percent posterior credible
 interval ranging from -0.558 to 0.064.
 
-#### Random Effects
+#### Varying Intercepts
 
 There are three sets of random effects included in the regression
 model. The first to be presented in figure \ref{fig:year} is the year
@@ -1981,7 +1993,7 @@ conflict onset is negative --- that is to say a more constrained
 executive is associated with a decreased risk of civil conflict onset.
 For example, for country-years with a relatively high level of GDP per
 capita, going from the worst to best in executive constraints
-decreases the predicted probability from [1.5, 4.5] down to below
+decreases the predicted probability from [1.0, 4.5] down to below
 0.5. This effect diminishes, however, for lower values of GDP per
 capita to the point that executive constraints are practically
 indeterminate to the risk of conflict onset for country-years situated
@@ -2021,7 +2033,9 @@ ggplot(df, aes(original, median)) +
     geom_line() +
     geom_ribbon(aes(ymin = codelow, ymax = codehigh), alpha = 0.2) +
     theme_tufte() +
-    xlab("GDP per Capita")
+    xlab("GDP per Capita") +
+    theme(axis.title.y = element_blank())
+
 ```
 
 To investigate this possibility, \ref{fig:gdp} plots the pointwise
@@ -2088,11 +2102,11 @@ kable(df, "latex", align = "c", booktabs = T, linesep = "", escape = F,
       caption = "(ref:psum)")
 ```
 
-(ref:confusion) Confusion matrix with a 0.168 cutoff for the median
+(ref:confusion) Confusion matrix with a 0.17 cutoff for the median
     posterior predicted probabilities.
 
 ```{r confusion}
-m <- table(p_median > .168, final.df$lepisode_onset)
+m <- table(p_median > .17, final.df$lepisode_onset)
 
 rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
 colnames(m) <- c("Actual: No Onset", "Actual: Onset")
@@ -2122,7 +2136,7 @@ posterior medians of the predicted probabilities. For onset
 country-years the interquartile interval is only `r df[1, "1st Qu."]`
 to `r df[1, "3rd Qu."]` with a max of `r df[1, "Max."]`. To better
 compare the predicted probabilities to the actual data, table
-\ref{tab:confusion} presents a confusion matrix with a 0.168 cutoff,
+\ref{tab:confusion} presents a confusion matrix with a 0.17 cutoff,
 which corresponds to the third quartile in the summary table. `r tpr`
 percent of onsets and `r tnr` percent of non-onsets are correctly
 predicted. The false positive rate is `r fpr` percent and the false
@@ -2333,7 +2347,7 @@ intensity model run is only `r fmt(ix_probs["cumulative_only"])`.
     and both the cumulatively high intensity model and the major
     conflicts only model is effectively one.
 
-(ref:confusion-major) Confusion matrix with a 0.168 cutoff for the
+(ref:confusion-major) Confusion matrix with a 0.17 cutoff for the
     median posterior predicted probabilities from the single year high
     intensity model run.
 
@@ -2343,7 +2357,7 @@ extra <- read_post("./posteriors/major_only/extra_posteriors.csv")
 p_hat <- extract(extra, "p_hat")
 p_median <- apply(p_hat, 2, median)
 
-m <- table(p_median > .168, major$final.df$lmajor_onset)
+m <- table(p_median > .17, major$final.df$lmajor_onset)
 rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
 colnames(m) <- c("Actual: No Onset", "Actual: Onset")
 
@@ -2358,17 +2372,17 @@ kable(m, "latex", align = "c", booktabs = T,
 
 Table \ref{tab:confusion-major} presents the confusion matrix for the
 single year high intensity model run using the median posterior
-predicted probabilities. A cutoff of 0.168 was reused for comparative
-purposes to the original results. In this case, the model is unable to
-predict even a single major conflict onset with the highest median
-posterior predicted probability for an actual onset being only
+predicted probabilities. A cutoff of 0.17 was reused for comparative
+purposes to the original results. In this case, the model is able to
+only correctly predict a single major conflict onset with the highest
+median posterior predicted probability for an actual onset being only
 `r fmt(max(p_median[major$final.df$lmajor_onset == 1]))`. Furthermore,
 although the ROC AUC is `r major_auc`, this is again due to the major
 class imbalance between positive versus negative outcomes in the
 dataset. A precision-recall AUC of `r major_auc_pr` demonstrates the
 poor performance of the model.
 
-(ref:confusion-cumulative) Confusion matrix with a 0.168 cutoff for
+(ref:confusion-cumulative) Confusion matrix with a 0.17 cutoff for
     the median posterior predicted probabilities from the cumulative
     high intensity model run.
 
@@ -2378,7 +2392,7 @@ extra <- read_post("./posteriors/cumulative_only/extra_posteriors.csv")
 p_hat <- extract(extra, "p_hat")
 p_median <- apply(p_hat, 2, median)
 
-m <- table(p_median > .168, cumulative$final.df$lcum_onset)
+m <- table(p_median > .17, cumulative$final.df$lcum_onset)
 rownames(m) <- c("Predicted: No Onset", "Predicted: Onset")
 colnames(m) <- c("Actual: No Onset", "Actual: Onset")
 

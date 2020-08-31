@@ -44,7 +44,7 @@ all: paper.pdf ## Default rule: paper.pdf
 
 ###
 # Convenience rules for development workflow
-bash: ## Drop into bash. Only useful within a container instance.
+bash: ## Drop into bash. Only useful when called from scripts/run.sh
 	@bash
 
 help: ## Useless help message
@@ -77,15 +77,14 @@ watch_pdf: ## Autobuild PDF in a container instance
 	@CLEANUP=1 entr -p scripts/run.sh <<< $(manuscript)
 
 wc: ## Very rough estimate of word count
-	@# All text except codeblocks, toc, appendix, and bibliography.
-	@# 200 is added for the abstract, but caption text is missing
-	@# from this count.
+	@# All text except codeblocks, toc, appendix, and bibliography with 290
+	@# added for the abstract.
 	@sed -e 's/\(suppress-bibliography:\) false/\1 true/' \
 			-e '/^```/,/^```/d' \
 			-e '/Appendices/,$$d' $(manuscript) | \
 		pandoc --quiet -F pandoc-citeproc -f markdown -t plain | \
 		wc -w | \
-		xargs -n1 expr 200 + | \
+		xargs -n1 expr 290 + | \
 		sed 's/^/word count: /'
 
 # Records R package versions from the latest run into the csv file
@@ -145,8 +144,8 @@ $(post)/$(1)/samples-chain_%.csv: $(post)/$(1)/data.json stan/$(2)
 	stan/$(2) id=$$* \
 		data file=$$< output file=$$@ \
 		random seed=$$$$(( $$(seed) + $$* - 1 )) \
-		method=sample  adapt delta=0.85 \
-		algorithm=hmc engine=nuts max_depth=10 |& \
+		method=sample adapt delta=0.85 \
+		algorithm=hmc engine=nuts max_depth=12 |& \
 			tee -a $$(@D)/log
 endef
 $(foreach x, $(schemas), \
